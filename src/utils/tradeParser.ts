@@ -324,6 +324,8 @@ export const parseTradovateCSV = (content: string): ParsedTrade[] => {
         side,
       });
     }
+    
+    console.log(`Parsed ${trades.length} trades from Tradovate performance report`);
   } else {
     // Original trade log format
     const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date') || h.toLowerCase().includes('time'));

@@ -66,6 +66,9 @@ const Index = () => {
       const text = await file.text();
       const parsedTrades = parseTradeFile(text);
       
+      console.log('Parsed trades:', parsedTrades);
+      console.log('Number of trades:', parsedTrades.length);
+      
       if (parsedTrades.length === 0) {
         toast.error("No trades found in the file. Please check the format.");
         return;
