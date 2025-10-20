@@ -74,17 +74,15 @@ const Index = () => {
         <div
           className={`relative bg-card border border-border rounded-3xl transition-all duration-500 ${
             isExpanded ? "w-[90vw] h-[85vh] p-8" : "w-[600px] h-[400px] p-12"
-          } flex ${isExpanded ? "flex-col" : "items-center justify-start"}`}
+          } flex ${isExpanded ? "flex-col" : "items-center justify-center"}`}
         >
           {!isExpanded ? (
-            <div className="flex items-center justify-center w-full h-full">
-              <JournalButton onClick={() => setIsExpanded(true)} />
-            </div>
+            <JournalButton onClick={() => setIsExpanded(true)} />
           ) : (
             <div className="space-y-6 h-full flex flex-col">
               <div className="flex items-center justify-between">
                 <div className="space-y-4">
-                  <h1 className="text-3xl font-bold text-foreground">
+                  <h1 className="text-3xl font-bold text-foreground" style={{ fontWeight: 700 }}>
                     FindYourEdge
                     <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">.</span>
                     com
@@ -93,8 +91,8 @@ const Index = () => {
                   <div className="flex gap-4 items-center">
                     {/* Monthly PnL Box */}
                     <div className="bg-card border border-border rounded-lg px-4 py-2">
-                      <div className="text-xs text-muted-foreground mb-1">Monthly PnL</div>
-                      <div className={`text-lg font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Monthly PnL</div>
+                      <div className={`text-lg font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
                         {monthlyStats.totalPnL >= 0 ? '$' : '-$'}{Math.abs(monthlyStats.totalPnL).toFixed(2)}
                       </div>
                     </div>
@@ -103,8 +101,8 @@ const Index = () => {
                     <div className="bg-card border border-border rounded-lg px-4 py-2">
                       <div className="flex gap-6 items-center">
                         <div>
-                          <div className="text-xs text-muted-foreground mb-1">Winners</div>
-                          <div className="text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block">
+                          <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Winners</div>
+                          <div className="text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
                             {monthlyStats.winners}
                           </div>
                         </div>
@@ -117,8 +115,8 @@ const Index = () => {
                         </div>
                         
                         <div>
-                          <div className="text-xs text-muted-foreground mb-1">Losers</div>
-                          <div className="text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block">
+                          <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Losers</div>
+                          <div className="text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
                             {monthlyStats.losers}
                           </div>
                         </div>
@@ -157,8 +155,10 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto">
-                <TradeCalendar trades={trades} />
+              <div className="flex-1 overflow-hidden flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <TradeCalendar trades={trades} />
+                </div>
               </div>
             </div>
           )}

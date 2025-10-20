@@ -87,7 +87,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
         >
           <ChevronLeft className="w-5 h-5" />
         </Button>
-        <h2 className="text-xl font-semibold text-foreground">
+        <h2 className="text-xl text-foreground" style={{ fontWeight: 700 }}>
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </h2>
         <Button
@@ -100,9 +100,9 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_100px] gap-2 w-full">
+      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_100px] gap-2 w-full max-h-[calc(85vh-200px)]">
         {dayNames.map((day) => (
-          <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+          <div key={day} className="text-center text-sm text-muted-foreground p-2" style={{ fontWeight: 600 }}>
             {day}
           </div>
         ))}
@@ -133,15 +133,15 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
                     : "border-border bg-card hover:bg-card/80"
                 }`}
               >
-                <div className={`text-sm font-medium ${dayStats ? "text-white" : "text-foreground"}`}>
+                <div className={`text-sm ${dayStats ? "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                   {day}
                 </div>
                 {dayStats && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-xs font-bold text-white">
+                    <div className="text-xs text-white" style={{ fontWeight: 700 }}>
                       {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
                     </div>
-                    <div className="text-[10px] text-white/80 mt-0.5">
+                    <div className="text-[10px] text-white/80 mt-0.5" style={{ fontWeight: 600 }}>
                       {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
                     </div>
                   </div>
@@ -158,8 +158,8 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
               key={`week-${weekIndex}`}
               className="aspect-square p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
             >
-              <div className="text-[10px] text-muted-foreground mb-1">Week {weekIndex + 1}</div>
-              <div className={`text-xs font-bold text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <div className="text-[10px] text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Week {weekIndex + 1}</div>
+              <div className={`text-xs text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
                 {weekPnL >= 0 ? '+' : '-'}${Math.abs(weekPnL).toFixed(0)}
               </div>
             </div>
@@ -184,15 +184,15 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
                       : "border-border bg-card hover:bg-card/80"
                   }`}
                 >
-                  <div className={`text-sm font-medium ${dayStats ? "text-white" : "text-foreground"}`}>
+                  <div className={`text-sm ${dayStats ? "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                     {day}
                   </div>
                   {dayStats && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-xs font-bold text-white">
+                      <div className="text-xs text-white" style={{ fontWeight: 700 }}>
                         {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
                       </div>
-                      <div className="text-[10px] text-white/80 mt-0.5">
+                      <div className="text-[10px] text-white/80 mt-0.5" style={{ fontWeight: 600 }}>
                         {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
                       </div>
                     </div>
@@ -214,8 +214,8 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
                 key={`week-${weekIndex}`}
                 className="aspect-square p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
               >
-                <div className="text-[10px] text-muted-foreground mb-1">Week {weekIndex + 1}</div>
-                <div className={`text-xs font-bold text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="text-[10px] text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Week {weekIndex + 1}</div>
+                <div className={`text-xs text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
                   {weekPnL >= 0 ? '+' : '-'}${Math.abs(weekPnL).toFixed(0)}
                 </div>
               </div>
