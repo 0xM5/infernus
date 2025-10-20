@@ -158,8 +158,19 @@ const Index = () => {
                           </Tooltip>
                         </TooltipProvider>
                       </div>
-                      <div className="text-2xl font-bold text-foreground mb-2" style={{ fontWeight: 800 }}>
-                        {monthlyStats.profitRatio.toFixed(2)}
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="text-2xl font-bold text-foreground" style={{ fontWeight: 800 }}>
+                          {monthlyStats.profitRatio.toFixed(2)}
+                        </div>
+                        {/* Semi-circle visualization */}
+                        <div className="relative w-12 h-6 overflow-hidden">
+                          <div 
+                            className="w-12 h-12 rounded-full"
+                            style={{
+                              background: `conic-gradient(from 180deg, #4ade80 0deg ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg, #f87171 ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg 180deg)`
+                            }}
+                          />
+                        </div>
                       </div>
                       <div className="flex items-center justify-between gap-4">
                         <div className="text-sm font-semibold text-green-400">
