@@ -2,7 +2,8 @@ import { useState } from "react";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseSierraChartLog } from "@/utils/tradeParser";
 import { toast } from "sonner";
 
@@ -33,12 +34,19 @@ const Index = () => {
     });
     
     const totalPnL = monthlyTrades.reduce((sum, trade) => sum + trade.profit, 0);
-    const winners = monthlyTrades.filter(trade => trade.profit > 0).length;
-    const losers = monthlyTrades.filter(trade => trade.profit < 0).length;
+    const winningTrades = monthlyTrades.filter(trade => trade.profit > 0);
+    const losingTrades = monthlyTrades.filter(trade => trade.profit < 0);
+    const winners = winningTrades.length;
+    const losers = losingTrades.length;
     const total = winners + losers;
     const winnerPercentage = total > 0 ? (winners / total) * 100 : 50;
     
-    return { totalPnL, winners, losers, winnerPercentage };
+    // Calculate average winners and losers
+    const avgWinner = winners > 0 ? winningTrades.reduce((sum, trade) => sum + trade.profit, 0) / winners : 0;
+    const avgLoser = losers > 0 ? losingTrades.reduce((sum, trade) => sum + trade.profit, 0) / losers : 0;
+    const profitRatio = avgLoser !== 0 ? Math.abs(avgWinner / avgLoser) : 0;
+    
+    return { totalPnL, winners, losers, winnerPercentage, avgWinner, avgLoser, profitRatio };
   };
   
   const monthlyStats = getMonthlyStats();
@@ -131,6 +139,34 @@ const Index = () => {
                           <div className="text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
                             {monthlyStats.losers}
                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Profit Ratio Box */}
+                    <div className="bg-card border border-border rounded-lg px-4 py-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="text-xs text-muted-foreground" style={{ fontWeight: 600 }}>Avg win/loss trade</div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Any ratio over 2 is a profitable system</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div className="text-2xl font-bold text-foreground mb-2" style={{ fontWeight: 800 }}>
+                        {monthlyStats.profitRatio.toFixed(2)}
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="text-sm font-semibold text-green-400">
+                          ${monthlyStats.avgWinner.toFixed(1)}
+                        </div>
+                        <div className="text-sm font-semibold text-red-400">
+                          -${Math.abs(monthlyStats.avgLoser).toFixed(1)}
                         </div>
                       </div>
                     </div>
