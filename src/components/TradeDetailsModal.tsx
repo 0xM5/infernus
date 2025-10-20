@@ -225,26 +225,32 @@ export const TradeDetailsModal = ({
 
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Target</div>
-                <Input
-                  type="number"
-                  placeholder="Enter target price"
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value)}
-                  className="bg-background"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    placeholder="Enter target price"
+                    value={target}
+                    onChange={(e) => setTarget(e.target.value)}
+                    className="bg-background pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
 
               <div>
                 <div className="text-sm text-muted-foreground mb-1">
                   Stop Loss
                 </div>
-                <Input
-                  type="number"
-                  placeholder="Enter stop loss"
-                  value={stopLoss}
-                  onChange={(e) => setStopLoss(e.target.value)}
-                  className="bg-background"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    placeholder="Enter stop loss"
+                    value={stopLoss}
+                    onChange={(e) => setStopLoss(e.target.value)}
+                    className="bg-background pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
 
               {target && stopLoss && (
@@ -252,8 +258,8 @@ export const TradeDetailsModal = ({
                   <div className="text-sm text-muted-foreground mb-1">
                     Planned R:R
                   </div>
-                  <div className="text-lg text-white">
-                    {plannedRR.toFixed(2)}
+                  <div className={`text-lg font-bold ${plannedRR >= 2 ? 'text-green-400' : 'text-red-400'}`}>
+                    {plannedRR.toFixed(2)}R
                   </div>
                 </div>
               )}
@@ -263,8 +269,8 @@ export const TradeDetailsModal = ({
                   <div className="text-sm text-muted-foreground mb-1">
                     Actual R:R
                   </div>
-                  <div className="text-lg text-white">
-                    {actualRR.toFixed(2)}
+                  <div className={`text-lg font-bold ${actualRR >= 2 ? 'text-green-400' : 'text-red-400'}`}>
+                    {actualRR.toFixed(2)}R
                   </div>
                 </div>
               )}
