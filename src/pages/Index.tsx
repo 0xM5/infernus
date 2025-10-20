@@ -5,7 +5,7 @@ import { TradeProviderModal } from "@/components/TradeProviderModal";
 import { Button } from "@/components/ui/button";
 import { Upload, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { parseSierraChartLog } from "@/utils/tradeParser";
+import { parseTradeFile } from "@/utils/tradeParser";
 import { toast } from "sonner";
 
 export interface Trade {
@@ -57,14 +57,19 @@ const Index = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.txt')) {
-      toast.error("Please select a .txt file");
+    if (!file.name.endsWith('.txt') && !file.name.endsWith('.csv')) {
+      toast.error("Please select a .txt or .csv file");
       return;
     }
 
     try {
       const text = await file.text();
-      const parsedTrades = parseSierraChartLog(text);
+      const parsedTrades = parseTradeFile(text);
+      
+      if (parsedTrades.length === 0) {
+        toast.error("No trades found in the file. Please check the format.");
+        return;
+      }
       
       const formattedTrades: Trade[] = parsedTrades.map(trade => ({
         date: trade.date,
@@ -200,7 +205,7 @@ const Index = () => {
                   <input
                     id="file-upload"
                     type="file"
-                    accept=".txt"
+                    accept=".txt,.csv"
                     onChange={handleFileImport}
                     className="hidden"
                   />
@@ -227,11 +232,7 @@ const Index = () => {
         onClose={() => setShowProviderModal(false)}
         onProviderSelect={(provider) => {
           setShowProviderModal(false);
-          if (provider === "SierraChart") {
-            document.getElementById("file-upload")?.click();
-          } else {
-            toast.info(`${provider} integration coming soon!`);
-          }
+          document.getElementById("file-upload")?.click();
         }}
       />
     </div>

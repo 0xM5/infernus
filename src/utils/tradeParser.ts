@@ -8,6 +8,8 @@ interface ParsedTrade {
   side: "LONG" | "SHORT";
 }
 
+type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "Unknown";
+
 // Point values for different futures contracts
 const POINT_VALUES: { [key: string]: number } = {
   ES: 50, // E-mini S&P 500
@@ -141,4 +143,240 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
 
   console.log('Total trades parsed:', trades.length);
   return trades;
+};
+
+export const parseRobinhoodCSV = (content: string): ParsedTrade[] => {
+  const lines = content.split('\n');
+  const trades: ParsedTrade[] = [];
+  
+  if (lines.length < 2) return trades;
+  
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  console.log('Robinhood headers:', headers);
+  
+  const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+  const symbolIdx = headers.findIndex(h => h.toLowerCase().includes('symbol') || h.toLowerCase().includes('instrument'));
+  const sideIdx = headers.findIndex(h => h.toLowerCase().includes('side') || h.toLowerCase().includes('trans'));
+  const qtyIdx = headers.findIndex(h => h.toLowerCase().includes('quantity') || h.toLowerCase().includes('shares'));
+  const priceIdx = headers.findIndex(h => h.toLowerCase().includes('price'));
+  const amountIdx = headers.findIndex(h => h.toLowerCase().includes('amount') || h.toLowerCase().includes('proceeds'));
+  
+  const openTrades = new Map<string, any>();
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+    
+    const dateStr = columns[dateIdx];
+    const symbol = columns[symbolIdx];
+    const side = columns[sideIdx]?.toLowerCase();
+    const quantity = parseFloat(columns[qtyIdx] || '0');
+    const price = parseFloat(columns[priceIdx] || '0');
+    const amount = parseFloat(columns[amountIdx] || '0');
+    
+    if (!dateStr || !symbol || !quantity || !price) continue;
+    
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) continue;
+    
+    const isBuy = side.includes('buy');
+    
+    if (isBuy && !openTrades.has(symbol)) {
+      openTrades.set(symbol, { date, symbol, quantity, entryPrice: price, side: 'LONG' });
+    } else if (!isBuy && openTrades.has(symbol)) {
+      const openTrade = openTrades.get(symbol);
+      const profit = amount - (openTrade.entryPrice * openTrade.quantity);
+      
+      trades.push({
+        date: openTrade.date,
+        symbol,
+        quantity: openTrade.quantity,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: price,
+        profit,
+        side: openTrade.side,
+      });
+      
+      openTrades.delete(symbol);
+    }
+  }
+  
+  return trades;
+};
+
+export const parseInteractiveBrokersCSV = (content: string): ParsedTrade[] => {
+  const lines = content.split('\n');
+  const trades: ParsedTrade[] = [];
+  
+  const headerLine = lines.find(line => line.toLowerCase().includes('date') && line.toLowerCase().includes('symbol'));
+  if (!headerLine) return trades;
+  
+  const headerIndex = lines.indexOf(headerLine);
+  const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
+  
+  const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+  const symbolIdx = headers.findIndex(h => h.toLowerCase().includes('symbol'));
+  const sideIdx = headers.findIndex(h => h.toLowerCase().includes('buy') || h.toLowerCase().includes('side'));
+  const qtyIdx = headers.findIndex(h => h.toLowerCase().includes('quantity'));
+  const priceIdx = headers.findIndex(h => h.toLowerCase().includes('price'));
+  const proceedsIdx = headers.findIndex(h => h.toLowerCase().includes('proceeds') || h.toLowerCase().includes('amount'));
+  
+  const openTrades = new Map<string, any>();
+  
+  for (let i = headerIndex + 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+    
+    const dateStr = columns[dateIdx];
+    const symbol = columns[symbolIdx];
+    const side = columns[sideIdx]?.toLowerCase();
+    const quantity = Math.abs(parseFloat(columns[qtyIdx] || '0'));
+    const price = Math.abs(parseFloat(columns[priceIdx] || '0'));
+    
+    if (!dateStr || !symbol || !quantity || !price) continue;
+    
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) continue;
+    
+    const isBuy = side.includes('buy') || side.includes('bot');
+    
+    if (isBuy && !openTrades.has(symbol)) {
+      openTrades.set(symbol, { date, symbol, quantity, entryPrice: price, side: 'LONG' });
+    } else if (!isBuy && openTrades.has(symbol)) {
+      const openTrade = openTrades.get(symbol);
+      const profit = (price - openTrade.entryPrice) * openTrade.quantity;
+      
+      trades.push({
+        date: openTrade.date,
+        symbol,
+        quantity: openTrade.quantity,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: price,
+        profit,
+        side: openTrade.side,
+      });
+      
+      openTrades.delete(symbol);
+    }
+  }
+  
+  return trades;
+};
+
+export const parseTradovateCSV = (content: string): ParsedTrade[] => {
+  const lines = content.split('\n');
+  const trades: ParsedTrade[] = [];
+  
+  if (lines.length < 2) return trades;
+  
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  console.log('Tradovate headers:', headers);
+  
+  const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date') || h.toLowerCase().includes('time'));
+  const symbolIdx = headers.findIndex(h => h.toLowerCase().includes('contract') || h.toLowerCase().includes('symbol'));
+  const sideIdx = headers.findIndex(h => h.toLowerCase().includes('side') || h.toLowerCase().includes('action'));
+  const qtyIdx = headers.findIndex(h => h.toLowerCase().includes('qty') || h.toLowerCase().includes('size'));
+  const priceIdx = headers.findIndex(h => h.toLowerCase().includes('price'));
+  const plIdx = headers.findIndex(h => h.toLowerCase().includes('p&l') || h.toLowerCase().includes('pnl'));
+  
+  const openTrades = new Map<string, any>();
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+    
+    const dateStr = columns[dateIdx];
+    const symbol = columns[symbolIdx];
+    const side = columns[sideIdx]?.toLowerCase();
+    const quantity = parseFloat(columns[qtyIdx] || '0');
+    const price = parseFloat(columns[priceIdx] || '0');
+    
+    if (!dateStr || !symbol || !quantity || !price) continue;
+    
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) continue;
+    
+    const pointValue = getPointValue(symbol);
+    const isBuy = side.includes('buy');
+    
+    if (isBuy && !openTrades.has(symbol)) {
+      openTrades.set(symbol, { date, symbol, quantity, entryPrice: price, side: 'LONG' });
+    } else if (!isBuy && openTrades.has(symbol)) {
+      const openTrade = openTrades.get(symbol);
+      const priceDiff = price - openTrade.entryPrice;
+      const profit = priceDiff * openTrade.quantity * pointValue;
+      
+      trades.push({
+        date: openTrade.date,
+        symbol,
+        quantity: openTrade.quantity,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: price,
+        profit,
+        side: openTrade.side,
+      });
+      
+      openTrades.delete(symbol);
+    }
+  }
+  
+  return trades;
+};
+
+export const detectTradeProvider = (content: string): TradeProvider => {
+  const firstLines = content.split('\n').slice(0, 5).join('\n').toLowerCase();
+  
+  // SierraChart detection
+  if (firstLines.includes('datetime') && firstLines.includes('fillprice') && firstLines.includes('openclose')) {
+    return "SierraChart";
+  }
+  
+  // Robinhood detection
+  if (firstLines.includes('robinhood') || (firstLines.includes('activity date') && firstLines.includes('process date'))) {
+    return "Robinhood";
+  }
+  
+  // Interactive Brokers detection
+  if (firstLines.includes('interactive brokers') || firstLines.includes('statement') || firstLines.includes('trades,header')) {
+    return "InteractiveBrokers";
+  }
+  
+  // Tradovate detection
+  if (firstLines.includes('tradovate') || (firstLines.includes('contract') && firstLines.includes('action'))) {
+    return "Tradovate";
+  }
+  
+  return "Unknown";
+};
+
+export const parseTradeFile = (content: string, provider?: TradeProvider): ParsedTrade[] => {
+  const detectedProvider = provider || detectTradeProvider(content);
+  
+  console.log('Detected trade provider:', detectedProvider);
+  
+  switch (detectedProvider) {
+    case "SierraChart":
+      return parseSierraChartLog(content);
+    case "Robinhood":
+      return parseRobinhoodCSV(content);
+    case "InteractiveBrokers":
+      return parseInteractiveBrokersCSV(content);
+    case "Tradovate":
+      return parseTradovateCSV(content);
+    default:
+      // Try all parsers and return the one with most results
+      const results = [
+        parseSierraChartLog(content),
+        parseRobinhoodCSV(content),
+        parseInteractiveBrokersCSV(content),
+        parseTradovateCSV(content),
+      ];
+      return results.reduce((best, current) => current.length > best.length ? current : best, []);
+  }
 };
