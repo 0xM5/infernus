@@ -5,6 +5,7 @@ interface ParsedTrade {
   entryPrice: number;
   exitPrice: number;
   profit: number;
+  side: "LONG" | "SHORT";
 }
 
 // Point values for different futures contracts
@@ -126,6 +127,7 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
             entryPrice: openTrade.entryPrice,
             exitPrice: fillPrice,
             profit,
+            side: openTrade.buySell === 'Buy' ? 'LONG' : 'SHORT',
           });
 
           openTrades.delete(symbol);

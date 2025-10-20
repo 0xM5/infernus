@@ -10,6 +10,7 @@ export interface Trade {
   date: Date;
   profit: number;
   symbol: string;
+  side?: "LONG" | "SHORT";
   quantity?: number;
   entryPrice?: number;
   exitPrice?: number;
@@ -59,6 +60,7 @@ const Index = () => {
         date: trade.date,
         profit: trade.profit,
         symbol: trade.symbol,
+        side: trade.side,
         quantity: trade.quantity,
         entryPrice: trade.entryPrice,
         exitPrice: trade.exitPrice,

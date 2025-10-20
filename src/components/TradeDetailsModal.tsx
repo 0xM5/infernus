@@ -12,6 +12,7 @@ interface Trade {
   date: Date;
   profit: number;
   symbol: string;
+  side?: "LONG" | "SHORT";
   quantity?: number;
   entryPrice?: number;
   exitPrice?: number;
@@ -142,7 +143,7 @@ export const TradeDetailsModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] h-[85vh] p-0 bg-transparent border-none shadow-none">
-        <div className="flex gap-6 h-full">
+        <div className="flex gap-6 h-full min-h-0">
           {/* Left side - Trade Details */}
           <div className="w-[250px] bg-muted rounded-lg p-6 space-y-4 overflow-y-auto">
             <h2
@@ -158,10 +159,19 @@ export const TradeDetailsModal = ({
                 <div className={`text-2xl font-bold ${getPnLColor()}`}>
                   {totalPnL >= 0 ? "+" : ""}${totalPnL.toFixed(2)}
                 </div>
-              </div>
+                </div>
 
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">
+                {dayTrades[0]?.side && (
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Order Type</div>
+                    <div className={`text-lg font-bold ${dayTrades[0].side === 'LONG' ? 'text-green-400' : 'text-red-400'}`}>
+                      {dayTrades[0].side}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">
                   Contracts Traded
                 </div>
                 <div className="text-lg text-white">{totalContracts}</div>
@@ -284,7 +294,7 @@ export const TradeDetailsModal = ({
           </div>
 
           {/* Right side - Edge Tags and Journal */}
-          <div className="flex-1 flex flex-col gap-4">
+          <div className="flex-1 flex flex-col gap-4 min-h-0">
             {/* Edge Tags */}
             <div className="w-[855px] h-[215px] bg-purple-600/20 rounded-lg p-6 border-2 border-purple-500">
               <h2
@@ -302,7 +312,7 @@ export const TradeDetailsModal = ({
             </div>
 
             {/* Journal Section */}
-            <div className="flex-1 bg-muted rounded-lg p-6 overflow-y-auto">
+            <div className="flex-1 min-h-0 bg-muted rounded-lg p-6 overflow-y-auto">
               <div className="flex items-center gap-2 mb-4">
                 <Checkbox
                   id="help-edge"
