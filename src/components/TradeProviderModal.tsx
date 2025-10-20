@@ -12,6 +12,7 @@ const providers = [
   "Robinhood",
   "SierraChart",
   "Tradovate",
+  "TradingView",
 ];
 
 export const TradeProviderModal = ({ open, onClose, onProviderSelect }: TradeProviderModalProps) => {

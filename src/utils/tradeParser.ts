@@ -8,7 +8,7 @@ interface ParsedTrade {
   side: "LONG" | "SHORT";
 }
 
-type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "Unknown";
+type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "TradingView" | "Unknown";
 
 // Point values for different futures contracts
 const POINT_VALUES: { [key: string]: number } = {
@@ -329,6 +329,68 @@ export const parseTradovateCSV = (content: string): ParsedTrade[] => {
   return trades;
 };
 
+export const parseTradingViewCSV = (content: string): ParsedTrade[] => {
+  const lines = content.split('\n');
+  const trades: ParsedTrade[] = [];
+  
+  if (lines.length < 2) return trades;
+  
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  console.log('TradingView headers:', headers);
+  
+  const dateIdx = headers.findIndex(h => h.toLowerCase().includes('time') || h.toLowerCase().includes('date'));
+  const symbolIdx = headers.findIndex(h => h.toLowerCase().includes('symbol') || h.toLowerCase().includes('instrument'));
+  const typeIdx = headers.findIndex(h => h.toLowerCase().includes('type') || h.toLowerCase().includes('side'));
+  const qtyIdx = headers.findIndex(h => h.toLowerCase().includes('qty') || h.toLowerCase().includes('contracts'));
+  const priceIdx = headers.findIndex(h => h.toLowerCase().includes('price'));
+  const plIdx = headers.findIndex(h => h.toLowerCase().includes('profit') || h.toLowerCase().includes('p/l'));
+  
+  const openTrades = new Map<string, any>();
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+    
+    const dateStr = columns[dateIdx];
+    const symbol = columns[symbolIdx];
+    const type = columns[typeIdx]?.toLowerCase();
+    const quantity = parseFloat(columns[qtyIdx] || '0');
+    const price = parseFloat(columns[priceIdx] || '0');
+    
+    if (!dateStr || !symbol || !quantity || !price) continue;
+    
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) continue;
+    
+    const pointValue = getPointValue(symbol);
+    const isBuy = type.includes('buy') || type.includes('long');
+    
+    if (isBuy && !openTrades.has(symbol)) {
+      openTrades.set(symbol, { date, symbol, quantity, entryPrice: price, side: 'LONG' });
+    } else if (!isBuy && openTrades.has(symbol)) {
+      const openTrade = openTrades.get(symbol);
+      const priceDiff = price - openTrade.entryPrice;
+      const profit = priceDiff * openTrade.quantity * pointValue;
+      
+      trades.push({
+        date: openTrade.date,
+        symbol,
+        quantity: openTrade.quantity,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: price,
+        profit,
+        side: openTrade.side,
+      });
+      
+      openTrades.delete(symbol);
+    }
+  }
+  
+  return trades;
+};
+
 export const detectTradeProvider = (content: string): TradeProvider => {
   const firstLines = content.split('\n').slice(0, 5).join('\n').toLowerCase();
   
@@ -352,6 +414,11 @@ export const detectTradeProvider = (content: string): TradeProvider => {
     return "Tradovate";
   }
   
+  // TradingView detection
+  if (firstLines.includes('tradingview') || (firstLines.includes('type') && firstLines.includes('profit'))) {
+    return "TradingView";
+  }
+  
   return "Unknown";
 };
 
@@ -369,6 +436,8 @@ export const parseTradeFile = (content: string, provider?: TradeProvider): Parse
       return parseInteractiveBrokersCSV(content);
     case "Tradovate":
       return parseTradovateCSV(content);
+    case "TradingView":
+      return parseTradingViewCSV(content);
     default:
       // Try all parsers and return the one with most results
       const results = [
@@ -376,6 +445,7 @@ export const parseTradeFile = (content: string, provider?: TradeProvider): Parse
         parseRobinhoodCSV(content),
         parseInteractiveBrokersCSV(content),
         parseTradovateCSV(content),
+        parseTradingViewCSV(content),
       ];
       return results.reduce((best, current) => current.length > best.length ? current : best, []);
   }
