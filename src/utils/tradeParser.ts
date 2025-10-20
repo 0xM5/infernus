@@ -276,53 +276,103 @@ export const parseTradovateCSV = (content: string): ParsedTrade[] => {
   const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
   console.log('Tradovate headers:', headers);
   
-  const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date') || h.toLowerCase().includes('time'));
-  const symbolIdx = headers.findIndex(h => h.toLowerCase().includes('contract') || h.toLowerCase().includes('symbol'));
-  const sideIdx = headers.findIndex(h => h.toLowerCase().includes('side') || h.toLowerCase().includes('action'));
-  const qtyIdx = headers.findIndex(h => h.toLowerCase().includes('qty') || h.toLowerCase().includes('size'));
-  const priceIdx = headers.findIndex(h => h.toLowerCase().includes('price'));
-  const plIdx = headers.findIndex(h => h.toLowerCase().includes('p&l') || h.toLowerCase().includes('pnl'));
+  // Check for performance report format (has pnl, buyPrice, sellPrice)
+  const hasPerformanceFormat = headers.includes('pnl') && headers.includes('buyPrice') && headers.includes('sellPrice');
   
-  const openTrades = new Map<string, any>();
-  
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+  if (hasPerformanceFormat) {
+    // Performance report format - each line is already a complete trade
+    const symbolIdx = headers.indexOf('symbol');
+    const qtyIdx = headers.indexOf('qty');
+    const buyPriceIdx = headers.indexOf('buyPrice');
+    const sellPriceIdx = headers.indexOf('sellPrice');
+    const pnlIdx = headers.indexOf('pnl');
+    const boughtTimestampIdx = headers.indexOf('boughtTimestamp');
     
-    const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
-    
-    const dateStr = columns[dateIdx];
-    const symbol = columns[symbolIdx];
-    const side = columns[sideIdx]?.toLowerCase();
-    const quantity = parseFloat(columns[qtyIdx] || '0');
-    const price = parseFloat(columns[priceIdx] || '0');
-    
-    if (!dateStr || !symbol || !quantity || !price) continue;
-    
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) continue;
-    
-    const pointValue = getPointValue(symbol);
-    const isBuy = side.includes('buy');
-    
-    if (isBuy && !openTrades.has(symbol)) {
-      openTrades.set(symbol, { date, symbol, quantity, entryPrice: price, side: 'LONG' });
-    } else if (!isBuy && openTrades.has(symbol)) {
-      const openTrade = openTrades.get(symbol);
-      const priceDiff = price - openTrade.entryPrice;
-      const profit = priceDiff * openTrade.quantity * pointValue;
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+      
+      const symbol = columns[symbolIdx];
+      const quantity = parseFloat(columns[qtyIdx] || '0');
+      const buyPrice = parseFloat(columns[buyPriceIdx] || '0');
+      const sellPrice = parseFloat(columns[sellPriceIdx] || '0');
+      const pnlStr = columns[pnlIdx] || '';
+      const dateStr = columns[boughtTimestampIdx];
+      
+      if (!symbol || !quantity || !buyPrice || !sellPrice || !dateStr) continue;
+      
+      // Parse PnL - handle format like "$25.50" or "$(67.50)"
+      const isNegative = pnlStr.includes('(');
+      const pnl = parseFloat(pnlStr.replace(/[$(),]/g, '')) * (isNegative ? -1 : 1);
+      
+      // Parse date
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) continue;
+      
+      // Determine side based on price movement
+      const side = buyPrice < sellPrice ? 'LONG' : 'SHORT';
       
       trades.push({
-        date: openTrade.date,
+        date,
         symbol,
-        quantity: openTrade.quantity,
-        entryPrice: openTrade.entryPrice,
-        exitPrice: price,
-        profit,
-        side: openTrade.side,
+        quantity,
+        entryPrice: buyPrice,
+        exitPrice: sellPrice,
+        profit: pnl,
+        side,
       });
+    }
+  } else {
+    // Original trade log format
+    const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date') || h.toLowerCase().includes('time'));
+    const symbolIdx = headers.findIndex(h => h.toLowerCase().includes('contract') || h.toLowerCase().includes('symbol'));
+    const sideIdx = headers.findIndex(h => h.toLowerCase().includes('side') || h.toLowerCase().includes('action'));
+    const qtyIdx = headers.findIndex(h => h.toLowerCase().includes('qty') || h.toLowerCase().includes('size'));
+    const priceIdx = headers.findIndex(h => h.toLowerCase().includes('price'));
+    
+    const openTrades = new Map<string, any>();
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
       
-      openTrades.delete(symbol);
+      const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+      
+      const dateStr = columns[dateIdx];
+      const symbol = columns[symbolIdx];
+      const side = columns[sideIdx]?.toLowerCase();
+      const quantity = parseFloat(columns[qtyIdx] || '0');
+      const price = parseFloat(columns[priceIdx] || '0');
+      
+      if (!dateStr || !symbol || !quantity || !price) continue;
+      
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) continue;
+      
+      const pointValue = getPointValue(symbol);
+      const isBuy = side.includes('buy');
+      
+      if (isBuy && !openTrades.has(symbol)) {
+        openTrades.set(symbol, { date, symbol, quantity, entryPrice: price, side: 'LONG' });
+      } else if (!isBuy && openTrades.has(symbol)) {
+        const openTrade = openTrades.get(symbol);
+        const priceDiff = price - openTrade.entryPrice;
+        const profit = priceDiff * openTrade.quantity * pointValue;
+        
+        trades.push({
+          date: openTrade.date,
+          symbol,
+          quantity: openTrade.quantity,
+          entryPrice: openTrade.entryPrice,
+          exitPrice: price,
+          profit,
+          side: openTrade.side,
+        });
+        
+        openTrades.delete(symbol);
+      }
     }
   }
   
@@ -410,7 +460,9 @@ export const detectTradeProvider = (content: string): TradeProvider => {
   }
   
   // Tradovate detection
-  if (firstLines.includes('tradovate') || (firstLines.includes('contract') && firstLines.includes('action'))) {
+  if (firstLines.includes('tradovate') || 
+      (firstLines.includes('contract') && firstLines.includes('action')) ||
+      (firstLines.includes('buyprice') && firstLines.includes('sellprice') && firstLines.includes('pnl'))) {
     return "Tradovate";
   }
   
