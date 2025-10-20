@@ -90,9 +90,9 @@ const Index = () => {
                   
                   <div className="flex gap-4 items-center">
                     {/* Monthly PnL Box */}
-                    <div className="bg-card border border-border rounded-lg px-4 py-2">
-                      <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Monthly PnL</div>
-                      <div className={`text-lg font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
+                    <div className="bg-card border border-border rounded-lg px-6 py-3">
+                      <div className="text-sm text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Monthly PnL</div>
+                      <div className={`text-2xl font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 800 }}>
                         {monthlyStats.totalPnL >= 0 ? '$' : '-$'}{Math.abs(monthlyStats.totalPnL).toFixed(2)}
                       </div>
                     </div>
@@ -155,10 +155,8 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden flex items-center justify-center">
-                <div className="w-full h-full flex items-center justify-center p-4">
-                  <TradeCalendar trades={trades} />
-                </div>
+              <div className="flex-1 overflow-hidden">
+                <TradeCalendar trades={trades} />
               </div>
             </div>
           )}

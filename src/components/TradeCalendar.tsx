@@ -77,8 +77,8 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="w-full h-full flex flex-col space-y-4">
+      <div className="flex items-center justify-between flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
@@ -100,7 +100,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_100px] gap-2 w-full max-h-[calc(85vh-200px)]">
+      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_100px] gap-2 w-full flex-1" style={{ gridAutoRows: 'minmax(0, 1fr)' }}>
         {dayNames.map((day) => (
           <div key={day} className="text-center text-sm text-muted-foreground p-2" style={{ fontWeight: 600 }}>
             {day}
@@ -125,7 +125,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
             firstWeekCells.push(
               <div
                 key={day}
-                className={`relative aspect-square p-2 rounded-lg border-2 transition-all duration-200 ${
+                className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                   dayStats
                     ? dayStats.profit >= 0
                       ? "bg-success border-success-light"
@@ -156,10 +156,10 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
           firstWeekCells.push(
             <div
               key={`week-${weekIndex}`}
-              className="aspect-square p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
+              className="p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
             >
               <div className="text-[10px] text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Week {weekIndex + 1}</div>
-              <div className={`text-xs text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
+              <div className={`text-xs text-center ${weekPnL === 0 ? 'text-muted-foreground' : weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
                 {weekPnL >= 0 ? '+' : '-'}${Math.abs(weekPnL).toFixed(0)}
               </div>
             </div>
@@ -176,7 +176,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
               weeks.push(
                 <div
                   key={day}
-                  className={`relative aspect-square p-2 rounded-lg border-2 transition-all duration-200 ${
+                  className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                     dayStats
                       ? dayStats.profit >= 0
                         ? "bg-success border-success-light"
@@ -212,10 +212,10 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
             weeks.push(
               <div
                 key={`week-${weekIndex}`}
-                className="aspect-square p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
+                className="p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
               >
                 <div className="text-[10px] text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Week {weekIndex + 1}</div>
-                <div className={`text-xs text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
+                <div className={`text-xs text-center ${weekPnL === 0 ? 'text-muted-foreground' : weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 700 }}>
                   {weekPnL >= 0 ? '+' : '-'}${Math.abs(weekPnL).toFixed(0)}
                 </div>
               </div>

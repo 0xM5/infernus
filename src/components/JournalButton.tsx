@@ -18,7 +18,6 @@ export const JournalButton = ({ onClick }: JournalButtonProps) => {
         backgroundClip: 'padding-box, border-box',
       }}
     >
-      <span className="text-3xl">📊</span>
       <span className="text-2xl text-foreground group-hover:text-primary transition-colors" style={{ fontWeight: 700 }}>
         Start Journaling
       </span>
