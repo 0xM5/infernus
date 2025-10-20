@@ -6,10 +6,15 @@ import { Upload } from "lucide-react";
 import { parseSierraChartLog } from "@/utils/tradeParser";
 import { toast } from "sonner";
 
-interface Trade {
+export interface Trade {
   date: Date;
   profit: number;
   symbol: string;
+  quantity?: number;
+  entryPrice?: number;
+  exitPrice?: number;
+  entryTime?: string;
+  exitTime?: string;
 }
 
 const Index = () => {
@@ -54,6 +59,11 @@ const Index = () => {
         date: trade.date,
         profit: trade.profit,
         symbol: trade.symbol,
+        quantity: trade.quantity,
+        entryPrice: trade.entryPrice,
+        exitPrice: trade.exitPrice,
+        entryTime: trade.date.toLocaleTimeString(),
+        exitTime: trade.date.toLocaleTimeString(),
       }));
 
       setTrades(formattedTrades);

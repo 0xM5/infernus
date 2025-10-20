@@ -1,12 +1,9 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { TradeDetailsModal } from "./TradeDetailsModal";
+import type { Trade } from "@/pages/Index";
 
-interface Trade {
-  date: Date;
-  profit: number;
-  symbol: string;
-}
 
 interface TradeCalendarProps {
   trades: Trade[];
@@ -14,6 +11,15 @@ interface TradeCalendarProps {
 
 export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleDayClick = (day: number, dayStats: { profit: number; count: number } | null) => {
+    if (!dayStats) return;
+    const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    setSelectedDate(clickedDate);
+    setIsModalOpen(true);
+  };
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -128,10 +134,11 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
                 className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                   dayStats
                     ? dayStats.profit >= 0
-                      ? "bg-success border-success-light"
-                      : "bg-destructive border-destructive-light"
+                      ? "bg-success border-success-light cursor-pointer"
+                      : "bg-destructive border-destructive-light cursor-pointer"
                     : "border-border bg-card hover:bg-card/80"
                 }`}
+                onClick={() => handleDayClick(day, dayStats)}
               >
                 <div className={`text-sm ${dayStats ? "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                   {day}
@@ -181,10 +188,11 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
                   className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                     dayStats
                       ? dayStats.profit >= 0
-                        ? "bg-success border-success-light"
-                        : "bg-destructive border-destructive-light"
+                        ? "bg-success border-success-light cursor-pointer"
+                        : "bg-destructive border-destructive-light cursor-pointer"
                       : "border-border bg-card hover:bg-card/80"
                   }`}
+                  onClick={() => handleDayClick(day, dayStats)}
                 >
                   <div className={`text-sm ${dayStats ? "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                     {day}
@@ -228,6 +236,13 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
           return weeks;
         })()}
       </div>
+
+      <TradeDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        trades={trades}
+        selectedDate={selectedDate}
+      />
     </div>
   );
 };
