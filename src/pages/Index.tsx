@@ -26,11 +26,11 @@ const Index = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [isYearlyView, setIsYearlyView] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
   
   const getMonthlyStats = () => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    const currentMonth = calendarDate.getMonth();
+    const currentYear = calendarDate.getFullYear();
     
     const monthlyTrades = trades.filter(trade => {
       const tradeDate = new Date(trade.date);
@@ -236,7 +236,11 @@ const Index = () => {
               </div>
 
               <div className="flex-1 overflow-hidden">
-                <TradeCalendar trades={trades} />
+                <TradeCalendar 
+                  trades={trades} 
+                  currentDate={calendarDate}
+                  setCurrentDate={setCalendarDate}
+                />
               </div>
             </div>
           )}

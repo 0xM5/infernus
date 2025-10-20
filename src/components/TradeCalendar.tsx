@@ -8,10 +8,11 @@ import type { Trade } from "@/pages/Index";
 
 interface TradeCalendarProps {
   trades: Trade[];
+  currentDate: Date;
+  setCurrentDate: (date: Date) => void;
 }
 
-export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+export const TradeCalendar = ({ trades, currentDate, setCurrentDate }: TradeCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
