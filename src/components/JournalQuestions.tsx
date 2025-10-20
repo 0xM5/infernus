@@ -65,14 +65,17 @@ export const JournalQuestions = ({
       </div>
 
       <div>
-        <div className="text-sm text-muted-foreground mb-2">Energy 1–5?</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-muted-foreground">Energy 1–5?</div>
+          <div className="text-sm text-white font-semibold">{energy.toFixed(1)}</div>
+        </div>
         <Slider
           value={[energy]}
           onValueChange={(values) => onEnergyChange(values[0])}
           min={1}
           max={5}
-          step={1}
-          className="mb-2"
+          step={0.1}
+          className="mb-2 h-1"
         />
         <div className="text-sm text-white mb-1">Why?</div>
         <Textarea
@@ -84,14 +87,17 @@ export const JournalQuestions = ({
       </div>
 
       <div>
-        <div className="text-sm text-muted-foreground mb-2">Stress 1–5?</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-muted-foreground">Stress 1–5?</div>
+          <div className="text-sm text-white font-semibold">{stress.toFixed(1)}</div>
+        </div>
         <Slider
           value={[stress]}
           onValueChange={(values) => onStressChange(values[0])}
           min={1}
           max={5}
-          step={1}
-          className="mb-2"
+          step={0.1}
+          className="mb-2 h-1"
         />
         <div className="text-sm text-white mb-1">Why?</div>
         <Textarea
@@ -103,14 +109,17 @@ export const JournalQuestions = ({
       </div>
 
       <div>
-        <div className="text-sm text-muted-foreground mb-2">Confidence 1–5?</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-muted-foreground">Confidence 1–5?</div>
+          <div className="text-sm text-white font-semibold">{confidence.toFixed(1)}</div>
+        </div>
         <Slider
           value={[confidence]}
           onValueChange={(values) => onConfidenceChange(values[0])}
           min={1}
           max={5}
-          step={1}
-          className="mb-2"
+          step={0.1}
+          className="mb-2 h-1"
         />
         <div className="text-sm text-white mb-1">Why?</div>
         <Textarea
