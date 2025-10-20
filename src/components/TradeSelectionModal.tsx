@@ -30,7 +30,7 @@ export const TradeSelectionModal = ({
               <Button
                 key={index}
                 variant="outline"
-                className="w-full justify-between h-auto py-3 px-4"
+                className="w-full justify-between h-auto py-3 px-4 hover:bg-muted"
                 onClick={() => {
                   onTradeSelect(trade);
                   onClose();
