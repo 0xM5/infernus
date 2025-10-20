@@ -170,6 +170,8 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
           // Remaining weeks
           while (currentDay <= daysInMonth) {
             const weekStartDay = currentDay;
+            let daysInThisWeek = 0;
+            
             for (let i = 0; i < 7 && currentDay <= daysInMonth; i++) {
               const day = currentDay;
               const dayStats = getDayStats(day);
@@ -200,11 +202,11 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
                 </div>
               );
               currentDay++;
+              daysInThisWeek++;
             }
             
-            // Fill remaining cells in the week if needed
-            const remainingCells = currentDay > daysInMonth ? (7 - ((currentDay - 1) % 7)) % 7 : 0;
-            for (let i = 0; i < remainingCells; i++) {
+            // Fill remaining cells in the week to ensure 7 total cells
+            for (let i = daysInThisWeek; i < 7; i++) {
               weeks.push(<div key={`empty-end-${weekIndex}-${i}`} className="p-2" />);
             }
             
