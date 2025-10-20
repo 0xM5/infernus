@@ -100,7 +100,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_100px] gap-2 w-full flex-1" style={{ gridAutoRows: 'minmax(0, 1fr)', aspectRatio: '1' }}>
+      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_100px] gap-2 w-full flex-1" style={{ gridAutoRows: 'minmax(0, 1fr)' }}>
         {dayNames.map((day) => (
           <div key={day} className="text-center text-sm text-muted-foreground p-2" style={{ fontWeight: 600 }}>
             {day}
@@ -125,7 +125,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
             firstWeekCells.push(
               <div
                 key={day}
-                className={`relative p-2 rounded-lg border-2 transition-all duration-200 aspect-square ${
+                className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                   dayStats
                     ? dayStats.profit >= 0
                       ? "bg-success border-success-light"
@@ -176,7 +176,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
               weeks.push(
                 <div
                   key={day}
-                  className={`relative p-2 rounded-lg border-2 transition-all duration-200 aspect-square ${
+                  className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                     dayStats
                       ? dayStats.profit >= 0
                         ? "bg-success border-success-light"
@@ -202,13 +202,10 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
               currentDay++;
             }
             
-            // Fill remaining cells in the week to ensure weekly PnL box is always in the 8th column
-            if (currentDay > daysInMonth) {
-              const lastDayOfWeek = (currentDay - 1) % 7;
-              const remainingCells = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek;
-              for (let i = 0; i < remainingCells; i++) {
-                weeks.push(<div key={`empty-end-${weekIndex}-${i}`} className="p-2" />);
-              }
+            // Fill remaining cells in the week if needed
+            const remainingCells = currentDay > daysInMonth ? (7 - ((currentDay - 1) % 7)) % 7 : 0;
+            for (let i = 0; i < remainingCells; i++) {
+              weeks.push(<div key={`empty-end-${weekIndex}-${i}`} className="p-2" />);
             }
             
             const weekPnL = getWeeklyPnL(weekStartDay);
