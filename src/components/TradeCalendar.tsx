@@ -36,12 +36,23 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  const getTradeForDay = (day: number) => {
+  const getTradesForDay = (day: number) => {
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return trades.find(trade => {
+    return trades.filter(trade => {
       const tradeDate = trade.date.toISOString().split('T')[0];
       return tradeDate === dateStr;
     });
+  };
+
+  const getDayStats = (day: number) => {
+    const dayTrades = getTradesForDay(day);
+    if (dayTrades.length === 0) return null;
+    
+    const totalProfit = dayTrades.reduce((sum, trade) => sum + trade.profit, 0);
+    return {
+      profit: totalProfit,
+      count: dayTrades.length
+    };
   };
 
   const monthNames = [
@@ -88,23 +99,30 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
 
         {Array.from({ length: daysInMonth }).map((_, index) => {
           const day = index + 1;
-          const trade = getTradeForDay(day);
+          const dayStats = getDayStats(day);
           
           return (
             <div
               key={day}
-              className="relative aspect-square p-2 rounded-lg border border-border bg-card hover:bg-card/80 transition-all duration-200"
+              className={`relative aspect-square p-2 rounded-lg border-2 transition-all duration-200 ${
+                dayStats
+                  ? dayStats.profit >= 0
+                    ? "bg-success border-success-light"
+                    : "bg-destructive border-destructive-light"
+                  : "border-border bg-card hover:bg-card/80"
+              }`}
             >
-              <div className="text-sm font-medium text-foreground">{day}</div>
-              {trade && (
-                <div
-                  className={`absolute bottom-1 left-1/2 -translate-x-1/2 text-xs font-bold px-2 py-1 rounded-full ${
-                    trade.profit >= 0
-                      ? "bg-success text-success-foreground"
-                      : "bg-destructive text-destructive-foreground"
-                  }`}
-                >
-                  {trade.profit >= 0 ? "+" : ""}${Math.abs(trade.profit).toFixed(2)}
+              <div className={`text-sm font-medium ${dayStats ? "text-white" : "text-foreground"}`}>
+                {day}
+              </div>
+              {dayStats && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="text-xs font-bold text-white">
+                    {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
+                  </div>
+                  <div className="text-[10px] text-white/80 mt-0.5">
+                    {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
+                  </div>
                 </div>
               )}
             </div>

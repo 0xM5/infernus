@@ -29,11 +29,13 @@ All colors MUST be HSL.
     --accent: 263 70% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 70% 40%;
     --destructive-foreground: 0 0% 100%;
+    --destructive-light: 0 70% 50%;
 
-    --success: 142 76% 45%;
+    --success: 142 65% 30%;
     --success-foreground: 0 0% 100%;
+    --success-light: 142 50% 40%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
@@ -68,10 +70,12 @@ All colors MUST be HSL.
     --muted-foreground: 0 0% 60%;
     --accent: 263 70% 50%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 70% 40%;
     --destructive-foreground: 0 0% 100%;
-    --success: 142 76% 45%;
+    --destructive-light: 0 70% 50%;
+    --success: 142 65% 30%;
     --success-foreground: 0 0% 100%;
+    --success-light: 142 50% 40%;
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 263 70% 50%;
