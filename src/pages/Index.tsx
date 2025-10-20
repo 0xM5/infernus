@@ -68,7 +68,7 @@ const Index = () => {
     <div className="min-h-screen w-full bg-background flex items-center justify-center p-8">
       <div className="relative">
         {/* Purple gradient glow */}
-        <div className="absolute inset-0 bg-gradient-purple blur-3xl opacity-50 rounded-3xl" />
+        <div className="absolute inset-0 bg-gradient-purple blur-3xl opacity-70 rounded-3xl" />
         
         {/* Main container */}
         <div

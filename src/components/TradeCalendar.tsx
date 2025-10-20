@@ -100,7 +100,7 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-[repeat(7,1fr)_auto] gap-2">
+      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_100px] gap-2 w-full">
         {dayNames.map((day) => (
           <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
             {day}
@@ -156,11 +156,11 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
           firstWeekCells.push(
             <div
               key={`week-${weekIndex}`}
-              className="aspect-square p-2 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: weekPnL >= 0 ? 'rgb(0, 150, 255)' : 'rgb(144, 144, 144)' }}
+              className="aspect-square p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
             >
-              <div className="text-xs font-bold text-white text-center">
-                {weekPnL >= 0 ? '+' : ''}${Math.abs(weekPnL).toFixed(0)}
+              <div className="text-[10px] text-muted-foreground mb-1">Week {weekIndex + 1}</div>
+              <div className={`text-xs font-bold text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {weekPnL >= 0 ? '+' : '-'}${Math.abs(weekPnL).toFixed(0)}
               </div>
             </div>
           );
@@ -212,11 +212,11 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
             weeks.push(
               <div
                 key={`week-${weekIndex}`}
-                className="aspect-square p-2 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: weekPnL >= 0 ? 'rgb(0, 150, 255)' : 'rgb(144, 144, 144)' }}
+                className="aspect-square p-2 rounded-lg bg-muted border-2 border-border flex flex-col items-center justify-center"
               >
-                <div className="text-xs font-bold text-white text-center">
-                  {weekPnL >= 0 ? '+' : ''}${Math.abs(weekPnL).toFixed(0)}
+                <div className="text-[10px] text-muted-foreground mb-1">Week {weekIndex + 1}</div>
+                <div className={`text-xs font-bold text-center ${weekPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {weekPnL >= 0 ? '+' : '-'}${Math.abs(weekPnL).toFixed(0)}
                 </div>
               </div>
             );
