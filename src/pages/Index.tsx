@@ -167,7 +167,7 @@ const Index = () => {
                           <div 
                             className="w-12 h-12 rounded-full"
                             style={{
-                              background: `conic-gradient(from 180deg, #4ade80 0deg ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg, #f87171 ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg 180deg)`
+                              background: `conic-gradient(from 180deg, #f87171 0deg ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg, #4ade80 ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg 180deg)`
                             }}
                           />
                         </div>
