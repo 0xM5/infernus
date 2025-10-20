@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { TradeDetailsModal } from "./TradeDetailsModal";
+import { TradeSelectionModal } from "./TradeSelectionModal";
 import type { Trade } from "@/pages/Index";
 
 
@@ -13,11 +14,25 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+  const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
 
   const handleDayClick = (day: number, dayStats: { profit: number; count: number } | null) => {
     if (!dayStats) return;
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setSelectedDate(clickedDate);
+    
+    const dayTrades = getTradesForDay(day);
+    if (dayTrades.length > 1) {
+      setIsSelectionModalOpen(true);
+    } else if (dayTrades.length === 1) {
+      setSelectedTrade(dayTrades[0]);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleTradeSelect = (trade: Trade) => {
+    setSelectedTrade(trade);
     setIsModalOpen(true);
   };
 
@@ -237,10 +252,20 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
         })()}
       </div>
 
+      <TradeSelectionModal
+        isOpen={isSelectionModalOpen}
+        onClose={() => setIsSelectionModalOpen(false)}
+        trades={selectedDate ? getTradesForDay(selectedDate.getDate()) : []}
+        onTradeSelect={handleTradeSelect}
+      />
+
       <TradeDetailsModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        trades={trades}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedTrade(null);
+        }}
+        trades={selectedTrade ? [selectedTrade] : []}
         selectedDate={selectedDate}
       />
     </div>
