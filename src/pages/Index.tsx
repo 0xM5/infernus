@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
+import { TradeProviderModal } from "@/components/TradeProviderModal";
 import { Button } from "@/components/ui/button";
 import { Upload, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,6 +23,7 @@ export interface Trade {
 const Index = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [showProviderModal, setShowProviderModal] = useState(false);
   
   const getMonthlyStats = () => {
     const currentDate = new Date();
@@ -146,7 +148,7 @@ const Index = () => {
                     {/* Profit Ratio Box */}
                     <div className="bg-card border border-border rounded-lg px-4 py-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="text-xs text-muted-foreground" style={{ fontWeight: 600 }}>Avg win/loss trade</div>
+                        <div className="text-xs text-muted-foreground" style={{ fontWeight: 600 }}>Win/Loss Ratio</div>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger>
@@ -185,18 +187,16 @@ const Index = () => {
                 </div>
                 
                 <div className="flex gap-4">
-                  <label htmlFor="file-upload">
-                    <Button
-                      variant="default"
-                      className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
-                      asChild
-                    >
-                      <div className="flex items-center gap-2">
-                        <Upload className="w-4 h-4" />
-                        Import Trades
-                      </div>
-                    </Button>
-                  </label>
+                  <Button
+                    variant="default"
+                    className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
+                    onClick={() => setShowProviderModal(true)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      Import Trades
+                    </div>
+                  </Button>
                   <input
                     id="file-upload"
                     type="file"
@@ -221,6 +221,19 @@ const Index = () => {
           )}
         </div>
       </div>
+      
+      <TradeProviderModal
+        open={showProviderModal}
+        onClose={() => setShowProviderModal(false)}
+        onProviderSelect={(provider) => {
+          setShowProviderModal(false);
+          if (provider === "SierraChart") {
+            document.getElementById("file-upload")?.click();
+          } else {
+            toast.info(`${provider} integration coming soon!`);
+          }
+        }}
+      />
     </div>
   );
 };
