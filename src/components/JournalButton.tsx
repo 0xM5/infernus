@@ -7,13 +7,12 @@ interface JournalButtonProps {
 
 export const JournalButton = ({ onClick }: JournalButtonProps) => {
   return (
-    <Button
+    <button
       onClick={onClick}
-      className="flex items-center gap-2 bg-card hover:bg-card/80 border border-border text-foreground transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20"
-      size="lg"
+      className="group relative px-12 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all duration-300 hover:scale-105 flex items-center gap-4"
     >
-      <PenLine className="w-5 h-5" />
-      <span>Start Journaling</span>
-    </Button>
+      <span className="text-4xl">✍️</span>
+      <span className="text-2xl font-semibold">Start Journaling</span>
+    </button>
   );
 };

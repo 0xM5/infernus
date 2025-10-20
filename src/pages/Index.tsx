@@ -15,6 +15,27 @@ interface Trade {
 const Index = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [trades, setTrades] = useState<Trade[]>([]);
+  
+  const getMonthlyStats = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    
+    const monthlyTrades = trades.filter(trade => {
+      const tradeDate = new Date(trade.date);
+      return tradeDate.getMonth() === currentMonth && tradeDate.getFullYear() === currentYear;
+    });
+    
+    const totalPnL = monthlyTrades.reduce((sum, trade) => sum + trade.profit, 0);
+    const winners = monthlyTrades.filter(trade => trade.profit > 0).length;
+    const losers = monthlyTrades.filter(trade => trade.profit < 0).length;
+    const total = winners + losers;
+    const winnerPercentage = total > 0 ? (winners / total) * 100 : 50;
+    
+    return { totalPnL, winners, losers, winnerPercentage };
+  };
+  
+  const monthlyStats = getMonthlyStats();
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -47,7 +68,7 @@ const Index = () => {
     <div className="min-h-screen w-full bg-background flex items-center justify-center p-8">
       <div className="relative">
         {/* Purple gradient glow */}
-        <div className="absolute inset-0 bg-gradient-purple blur-3xl opacity-30 rounded-3xl" />
+        <div className="absolute inset-0 bg-gradient-purple blur-3xl opacity-50 rounded-3xl" />
         
         {/* Main container */}
         <div
@@ -56,13 +77,56 @@ const Index = () => {
           } flex ${isExpanded ? "flex-col" : "items-center justify-start"}`}
         >
           {!isExpanded ? (
-            <div className="flex items-center">
+            <div className="flex items-center justify-center w-full h-full">
               <JournalButton onClick={() => setIsExpanded(true)} />
             </div>
           ) : (
             <div className="space-y-6 h-full flex flex-col">
               <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-foreground">Day Trading Journal</h1>
+                <div className="space-y-4">
+                  <h1 className="text-3xl font-bold text-foreground">
+                    FindYourEdge
+                    <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">.</span>
+                    com
+                  </h1>
+                  
+                  <div className="flex gap-4 items-center">
+                    {/* Monthly PnL Box */}
+                    <div className="bg-card border border-border rounded-lg px-4 py-2">
+                      <div className="text-xs text-muted-foreground mb-1">Monthly PnL</div>
+                      <div className={`text-lg font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {monthlyStats.totalPnL >= 0 ? '$' : '-$'}{Math.abs(monthlyStats.totalPnL).toFixed(2)}
+                      </div>
+                    </div>
+                    
+                    {/* Winners/Losers Box */}
+                    <div className="bg-card border border-border rounded-lg px-4 py-2">
+                      <div className="flex gap-6 items-center">
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">Winners</div>
+                          <div className="text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block">
+                            {monthlyStats.winners}
+                          </div>
+                        </div>
+                        
+                        <div className="relative w-32 h-3 bg-red-500 rounded-full overflow-hidden">
+                          <div 
+                            className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
+                            style={{ width: `${monthlyStats.winnerPercentage}%` }}
+                          />
+                        </div>
+                        
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">Losers</div>
+                          <div className="text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block">
+                            {monthlyStats.losers}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="flex gap-4">
                   <label htmlFor="file-upload">
                     <Button

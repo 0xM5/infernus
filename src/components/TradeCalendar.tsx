@@ -55,6 +55,20 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
     };
   };
 
+  const getWeeklyPnL = (weekStartDay: number) => {
+    let total = 0;
+    for (let i = 0; i < 7; i++) {
+      const day = weekStartDay + i;
+      if (day <= daysInMonth) {
+        const dayStats = getDayStats(day);
+        if (dayStats) {
+          total += dayStats.profit;
+        }
+      }
+    }
+    return total;
+  };
+
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -86,48 +100,131 @@ export const TradeCalendar = ({ trades }: TradeCalendarProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-[repeat(7,1fr)_auto] gap-2">
         {dayNames.map((day) => (
           <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
             {day}
           </div>
         ))}
+        <div className="p-2"></div>
 
-        {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-          <div key={`empty-${index}`} className="p-2" />
-        ))}
-
-        {Array.from({ length: daysInMonth }).map((_, index) => {
-          const day = index + 1;
-          const dayStats = getDayStats(day);
+        {(() => {
+          const weeks: JSX.Element[] = [];
+          let currentDay = 1;
+          let weekIndex = 0;
           
-          return (
-            <div
-              key={day}
-              className={`relative aspect-square p-2 rounded-lg border-2 transition-all duration-200 ${
-                dayStats
-                  ? dayStats.profit >= 0
-                    ? "bg-success border-success-light"
-                    : "bg-destructive border-destructive-light"
-                  : "border-border bg-card hover:bg-card/80"
-              }`}
-            >
-              <div className={`text-sm font-medium ${dayStats ? "text-white" : "text-foreground"}`}>
-                {day}
-              </div>
-              {dayStats && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-xs font-bold text-white">
-                    {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
-                  </div>
-                  <div className="text-[10px] text-white/80 mt-0.5">
-                    {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
-                  </div>
+          // First week with empty cells
+          const firstWeekCells: JSX.Element[] = [];
+          for (let i = 0; i < startingDayOfWeek; i++) {
+            firstWeekCells.push(<div key={`empty-${i}`} className="p-2" />);
+          }
+          
+          for (let i = startingDayOfWeek; i < 7 && currentDay <= daysInMonth; i++) {
+            const day = currentDay;
+            const dayStats = getDayStats(day);
+            firstWeekCells.push(
+              <div
+                key={day}
+                className={`relative aspect-square p-2 rounded-lg border-2 transition-all duration-200 ${
+                  dayStats
+                    ? dayStats.profit >= 0
+                      ? "bg-success border-success-light"
+                      : "bg-destructive border-destructive-light"
+                    : "border-border bg-card hover:bg-card/80"
+                }`}
+              >
+                <div className={`text-sm font-medium ${dayStats ? "text-white" : "text-foreground"}`}>
+                  {day}
                 </div>
-              )}
+                {dayStats && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="text-xs font-bold text-white">
+                      {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
+                    </div>
+                    <div className="text-[10px] text-white/80 mt-0.5">
+                      {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+            currentDay++;
+          }
+          
+          const weekStartDay = 1;
+          const weekPnL = getWeeklyPnL(weekStartDay);
+          firstWeekCells.push(
+            <div
+              key={`week-${weekIndex}`}
+              className="aspect-square p-2 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: weekPnL >= 0 ? 'rgb(0, 150, 255)' : 'rgb(144, 144, 144)' }}
+            >
+              <div className="text-xs font-bold text-white text-center">
+                {weekPnL >= 0 ? '+' : ''}${Math.abs(weekPnL).toFixed(0)}
+              </div>
             </div>
           );
-        })}
+          weeks.push(...firstWeekCells);
+          weekIndex++;
+          
+          // Remaining weeks
+          while (currentDay <= daysInMonth) {
+            const weekStartDay = currentDay;
+            for (let i = 0; i < 7 && currentDay <= daysInMonth; i++) {
+              const day = currentDay;
+              const dayStats = getDayStats(day);
+              weeks.push(
+                <div
+                  key={day}
+                  className={`relative aspect-square p-2 rounded-lg border-2 transition-all duration-200 ${
+                    dayStats
+                      ? dayStats.profit >= 0
+                        ? "bg-success border-success-light"
+                        : "bg-destructive border-destructive-light"
+                      : "border-border bg-card hover:bg-card/80"
+                  }`}
+                >
+                  <div className={`text-sm font-medium ${dayStats ? "text-white" : "text-foreground"}`}>
+                    {day}
+                  </div>
+                  {dayStats && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="text-xs font-bold text-white">
+                        {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
+                      </div>
+                      <div className="text-[10px] text-white/80 mt-0.5">
+                        {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+              currentDay++;
+            }
+            
+            // Fill remaining cells in the week if needed
+            const remainingCells = currentDay > daysInMonth ? (7 - ((currentDay - 1) % 7)) % 7 : 0;
+            for (let i = 0; i < remainingCells; i++) {
+              weeks.push(<div key={`empty-end-${weekIndex}-${i}`} className="p-2" />);
+            }
+            
+            const weekPnL = getWeeklyPnL(weekStartDay);
+            weeks.push(
+              <div
+                key={`week-${weekIndex}`}
+                className="aspect-square p-2 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: weekPnL >= 0 ? 'rgb(0, 150, 255)' : 'rgb(144, 144, 144)' }}
+              >
+                <div className="text-xs font-bold text-white text-center">
+                  {weekPnL >= 0 ? '+' : ''}${Math.abs(weekPnL).toFixed(0)}
+                </div>
+              </div>
+            );
+            weekIndex++;
+          }
+          
+          return weeks;
+        })()}
       </div>
     </div>
   );

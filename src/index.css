@@ -45,6 +45,9 @@ All colors MUST be HSL.
 
     --gradient-purple: linear-gradient(135deg, hsl(263 70% 50%), hsl(0 84% 60%));
     
+    --week-win: 199 100% 50%;
+    --week-loss: 0 0% 56%;
+    
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 263 70% 50%;
