@@ -3,6 +3,7 @@ import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { TradeProviderModal } from "@/components/TradeProviderModal";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Upload, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseTradeFile } from "@/utils/tradeParser";
@@ -24,6 +25,7 @@ const Index = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [showProviderModal, setShowProviderModal] = useState(false);
+  const [isYearlyView, setIsYearlyView] = useState(false);
   
   const getMonthlyStats = () => {
     const currentDate = new Date();
@@ -32,7 +34,11 @@ const Index = () => {
     
     const monthlyTrades = trades.filter(trade => {
       const tradeDate = new Date(trade.date);
-      return tradeDate.getMonth() === currentMonth && tradeDate.getFullYear() === currentYear;
+      if (isYearlyView) {
+        return tradeDate.getFullYear() === currentYear;
+      } else {
+        return tradeDate.getMonth() === currentMonth && tradeDate.getFullYear() === currentYear;
+      }
     });
     
     const totalPnL = monthlyTrades.reduce((sum, trade) => sum + trade.profit, 0);
@@ -65,9 +71,6 @@ const Index = () => {
     try {
       const text = await file.text();
       const parsedTrades = parseTradeFile(text);
-      
-      console.log('Parsed trades:', parsedTrades);
-      console.log('Number of trades:', parsedTrades.length);
       
       if (parsedTrades.length === 0) {
         toast.error("No trades found in the file. Please check the format.");
@@ -119,9 +122,11 @@ const Index = () => {
                   </h1>
                   
                   <div className="flex gap-4 items-center">
-                    {/* Monthly PnL Box */}
+                    {/* Monthly/Total PnL Box */}
                     <div className="bg-card border border-border rounded-lg px-6 py-3">
-                      <div className="text-sm text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Monthly PnL</div>
+                      <div className="text-sm text-muted-foreground mb-1" style={{ fontWeight: 600 }}>
+                        {isYearlyView ? 'Total PnL' : 'Monthly PnL'}
+                      </div>
                       <div className={`text-2xl font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 800 }}>
                         {monthlyStats.totalPnL >= 0 ? '$' : '-$'}{Math.abs(monthlyStats.totalPnL).toFixed(2)}
                       </div>
@@ -194,7 +199,15 @@ const Index = () => {
                   </div>
                 </div>
                 
-                <div className="flex gap-4">
+                <div className="flex gap-4 items-center">
+                  <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
+                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Monthly</span>
+                    <Switch 
+                      checked={isYearlyView} 
+                      onCheckedChange={setIsYearlyView}
+                    />
+                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Yearly</span>
+                  </div>
                   <Button
                     variant="default"
                     className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
