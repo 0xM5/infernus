@@ -1,15 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Star, Plus } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Star } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { EdgeSelector } from "./EdgeSelector";
+import { JournalQuestions } from "./JournalQuestions";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 interface Trade {
   date: Date;
@@ -40,7 +37,23 @@ export const TradeDetailsModal = ({
   const [stopLoss, setStopLoss] = useState("");
   const [edges, setEdges] = useState<string[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
-  const [newEdge, setNewEdge] = useState("");
+  const [helpFindEdge, setHelpFindEdge] = useState(false);
+  const [freeJournal, setFreeJournal] = useState("");
+  
+  // Journal questions state
+  const [energy, setEnergy] = useState(3);
+  const [energyWhy, setEnergyWhy] = useState("");
+  const [stress, setStress] = useState(3);
+  const [stressWhy, setStressWhy] = useState("");
+  const [confidence, setConfidence] = useState(3);
+  const [confidenceWhy, setConfidenceWhy] = useState("");
+  const [bias, setBias] = useState("");
+  const [regime, setRegime] = useState("");
+  const [vwap, setVwap] = useState("");
+  const [keyLevels, setKeyLevels] = useState("");
+  const [volume, setVolume] = useState("");
+  const [fixTomorrow, setFixTomorrow] = useState("");
+  const [additionalComments, setAdditionalComments] = useState("");
 
   // Load edges from localStorage on mount
   useEffect(() => {
@@ -91,10 +104,16 @@ export const TradeDetailsModal = ({
       ? Math.abs((avgExit - avgEntry) / (avgEntry - parseFloat(stopLoss)))
       : 0;
 
-  const handleAddEdge = () => {
-    if (newEdge.trim() && !edges.includes(newEdge.trim())) {
-      setEdges([...edges, newEdge.trim()]);
-      setNewEdge("");
+  const handleStarClick = (starIndex: number, event: React.MouseEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const starWidth = rect.width;
+    const isLeftHalf = clickX < starWidth / 2;
+    
+    if (isLeftHalf) {
+      setRating(starIndex - 0.5);
+    } else {
+      setRating(starIndex);
     }
   };
 
@@ -102,6 +121,16 @@ export const TradeDetailsModal = ({
     setSelectedEdges((prev) =>
       prev.includes(edge) ? prev.filter((e) => e !== edge) : [...prev, edge]
     );
+  };
+
+  const modules = {
+    toolbar: [
+      [{ font: [] }, { size: [] }],
+      ["bold", "italic", "underline"],
+      [{ color: [] }, { background: [] }],
+      ["image"],
+      ["clean"],
+    ],
   };
 
   const getPnLColor = () => {
@@ -115,7 +144,7 @@ export const TradeDetailsModal = ({
       <DialogContent className="max-w-[90vw] h-[85vh] p-0 bg-transparent border-none shadow-none">
         <div className="flex gap-6 h-full">
           {/* Left side - Trade Details */}
-          <div className="w-[300px] bg-muted rounded-lg p-6 space-y-4 overflow-y-auto">
+          <div className="w-[250px] bg-muted rounded-lg p-6 space-y-4 overflow-y-auto">
             <h2
               className="text-xl text-white mb-6"
               style={{ fontWeight: 700, fontFamily: "Inter" }}
@@ -143,17 +172,28 @@ export const TradeDetailsModal = ({
                   Rate Your Trade
                 </div>
                 <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-6 h-6 cursor-pointer transition-colors ${
-                        star <= rating
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-muted-foreground"
-                      }`}
-                      onClick={() => setRating(star)}
-                    />
-                  ))}
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const isFull = star <= Math.floor(rating);
+                    const isHalf = star === Math.ceil(rating) && rating % 1 !== 0;
+                    
+                    return (
+                      <div key={star} className="relative w-6 h-6">
+                        <Star
+                          className={`w-6 h-6 cursor-pointer transition-colors absolute ${
+                            isFull
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-muted-foreground"
+                          }`}
+                          onClick={(e) => handleStarClick(star, e)}
+                        />
+                        {isHalf && (
+                          <div className="absolute inset-0 overflow-hidden w-1/2">
+                            <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -243,68 +283,78 @@ export const TradeDetailsModal = ({
             </div>
           </div>
 
-          {/* Right side - Edge Tags */}
-          <div className="flex-1 bg-purple-600/20 rounded-lg p-6 border-2 border-purple-500">
-            <h2
-              className="text-xl text-white mb-6"
-              style={{ fontWeight: 700, fontFamily: "Inter" }}
-            >
-              What was the edge?
-            </h2>
+          {/* Right side - Edge Tags and Journal */}
+          <div className="flex-1 flex flex-col gap-4">
+            {/* Edge Tags */}
+            <div className="w-[855px] h-[215px] bg-purple-600/20 rounded-lg p-6 border-2 border-purple-500">
+              <h2
+                className="text-xl text-white mb-4"
+                style={{ fontWeight: 700, fontFamily: "Inter" }}
+              >
+                What was the edge?
+              </h2>
+              <EdgeSelector
+                edges={edges}
+                selectedEdges={selectedEdges}
+                onEdgesChange={setEdges}
+                onEdgeSelect={toggleEdgeSelection}
+              />
+            </div>
 
-            <div className="space-y-4">
-              {edges.length > 0 && (
-                <Select>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Select existing edges" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {edges.map((edge) => (
-                      <SelectItem key={edge} value={edge}>
-                        {edge}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add new edge tag"
-                  value={newEdge}
-                  onChange={(e) => setNewEdge(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleAddEdge();
-                    }
-                  }}
-                  className="bg-background"
+            {/* Journal Section */}
+            <div className="flex-1 bg-muted rounded-lg p-6 overflow-y-auto">
+              <div className="flex items-center gap-2 mb-4">
+                <Checkbox
+                  id="help-edge"
+                  checked={helpFindEdge}
+                  onCheckedChange={(checked) => setHelpFindEdge(checked as boolean)}
                 />
-                <Button onClick={handleAddEdge} size="icon">
-                  <Plus className="w-4 h-4" />
-                </Button>
+                <label
+                  htmlFor="help-edge"
+                  className="text-white font-semibold cursor-pointer"
+                >
+                  Help me find my edge
+                </label>
               </div>
 
-              {edges.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">
-                    Select tags:
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {edges.map((edge) => (
-                      <button
-                        key={edge}
-                        onClick={() => toggleEdgeSelection(edge)}
-                        className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                          selectedEdges.includes(edge)
-                            ? "bg-purple-500 text-white"
-                            : "bg-background text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {edge}
-                      </button>
-                    ))}
-                  </div>
+              {helpFindEdge ? (
+                <JournalQuestions
+                  energy={energy}
+                  energyWhy={energyWhy}
+                  stress={stress}
+                  stressWhy={stressWhy}
+                  confidence={confidence}
+                  confidenceWhy={confidenceWhy}
+                  bias={bias}
+                  regime={regime}
+                  vwap={vwap}
+                  keyLevels={keyLevels}
+                  volume={volume}
+                  fixTomorrow={fixTomorrow}
+                  additionalComments={additionalComments}
+                  onEnergyChange={setEnergy}
+                  onEnergyWhyChange={setEnergyWhy}
+                  onStressChange={setStress}
+                  onStressWhyChange={setStressWhy}
+                  onConfidenceChange={setConfidence}
+                  onConfidenceWhyChange={setConfidenceWhy}
+                  onBiasChange={setBias}
+                  onRegimeChange={setRegime}
+                  onVwapChange={setVwap}
+                  onKeyLevelsChange={setKeyLevels}
+                  onVolumeChange={setVolume}
+                  onFixTomorrowChange={setFixTomorrow}
+                  onAdditionalCommentsChange={setAdditionalComments}
+                />
+              ) : (
+                <div className="h-full">
+                  <ReactQuill
+                    theme="snow"
+                    value={freeJournal}
+                    onChange={setFreeJournal}
+                    modules={modules}
+                    className="h-[calc(100%-50px)] bg-background rounded-lg"
+                  />
                 </div>
               )}
             </div>
