@@ -2,9 +2,12 @@ import { useState } from "react";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { TradeProviderModal } from "@/components/TradeProviderModal";
+import { SettingsModal } from "@/components/SettingsModal";
+import { CreateProfileModal } from "@/components/CreateProfileModal";
+import { QuestionEditorModal } from "@/components/QuestionEditorModal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Info } from "lucide-react";
+import { Upload, Info, Settings } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseTradeFile } from "@/utils/tradeParser";
 import { toast } from "sonner";
@@ -29,6 +32,12 @@ const Index = () => {
   const [isYearlyView, setIsYearlyView] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [useEstimatedCommissions, setUseEstimatedCommissions] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showCreateProfile, setShowCreateProfile] = useState(false);
+  const [showQuestionEditor, setShowQuestionEditor] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState("default");
+  const [currentProfileName, setCurrentProfileName] = useState("");
+  const [currentProfileId, setCurrentProfileId] = useState("");
   
   const getMonthlyStats = () => {
     const currentMonth = calendarDate.getMonth();
@@ -215,6 +224,14 @@ const Index = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-4 items-center justify-end">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowSettings(true)}
+                    className="border-border"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
                   <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
                     <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Monthly</span>
                     <Switch 
@@ -268,6 +285,7 @@ const Index = () => {
                   } 
                   currentDate={calendarDate}
                   setCurrentDate={setCalendarDate}
+                  selectedProfile={selectedProfile}
                 />
               </div>
             </div>
@@ -282,6 +300,34 @@ const Index = () => {
           setShowProviderModal(false);
           document.getElementById("file-upload")?.click();
         }}
+      />
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onCreateProfile={() => setShowCreateProfile(true)}
+        selectedProfile={selectedProfile}
+        onProfileChange={setSelectedProfile}
+      />
+
+      <CreateProfileModal
+        isOpen={showCreateProfile}
+        onClose={() => setShowCreateProfile(false)}
+        onCreateSuccess={(profileId) => setSelectedProfile(profileId)}
+        onOpenQuestionEditor={(name, id) => {
+          setCurrentProfileName(name);
+          setCurrentProfileId(id);
+          setShowQuestionEditor(true);
+        }}
+      />
+
+      <QuestionEditorModal
+        isOpen={showQuestionEditor}
+        onClose={() => setShowQuestionEditor(false)}
+        profileName={currentProfileName}
+        profileId={currentProfileId}
+        onSave={(profileId) => setSelectedProfile(profileId)}
+        onCancel={() => setShowSettings(true)}
       />
     </div>
   );

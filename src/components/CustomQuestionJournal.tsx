@@ -1,0 +1,45 @@
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
+interface CustomQuestionJournalProps {
+  questions: string[];
+  answers: { [key: number]: string };
+  onAnswerChange: (index: number, value: string) => void;
+}
+
+export const CustomQuestionJournal = ({
+  questions,
+  answers,
+  onAnswerChange,
+}: CustomQuestionJournalProps) => {
+  const modules = {
+    toolbar: [
+      [{ font: [] }, { size: [] }],
+      ["bold", "italic", "underline"],
+      [{ color: [] }, { background: [] }],
+      ["image"],
+      ["clean"],
+    ],
+  };
+
+  return (
+    <div className="space-y-6">
+      {questions.map((question, index) => (
+        <div key={index} className="space-y-2">
+          <h3 className="text-lg font-semibold text-foreground">
+            {question}
+          </h3>
+          <div className="h-[200px]">
+            <ReactQuill
+              theme="snow"
+              value={answers[index] || ""}
+              onChange={(value) => onAnswerChange(index, value)}
+              modules={modules}
+              className="h-[150px] bg-background rounded-lg"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};

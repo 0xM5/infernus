@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
+import { CustomQuestionJournal } from "./CustomQuestionJournal";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -25,6 +26,7 @@ interface TradeDetailsModalProps {
   onClose: () => void;
   trades: Trade[];
   selectedDate: Date | null;
+  selectedProfile: string;
 }
 
 export const TradeDetailsModal = ({
@@ -32,6 +34,7 @@ export const TradeDetailsModal = ({
   onClose,
   trades,
   selectedDate,
+  selectedProfile,
 }: TradeDetailsModalProps) => {
   const [rating, setRating] = useState(0);
   const [target, setTarget] = useState("");
@@ -40,6 +43,7 @@ export const TradeDetailsModal = ({
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   const [helpFindEdge, setHelpFindEdge] = useState(false);
   const [freeJournal, setFreeJournal] = useState("");
+  const [customAnswers, setCustomAnswers] = useState<{ [key: number]: string }>({});
   
   // Journal questions state
   const [energy, setEnergy] = useState(3);
@@ -55,6 +59,24 @@ export const TradeDetailsModal = ({
   const [volume, setVolume] = useState("");
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
+
+  // Get current profile's questions
+  const [profileQuestions, setProfileQuestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (selectedProfile !== "default") {
+      const savedProfiles = localStorage.getItem("questionProfiles");
+      if (savedProfiles) {
+        const profiles = JSON.parse(savedProfiles);
+        const profile = profiles.find((p: any) => p.id === selectedProfile);
+        if (profile) {
+          setProfileQuestions(profile.questions);
+        }
+      }
+    } else {
+      setProfileQuestions([]);
+    }
+  }, [selectedProfile]);
 
   // Load edges from localStorage on mount
   useEffect(() => {
@@ -319,21 +341,31 @@ export const TradeDetailsModal = ({
 
             {/* Journal Section */}
             <div className="flex-1 min-h-0 bg-muted rounded-lg p-6 overflow-y-auto">
-              <div className="flex items-center gap-2 mb-4">
-                <Checkbox
-                  id="help-edge"
-                  checked={helpFindEdge}
-                  onCheckedChange={(checked) => setHelpFindEdge(checked as boolean)}
-                />
-                <label
-                  htmlFor="help-edge"
-                  className="text-white font-semibold cursor-pointer"
-                >
-                  Help me find my edge
-                </label>
-              </div>
+              {selectedProfile === "default" && (
+                <div className="flex items-center gap-2 mb-4">
+                  <Checkbox
+                    id="help-edge"
+                    checked={helpFindEdge}
+                    onCheckedChange={(checked) => setHelpFindEdge(checked as boolean)}
+                  />
+                  <label
+                    htmlFor="help-edge"
+                    className="text-white font-semibold cursor-pointer"
+                  >
+                    Help me find my edge
+                  </label>
+                </div>
+              )}
 
-              {helpFindEdge ? (
+              {selectedProfile !== "default" ? (
+                <CustomQuestionJournal
+                  questions={profileQuestions}
+                  answers={customAnswers}
+                  onAnswerChange={(index, value) => {
+                    setCustomAnswers((prev) => ({ ...prev, [index]: value }));
+                  }}
+                />
+              ) : helpFindEdge ? (
                 <JournalQuestions
                   energy={energy}
                   energyWhy={energyWhy}

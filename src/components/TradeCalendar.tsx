@@ -10,9 +10,10 @@ interface TradeCalendarProps {
   trades: Trade[];
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
+  selectedProfile: string;
 }
 
-export const TradeCalendar = ({ trades, currentDate, setCurrentDate }: TradeCalendarProps) => {
+export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedProfile }: TradeCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
@@ -268,6 +269,7 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate }: TradeCale
         }}
         trades={selectedTrade ? [selectedTrade] : []}
         selectedDate={selectedDate}
+        selectedProfile={selectedProfile}
       />
     </div>
   );
