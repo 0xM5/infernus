@@ -152,14 +152,14 @@ const Index = () => {
                           </div>
                         </div>
                         
-                        <div className="flex flex-col items-center gap-1">
+                        <div className="flex flex-col items-center gap-2">
                           <div className="relative w-32 h-3 bg-red-500 rounded-full overflow-hidden">
                             <div 
                               className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
                               style={{ width: `${monthlyStats.winnerPercentage}%` }}
                             />
                           </div>
-                          <div className="text-[10px] text-muted-foreground/60" style={{ fontWeight: 500 }}>
+                          <div className="text-xs text-muted-foreground/60" style={{ fontWeight: 500 }}>
                             Win Rate: {monthlyStats.winnerPercentage.toFixed(0)}%
                           </div>
                         </div>
