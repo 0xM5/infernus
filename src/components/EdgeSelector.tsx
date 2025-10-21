@@ -7,6 +7,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 interface EdgeSelectorProps {
   edges: string[];
@@ -23,6 +25,7 @@ export const EdgeSelector = ({
 }: EdgeSelectorProps) => {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newEdge, setNewEdge] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleAddEdge = () => {
     if (newEdge.trim() && !edges.includes(newEdge.trim())) {
@@ -33,8 +36,9 @@ export const EdgeSelector = ({
     }
   };
 
-  const handleDeleteEdge = (edgeToDelete: string) => {
-    const updatedEdges = edges.filter(e => e !== edgeToDelete);
+  const handleDeleteEdge = (edgeToDelete: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updatedEdges = edges.filter(edge => edge !== edgeToDelete);
     onEdgesChange(updatedEdges);
     // Also remove from selected if it was selected
     if (selectedEdges.includes(edgeToDelete)) {
@@ -44,40 +48,61 @@ export const EdgeSelector = ({
 
   return (
     <div className="space-y-3">
-      <Select
-        onValueChange={(value) => {
-          if (value === "__add_new__") {
-            setIsAddingNew(true);
-          } else {
-            onEdgeSelect(value);
-          }
-        }}
-      >
-        <SelectTrigger className="bg-background rounded-lg">
-          <SelectValue placeholder="Select edges" />
-        </SelectTrigger>
-        <SelectContent className="bg-background">
-          {edges.map((edge) => (
-            <SelectItem key={edge} value={edge} className="group">
-              <div className="flex items-center justify-between w-full">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            className="w-full justify-between bg-background rounded-lg"
+          >
+            <span className="text-muted-foreground">Select edges</span>
+            <svg
+              className="w-4 h-4 opacity-50"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-2 bg-background" align="start">
+          <div className="space-y-1">
+            {edges.map((edge) => (
+              <div
+                key={edge}
+                className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer group"
+                onClick={() => {
+                  onEdgeSelect(edge);
+                  setIsOpen(false);
+                }}
+              >
                 <span>{edge}</span>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteEdge(edge);
-                  }}
-                  className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => handleDeleteEdge(edge, e)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/20 rounded"
                 >
-                  <X className="w-3 h-3 text-red-400 hover:text-red-300" />
+                  <X className="w-3.5 h-3.5 text-destructive" />
                 </button>
               </div>
-            </SelectItem>
-          ))}
-          <SelectItem value="__add_new__" className="text-primary font-semibold">
-            Add new tag
-          </SelectItem>
-        </SelectContent>
-      </Select>
+            ))}
+            <button
+              onClick={() => {
+                setIsAddingNew(true);
+                setIsOpen(false);
+              }}
+              className="w-full text-left p-2 text-primary font-semibold hover:bg-accent rounded-md"
+            >
+              Add new tag
+            </button>
+          </div>
+        </PopoverContent>
+      </Popover>
 
       {isAddingNew && (
         <div className="flex gap-2">
