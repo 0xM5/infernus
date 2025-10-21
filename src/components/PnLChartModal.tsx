@@ -176,6 +176,13 @@ export const PnLChartModal = ({
                   stroke="hsl(var(--muted-foreground))" 
                   strokeWidth={2}
                   strokeDasharray="5 5"
+                  label={{ 
+                    value: '$0', 
+                    fill: 'hsl(var(--muted-foreground))', 
+                    fontSize: 14,
+                    fontWeight: 600,
+                    position: 'insideTopLeft'
+                  }}
                 />
                 
                 {/* Green area for positive values */}
