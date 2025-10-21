@@ -6,6 +6,7 @@ interface ParsedTrade {
   exitPrice: number;
   profit: number;
   side: "LONG" | "SHORT";
+  commission?: number;
 }
 
 type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "TradingView" | "Unknown";
@@ -287,6 +288,7 @@ export const parseTradovateCSV = (content: string): ParsedTrade[] => {
     const sellPriceIdx = headers.indexOf('sellPrice');
     const pnlIdx = headers.indexOf('pnl');
     const boughtTimestampIdx = headers.indexOf('boughtTimestamp');
+    const commissionIdx = headers.findIndex(h => h.toLowerCase().includes('commission') || h.toLowerCase().includes('fee'));
     
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -300,12 +302,20 @@ export const parseTradovateCSV = (content: string): ParsedTrade[] => {
       const sellPrice = parseFloat(columns[sellPriceIdx] || '0');
       const pnlStr = columns[pnlIdx] || '';
       const dateStr = columns[boughtTimestampIdx];
+      const commissionStr = commissionIdx >= 0 ? columns[commissionIdx] || '' : '';
       
       if (!symbol || !quantity || !buyPrice || !sellPrice || !dateStr) continue;
       
       // Parse PnL - handle format like "$25.50" or "$(67.50)"
       const isNegative = pnlStr.includes('(');
       const pnl = parseFloat(pnlStr.replace(/[$(),]/g, '')) * (isNegative ? -1 : 1);
+      
+      // Parse commission - handle format like "$2.50" or "$(2.50)"
+      let commission = 0;
+      if (commissionStr) {
+        const isCommissionNegative = commissionStr.includes('(');
+        commission = Math.abs(parseFloat(commissionStr.replace(/[$(),]/g, '')) * (isCommissionNegative ? -1 : 1));
+      }
       
       // Parse date
       const date = new Date(dateStr);
@@ -314,14 +324,18 @@ export const parseTradovateCSV = (content: string): ParsedTrade[] => {
       // Determine side based on price movement
       const side = buyPrice < sellPrice ? 'LONG' : 'SHORT';
       
+      // Subtract commission from profit
+      const profitAfterCommission = pnl - commission;
+      
       trades.push({
         date,
         symbol,
         quantity,
         entryPrice: buyPrice,
         exitPrice: sellPrice,
-        profit: pnl,
+        profit: profitAfterCommission,
         side,
+        commission,
       });
     }
   } else {
