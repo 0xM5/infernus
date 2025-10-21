@@ -27,6 +27,7 @@ interface TradeDetailsModalProps {
   trades: Trade[];
   selectedDate: Date | null;
   selectedProfile: string;
+  selectedTrade: Trade | null;
 }
 
 export const TradeDetailsModal = ({
@@ -35,6 +36,7 @@ export const TradeDetailsModal = ({
   trades,
   selectedDate,
   selectedProfile,
+  selectedTrade,
 }: TradeDetailsModalProps) => {
   const [rating, setRating] = useState(0);
   const [target, setTarget] = useState("");
@@ -45,9 +47,9 @@ export const TradeDetailsModal = ({
   const [freeJournal, setFreeJournal] = useState("");
   const [customAnswers, setCustomAnswers] = useState<{ [key: number]: string }>({});
   
-  // Track the current trade key for saving
-  const tradeKey = selectedDate 
-    ? `trade_${selectedDate.toISOString()}_${trades.find(t => t.date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0])?.symbol || ''}`
+  // Track the current trade key for saving - use selectedTrade for accurate symbol
+  const tradeKey = selectedTrade 
+    ? `trade_${selectedTrade.date.toISOString()}_${selectedTrade.symbol}`
     : '';
   
   // Journal questions state

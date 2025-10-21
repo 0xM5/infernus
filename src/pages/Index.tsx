@@ -336,8 +336,9 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="overflow-hidden" style={{ height: edgeShowerEnabled ? '658px' : '758px' }}>
-                <TradeCalendar
+              <div className="flex-1 min-h-0 overflow-auto">
+                <div className="w-full max-w-[1370px] mx-auto" style={{ minHeight: '758px' }}>
+                  <TradeCalendar
                   trades={useEstimatedCommissions
                     ? trades.map(trade => ({
                         ...trade,
@@ -348,7 +349,8 @@ const Index = () => {
                   currentDate={calendarDate}
                   setCurrentDate={setCalendarDate}
                   selectedProfile={selectedProfile}
-                />
+                  />
+                </div>
               </div>
             </div>
           )}

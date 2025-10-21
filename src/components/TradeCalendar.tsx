@@ -270,6 +270,7 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
         trades={selectedTrade ? [selectedTrade] : []}
         selectedDate={selectedDate}
         selectedProfile={selectedProfile}
+        selectedTrade={selectedTrade}
       />
     </div>
   );
