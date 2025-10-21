@@ -155,55 +155,108 @@ export const parseRobinhoodCSV = (content: string): ParsedTrade[] => {
   const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
   console.log('Robinhood headers:', headers);
   
-  const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
-  const symbolIdx = headers.findIndex(h => h.toLowerCase().includes('symbol') || h.toLowerCase().includes('instrument'));
-  const sideIdx = headers.findIndex(h => h.toLowerCase().includes('side') || h.toLowerCase().includes('trans'));
-  const qtyIdx = headers.findIndex(h => h.toLowerCase().includes('quantity') || h.toLowerCase().includes('shares'));
-  const priceIdx = headers.findIndex(h => h.toLowerCase().includes('price'));
-  const amountIdx = headers.findIndex(h => h.toLowerCase().includes('amount') || h.toLowerCase().includes('proceeds'));
-  
-  const openTrades = new Map<string, any>();
+  // Parse CSV with proper handling of multi-line fields
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let inQuotes = false;
+  let currentField = '';
   
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+    const line = lines[i];
     
-    const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        currentRow.push(currentField.trim());
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
     
-    const dateStr = columns[dateIdx];
-    const symbol = columns[symbolIdx];
-    const side = columns[sideIdx]?.toLowerCase();
-    const quantity = parseFloat(columns[qtyIdx] || '0');
-    const price = parseFloat(columns[priceIdx] || '0');
-    const amount = parseFloat(columns[amountIdx] || '0');
+    if (!inQuotes) {
+      currentRow.push(currentField.trim());
+      if (currentRow.some(field => field)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = '';
+    } else {
+      currentField += '\n';
+    }
+  }
+  
+  // Map open trades (BTO) to closed trades (STC)
+  const openTrades = new Map<string, any[]>();
+  
+  for (const row of rows) {
+    const dateStr = row[0];
+    const instrument = row[3];
+    const transCode = row[5];
+    const quantityStr = row[6];
+    const priceStr = row[7];
+    const amountStr = row[8];
     
-    if (!dateStr || !symbol || !quantity || !price) continue;
+    if (!dateStr || !instrument || !transCode) continue;
+    
+    // Only process options trades (BTO/STC)
+    if (transCode !== 'BTO' && transCode !== 'STC') continue;
+    
+    const quantity = parseFloat(quantityStr || '0');
+    const price = parseFloat(priceStr?.replace('$', '') || '0');
+    const amount = parseFloat(amountStr?.replace(/[$(),]/g, '') || '0') * (amountStr?.includes('(') ? -1 : 1);
+    
+    if (!quantity || !price) continue;
     
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) continue;
     
-    const isBuy = side.includes('buy');
+    // Extract base symbol from options format (e.g., "SPY 8/13/2025 Call $640.00" -> "SPY")
+    const baseSymbol = instrument.split(' ')[0];
+    const tradeKey = instrument; // Use full instrument name as key for matching
     
-    if (isBuy && !openTrades.has(symbol)) {
-      openTrades.set(symbol, { date, symbol, quantity, entryPrice: price, side: 'LONG' });
-    } else if (!isBuy && openTrades.has(symbol)) {
-      const openTrade = openTrades.get(symbol);
-      const profit = amount - (openTrade.entryPrice * openTrade.quantity);
-      
-      trades.push({
-        date: openTrade.date,
-        symbol,
-        quantity: openTrade.quantity,
-        entryPrice: openTrade.entryPrice,
-        exitPrice: price,
-        profit,
-        side: openTrade.side,
+    if (transCode === 'BTO') {
+      // Buy To Open - store the opening position
+      if (!openTrades.has(tradeKey)) {
+        openTrades.set(tradeKey, []);
+      }
+      openTrades.get(tradeKey)!.push({
+        date,
+        symbol: baseSymbol,
+        instrument,
+        quantity,
+        entryPrice: price,
+        entryAmount: Math.abs(amount),
       });
-      
-      openTrades.delete(symbol);
+    } else if (transCode === 'STC') {
+      // Sell To Close - match with opening position
+      const opens = openTrades.get(tradeKey);
+      if (opens && opens.length > 0) {
+        const openTrade = opens.shift(); // Take first matching open
+        const profit = amount - openTrade.entryAmount;
+        
+        trades.push({
+          date: openTrade.date,
+          symbol: openTrade.symbol,
+          quantity,
+          entryPrice: openTrade.entryPrice,
+          exitPrice: price,
+          profit,
+          side: 'LONG',
+        });
+        
+        // Clean up empty arrays
+        if (opens.length === 0) {
+          openTrades.delete(tradeKey);
+        }
+      }
     }
   }
   
+  console.log(`Parsed ${trades.length} completed trades from Robinhood CSV`);
   return trades;
 };
 
