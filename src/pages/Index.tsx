@@ -336,8 +336,8 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="overflow-hidden" style={{ height: '758px' }}>
-                <TradeCalendar 
+              <div className="overflow-hidden" style={{ height: edgeShowerEnabled ? '658px' : '758px' }}>
+                <TradeCalendar
                   trades={useEstimatedCommissions
                     ? trades.map(trade => ({
                         ...trade,

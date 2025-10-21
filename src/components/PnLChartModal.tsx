@@ -47,16 +47,69 @@ export const PnLChartModal = ({
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  // Calculate cumulative P&L
+  // Generate full month/year date range
+  const generateDateRange = () => {
+    const dates: Date[] = [];
+    if (isYearlyView) {
+      // Generate dates for the entire year (first day of each month)
+      for (let month = 0; month < 12; month++) {
+        dates.push(new Date(currentDate.getFullYear(), month, 1));
+      }
+    } else {
+      // Generate dates for the entire month
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        dates.push(new Date(year, month, day));
+      }
+    }
+    return dates;
+  };
+
+  const allDates = generateDateRange();
+
+  // Create a map of trade dates to cumulative P&L
+  const tradeMap = new Map<string, { pnl: number; profit: number }>();
   let cumulativePnL = 0;
-  const chartData = sortedTrades.map((trade) => {
+  
+  sortedTrades.forEach((trade) => {
     cumulativePnL += trade.profit;
-    return {
-      date: format(new Date(trade.date), isYearlyView ? "MMM dd" : "MMM dd"),
+    const dateKey = format(new Date(trade.date), "yyyy-MM-dd");
+    tradeMap.set(dateKey, {
       pnl: parseFloat(cumulativePnL.toFixed(2)),
       profit: trade.profit,
-      timestamp: new Date(trade.date).getTime(),
-    };
+    });
+  });
+
+  // Build chart data with all dates
+  const chartData = allDates.map((date) => {
+    const dateKey = format(date, "yyyy-MM-dd");
+    const tradeData = tradeMap.get(dateKey);
+    
+    if (tradeData) {
+      return {
+        date: format(date, isYearlyView ? "MMM dd" : "MMM dd"),
+        pnl: tradeData.pnl,
+        profit: tradeData.profit,
+        timestamp: date.getTime(),
+      };
+    } else {
+      // Find the last known cumulative P&L before this date
+      let lastPnL = 0;
+      for (const [key, value] of tradeMap.entries()) {
+        const keyDate = new Date(key);
+        if (keyDate < date) {
+          lastPnL = value.pnl;
+        }
+      }
+      return {
+        date: format(date, isYearlyView ? "MMM dd" : "MMM dd"),
+        pnl: lastPnL,
+        profit: 0,
+        timestamp: date.getTime(),
+      };
+    }
   });
 
   // Add interpolated points where line crosses $0

@@ -45,6 +45,11 @@ export const TradeDetailsModal = ({
   const [freeJournal, setFreeJournal] = useState("");
   const [customAnswers, setCustomAnswers] = useState<{ [key: number]: string }>({});
   
+  // Track the current trade key for saving
+  const tradeKey = selectedDate 
+    ? `trade_${selectedDate.toISOString()}_${trades.find(t => t.date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0])?.symbol || ''}`
+    : '';
+  
   // Journal questions state
   const [energy, setEnergy] = useState(3);
   const [energyWhy, setEnergyWhy] = useState("");
@@ -86,12 +91,35 @@ export const TradeDetailsModal = ({
     }
   }, []);
 
+  // Load selected edges for this specific trade
+  useEffect(() => {
+    if (tradeKey && selectedDate) {
+      const tradeData = localStorage.getItem(tradeKey);
+      if (tradeData) {
+        const parsed = JSON.parse(tradeData);
+        if (parsed.edges && Array.isArray(parsed.edges)) {
+          setSelectedEdges(parsed.edges);
+        }
+      }
+    }
+  }, [tradeKey, selectedDate]);
+
   // Save edges to localStorage whenever they change
   useEffect(() => {
     if (edges.length > 0) {
       localStorage.setItem("tradeEdges", JSON.stringify(edges));
     }
   }, [edges]);
+
+  // Save selected edges for this specific trade whenever they change
+  useEffect(() => {
+    if (tradeKey && selectedDate) {
+      const existingData = localStorage.getItem(tradeKey);
+      const parsed = existingData ? JSON.parse(existingData) : {};
+      parsed.edges = selectedEdges;
+      localStorage.setItem(tradeKey, JSON.stringify(parsed));
+    }
+  }, [selectedEdges, tradeKey, selectedDate]);
 
   if (!selectedDate) return null;
 
