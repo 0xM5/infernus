@@ -59,27 +59,38 @@ export const PnLChartModal = ({
   });
 
   // Find min and max for chart domain
-  const minPnL = Math.min(0, ...chartData.map((d) => d.pnl));
-  const maxPnL = Math.max(0, ...chartData.map((d) => d.pnl));
+  const minPnL = Math.min(...chartData.map((d) => d.pnl), 0);
+  const maxPnL = Math.max(...chartData.map((d) => d.pnl), 0);
   
   // Calculate range and 25% increments
   const range = maxPnL - minPnL;
-  const increment = range * 0.25;
-  const yAxisMin = Math.floor(minPnL / increment) * increment;
-  const yAxisMax = Math.ceil(maxPnL / increment) * increment;
+  const increment = range / 4; // Divide range into 4 equal parts (25% each)
   
-  // Generate ticks at 25% increments
-  const ticks = [];
-  for (let i = yAxisMin; i <= yAxisMax; i += increment) {
-    ticks.push(Math.round(i * 100) / 100);
-  }
+  // Generate ticks at 25% increments, ensuring we include the min and max
+  const ticks = [
+    minPnL,
+    minPnL + increment,
+    minPnL + increment * 2,
+    minPnL + increment * 3,
+    maxPnL
+  ].map(v => Math.round(v * 100) / 100);
 
-  // Split data into positive and negative for coloring
-  const chartDataWithSplit = chartData.map((d) => ({
-    ...d,
-    positivePnl: d.pnl > 0 ? d.pnl : null,
-    negativePnl: d.pnl < 0 ? d.pnl : null,
-  }));
+  // Create segments for continuous line with color changes
+  const chartDataWithSegments = chartData.map((d, idx) => {
+    const isNegative = d.pnl < 0;
+    const prevIsNegative = idx > 0 ? chartData[idx - 1].pnl < 0 : false;
+    
+    return {
+      ...d,
+      greenLine: !isNegative ? d.pnl : null,
+      redLine: isNegative ? d.pnl : null,
+      // For transitions, include both colors at crossing point
+      ...(idx > 0 && isNegative !== prevIsNegative ? {
+        greenLine: d.pnl,
+        redLine: d.pnl,
+      } : {})
+    };
+  });
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -107,7 +118,7 @@ export const PnLChartModal = ({
           </h2>
           <div className="h-[65vh] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartDataWithSplit}>
+              <AreaChart data={chartDataWithSegments}>
                 <defs>
                   <linearGradient id="colorPositive" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3} />
@@ -128,7 +139,7 @@ export const PnLChartModal = ({
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                   tickFormatter={(value) => `$${value.toFixed(0)}`}
-                  domain={[yAxisMin, yAxisMax]}
+                  domain={[minPnL, maxPnL]}
                   ticks={ticks}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -139,29 +150,28 @@ export const PnLChartModal = ({
                   stroke="hsl(var(--muted-foreground))" 
                   strokeWidth={2}
                   strokeDasharray="5 5"
-                  label={{ value: '$0', fill: 'hsl(var(--muted-foreground))', fontSize: 12, position: 'left' }}
                 />
                 
                 {/* Green area for positive values */}
                 <Area
                   type="monotone"
-                  dataKey="positivePnl"
+                  dataKey="greenLine"
                   stroke="#4ade80"
                   strokeWidth={3}
                   fill="url(#colorPositive)"
                   fillOpacity={1}
-                  connectNulls={false}
+                  connectNulls={true}
                 />
                 
                 {/* Red area for negative values */}
                 <Area
                   type="monotone"
-                  dataKey="negativePnl"
+                  dataKey="redLine"
                   stroke="#f87171"
                   strokeWidth={3}
                   fill="url(#colorNegative)"
                   fillOpacity={1}
-                  connectNulls={false}
+                  connectNulls={true}
                 />
               </AreaChart>
             </ResponsiveContainer>
