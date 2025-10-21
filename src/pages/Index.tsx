@@ -214,7 +214,7 @@ const Index = () => {
                   </div>
                 </div>
                 
-                <div className="flex gap-4 items-center">
+                <div className="flex flex-wrap gap-4 items-center justify-end">
                   <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
                     <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Monthly</span>
                     <Switch 
