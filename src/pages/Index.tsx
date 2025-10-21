@@ -45,7 +45,7 @@ const Index = () => {
   const [edgeShowerEnabled, setEdgeShowerEnabled] = useState(false);
   const [showStudyTrades, setShowStudyTrades] = useState(false);
   const [studyEdge, setStudyEdge] = useState<{ edge: string; wins: number; losses: number } | null>(null);
-
+  const [edgesVersion, setEdgesVersion] = useState(0);
   useEffect(() => {
     const saved = localStorage.getItem("edgeShowerEnabled");
     if (saved) {
@@ -53,6 +53,11 @@ const Index = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const handler = () => setEdgesVersion((v) => v + 1);
+    window.addEventListener("tradeEdgesUpdated", handler);
+    return () => window.removeEventListener("tradeEdgesUpdated", handler);
+  }, []);
   const handleEdgeShowerChange = (enabled: boolean) => {
     setEdgeShowerEnabled(enabled);
     localStorage.setItem("edgeShowerEnabled", JSON.stringify(enabled));
@@ -160,7 +165,7 @@ const Index = () => {
         {/* Main container */}
         <div
           className={`relative bg-card border border-border rounded-3xl transition-all duration-500 ${
-            isExpanded ? "w-[90vw] h-[85vh] p-8" : "w-[600px] h-[400px] p-12"
+            isExpanded ? `w-[90vw] ${edgeShowerEnabled ? 'h-auto' : 'h-[85vh]'} p-8` : "w-[600px] h-[400px] p-12"
           } flex ${isExpanded ? "flex-col" : "items-center justify-center"}`}
         >
           {!isExpanded ? (
@@ -332,24 +337,27 @@ const Index = () => {
                       : trades
                     }
                     onStudyClick={handleStudyClick}
+                    refreshKey={edgesVersion}
                   />
                 </div>
               )}
 
-              <div className="flex-1 min-h-0 overflow-auto">
-                <div className="w-full max-w-[1370px] mx-auto" style={{ minHeight: '758px' }}>
-                  <TradeCalendar
-                  trades={useEstimatedCommissions
-                    ? trades.map(trade => ({
-                        ...trade,
-                        profit: trade.profit - getEstimatedCommission(trade.symbol)
-                      }))
-                    : trades
-                  } 
-                  currentDate={calendarDate}
-                  setCurrentDate={setCalendarDate}
-                  selectedProfile={selectedProfile}
-                  />
+              <div className="w-full max-w-[1370px] mx-auto">
+                <div className="relative w-full" style={{ aspectRatio: '1370 / 758' }}>
+                  <div className="absolute inset-0">
+                    <TradeCalendar
+                      trades={useEstimatedCommissions
+                        ? trades.map(trade => ({
+                            ...trade,
+                            profit: trade.profit - getEstimatedCommission(trade.symbol)
+                          }))
+                        : trades
+                      } 
+                      currentDate={calendarDate}
+                      setCurrentDate={setCalendarDate}
+                      selectedProfile={selectedProfile}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

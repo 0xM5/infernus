@@ -120,6 +120,8 @@ export const TradeDetailsModal = ({
       const parsed = existingData ? JSON.parse(existingData) : {};
       parsed.edges = selectedEdges;
       localStorage.setItem(tradeKey, JSON.stringify(parsed));
+      // Notify other components (EdgeShower, Index) that edges have changed
+      window.dispatchEvent(new Event("tradeEdgesUpdated"));
     }
   }, [selectedEdges, tradeKey, selectedDate]);
 
