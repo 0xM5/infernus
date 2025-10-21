@@ -7,6 +7,8 @@ interface ParsedTrade {
   profit: number;
   side: "LONG" | "SHORT";
   commission?: number;
+  entryTime?: string;
+  exitTime?: string;
 }
 
 type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "TradingView" | "Unknown";
@@ -214,6 +216,13 @@ export const parseRobinhoodCSV = (content: string): ParsedTrade[] => {
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) continue;
     
+    // Extract time from date string
+    const time = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    
     // Extract base symbol from options format (e.g., "SPY 8/13/2025 Call $640.00" -> "SPY")
     const baseSymbol = instrument.split(' ')[0];
     const tradeKey = instrument; // Use full instrument name as key for matching
@@ -230,6 +239,7 @@ export const parseRobinhoodCSV = (content: string): ParsedTrade[] => {
         quantity,
         entryPrice: price,
         entryAmount: Math.abs(amount),
+        entryTime: time,
       });
     } else if (transCode === 'STC') {
       // Sell To Close - match with opening position
@@ -246,6 +256,8 @@ export const parseRobinhoodCSV = (content: string): ParsedTrade[] => {
           exitPrice: price,
           profit,
           side: 'LONG',
+          entryTime: openTrade.entryTime,
+          exitTime: time,
         });
         
         // Clean up empty arrays

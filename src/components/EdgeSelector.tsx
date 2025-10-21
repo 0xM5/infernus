@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { X } from "lucide-react";
 
 interface EdgeSelectorProps {
   edges: string[];
@@ -32,8 +33,17 @@ export const EdgeSelector = ({
     }
   };
 
+  const handleDeleteEdge = (edgeToDelete: string) => {
+    const updatedEdges = edges.filter(e => e !== edgeToDelete);
+    onEdgesChange(updatedEdges);
+    // Also remove from selected if it was selected
+    if (selectedEdges.includes(edgeToDelete)) {
+      onEdgeSelect(edgeToDelete);
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <Select
         onValueChange={(value) => {
           if (value === "__add_new__") {
@@ -43,16 +53,27 @@ export const EdgeSelector = ({
           }
         }}
       >
-        <SelectTrigger className="bg-background">
+        <SelectTrigger className="bg-background rounded-lg">
           <SelectValue placeholder="Select edges" />
         </SelectTrigger>
         <SelectContent className="bg-background">
           {edges.map((edge) => (
-            <SelectItem key={edge} value={edge}>
-              {edge}
+            <SelectItem key={edge} value={edge} className="group">
+              <div className="flex items-center justify-between w-full">
+                <span>{edge}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteEdge(edge);
+                  }}
+                  className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3 text-red-400 hover:text-red-300" />
+                </button>
+              </div>
             </SelectItem>
           ))}
-          <SelectItem value="__add_new__" className="text-purple-500 font-semibold">
+          <SelectItem value="__add_new__" className="text-primary font-semibold">
             Add new tag
           </SelectItem>
         </SelectContent>
@@ -73,12 +94,12 @@ export const EdgeSelector = ({
                 setNewEdge("");
               }
             }}
-            className="flex-1 px-3 py-2 bg-background rounded-md text-sm"
+            className="flex-1 px-3 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             autoFocus
           />
           <button
             onClick={handleAddEdge}
-            className="px-4 py-2 bg-purple-500 text-white rounded-md text-sm"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
           >
             Add
           </button>
@@ -88,15 +109,18 @@ export const EdgeSelector = ({
       {selectedEdges.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedEdges.map((edge) => (
-            <button
+            <div
               key={edge}
-              onClick={() => {
-                onEdgeSelect(edge);
-              }}
-              className="px-3 py-1 rounded-full text-sm bg-purple-500 text-white"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-primary text-primary-foreground"
             >
-              {edge}
-            </button>
+              <span>{edge}</span>
+              <button
+                onClick={() => onEdgeSelect(edge)}
+                className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
           ))}
         </div>
       )}

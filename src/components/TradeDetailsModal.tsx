@@ -167,7 +167,7 @@ export const TradeDetailsModal = ({
       <DialogContent className="max-w-[90vw] h-[85vh] p-0 bg-transparent border-none shadow-none">
         <div className="flex gap-6 h-full min-h-0">
           {/* Left side - Trade Details */}
-          <div className="w-[250px] bg-muted rounded-lg p-6 space-y-4 overflow-y-auto">
+          <div className="w-[250px] bg-muted rounded-xl p-6 space-y-4 overflow-y-auto">
             <h2
               className="text-xl text-white mb-6"
               style={{ fontWeight: 700, fontFamily: "Inter" }}
@@ -254,7 +254,7 @@ export const TradeDetailsModal = ({
                     placeholder="Enter target price"
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
-                    className="bg-background pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="bg-background rounded-lg pl-7 border-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -270,7 +270,7 @@ export const TradeDetailsModal = ({
                     placeholder="Enter stop loss"
                     value={stopLoss}
                     onChange={(e) => setStopLoss(e.target.value)}
-                    className="bg-background pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="bg-background rounded-lg pl-7 border-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -324,7 +324,7 @@ export const TradeDetailsModal = ({
           {/* Right side - Edge Tags and Journal */}
           <div className="flex-1 flex flex-col gap-4 min-h-0">
             {/* Edge Tags */}
-            <div className="w-[855px] h-[215px] bg-purple-600/20 rounded-lg p-6 border-2 border-purple-500">
+            <div className="w-full bg-primary/20 rounded-xl p-6 border-2 border-primary">
               <h2
                 className="text-xl text-white mb-4"
                 style={{ fontWeight: 700, fontFamily: "Inter" }}
@@ -340,7 +340,7 @@ export const TradeDetailsModal = ({
             </div>
 
             {/* Journal Section */}
-            <div className="flex-1 min-h-0 bg-muted rounded-lg p-6 overflow-y-auto">
+            <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto">
               {selectedProfile === "default" && (
                 <div className="flex items-center gap-2 mb-4">
                   <Checkbox
@@ -401,7 +401,7 @@ export const TradeDetailsModal = ({
                     value={freeJournal}
                     onChange={setFreeJournal}
                     modules={modules}
-                    className="h-[calc(100%-50px)] bg-background rounded-lg"
+                    className="h-[calc(100%-50px)] bg-background rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-input [&_.ql-toolbar]:border-input"
                   />
                 </div>
               )}
