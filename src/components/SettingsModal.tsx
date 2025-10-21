@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
 
 interface QuestionProfile {
@@ -16,6 +17,8 @@ interface SettingsModalProps {
   onCreateProfile: () => void;
   selectedProfile: string;
   onProfileChange: (profileId: string) => void;
+  edgeShowerEnabled: boolean;
+  onEdgeShowerChange: (enabled: boolean) => void;
 }
 
 export const SettingsModal = ({
@@ -24,6 +27,8 @@ export const SettingsModal = ({
   onCreateProfile,
   selectedProfile,
   onProfileChange,
+  edgeShowerEnabled,
+  onEdgeShowerChange,
 }: SettingsModalProps) => {
   const [profiles, setProfiles] = useState<QuestionProfile[]>([
     { id: "default", name: "Default", questions: [] }
@@ -72,6 +77,17 @@ export const SettingsModal = ({
                 </div>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-foreground">Edge Shower</label>
+            <div className="flex items-center justify-between bg-background border border-border rounded-lg px-4 py-3">
+              <span className="text-sm text-muted-foreground">Display your best edge</span>
+              <Switch 
+                checked={edgeShowerEnabled} 
+                onCheckedChange={onEdgeShowerChange}
+              />
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { TradeProviderModal } from "@/components/TradeProviderModal";
@@ -6,6 +6,8 @@ import { SettingsModal } from "@/components/SettingsModal";
 import { CreateProfileModal } from "@/components/CreateProfileModal";
 import { QuestionEditorModal } from "@/components/QuestionEditorModal";
 import { PnLChartModal } from "@/components/PnLChartModal";
+import { EdgeShowerBox } from "@/components/EdgeShowerBox";
+import { StudyTradesModal } from "@/components/StudyTradesModal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Upload, Info, Settings, TrendingUp } from "lucide-react";
@@ -40,6 +42,37 @@ const Index = () => {
   const [currentProfileName, setCurrentProfileName] = useState("");
   const [currentProfileId, setCurrentProfileId] = useState("");
   const [showPnLChart, setShowPnLChart] = useState(false);
+  const [edgeShowerEnabled, setEdgeShowerEnabled] = useState(false);
+  const [showStudyTrades, setShowStudyTrades] = useState(false);
+  const [studyEdge, setStudyEdge] = useState<{ edge: string; wins: number; losses: number } | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("edgeShowerEnabled");
+    if (saved) {
+      setEdgeShowerEnabled(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleEdgeShowerChange = (enabled: boolean) => {
+    setEdgeShowerEnabled(enabled);
+    localStorage.setItem("edgeShowerEnabled", JSON.stringify(enabled));
+  };
+
+  const handleStudyClick = (edge: string, wins: number, losses: number) => {
+    setStudyEdge({ edge, wins, losses });
+    setShowStudyTrades(true);
+  };
+
+  const getTradesWithEdge = (edge: string) => {
+    return trades.filter(trade => {
+      const tradeData = localStorage.getItem(`trade_${trade.date.toISOString()}_${trade.symbol}`);
+      if (tradeData) {
+        const parsedData = JSON.parse(tradeData);
+        return parsedData.edges && Array.isArray(parsedData.edges) && parsedData.edges.includes(edge);
+      }
+      return false;
+    });
+  };
   
   const getMonthlyStats = () => {
     const currentMonth = calendarDate.getMonth();
@@ -288,9 +321,24 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden">
+              {edgeShowerEnabled && (
+                <div className="flex justify-center">
+                  <EdgeShowerBox 
+                    trades={useEstimatedCommissions 
+                      ? trades.map(trade => ({
+                          ...trade,
+                          profit: trade.profit - getEstimatedCommission(trade.symbol)
+                        }))
+                      : trades
+                    }
+                    onStudyClick={handleStudyClick}
+                  />
+                </div>
+              )}
+
+              <div className="overflow-hidden" style={{ height: '758px' }}>
                 <TradeCalendar 
-                  trades={useEstimatedCommissions 
+                  trades={useEstimatedCommissions
                     ? trades.map(trade => ({
                         ...trade,
                         profit: trade.profit - getEstimatedCommission(trade.symbol)
@@ -322,6 +370,20 @@ const Index = () => {
         onCreateProfile={() => setShowCreateProfile(true)}
         selectedProfile={selectedProfile}
         onProfileChange={setSelectedProfile}
+        edgeShowerEnabled={edgeShowerEnabled}
+        onEdgeShowerChange={handleEdgeShowerChange}
+      />
+
+      <StudyTradesModal
+        isOpen={showStudyTrades}
+        onClose={() => {
+          setShowStudyTrades(false);
+          setStudyEdge(null);
+        }}
+        edge={studyEdge?.edge || ""}
+        trades={studyEdge ? getTradesWithEdge(studyEdge.edge) : []}
+        winCount={studyEdge?.wins || 0}
+        lossCount={studyEdge?.losses || 0}
       />
 
       <CreateProfileModal
