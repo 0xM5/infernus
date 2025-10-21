@@ -342,23 +342,19 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="w-full max-w-[1370px] mx-auto">
-                <div className="relative w-full" style={{ aspectRatio: '1370 / 758' }}>
-                  <div className="absolute inset-0">
-                    <TradeCalendar
-                      trades={useEstimatedCommissions
-                        ? trades.map(trade => ({
-                            ...trade,
-                            profit: trade.profit - getEstimatedCommission(trade.symbol)
-                          }))
-                        : trades
-                      } 
-                      currentDate={calendarDate}
-                      setCurrentDate={setCalendarDate}
-                      selectedProfile={selectedProfile}
-                    />
-                  </div>
-                </div>
+              <div className="w-full max-w-[1370px] mx-auto" style={{ maxHeight: '758px' }}>
+                <TradeCalendar
+                  trades={useEstimatedCommissions
+                    ? trades.map(trade => ({
+                        ...trade,
+                        profit: trade.profit - getEstimatedCommission(trade.symbol)
+                      }))
+                    : trades
+                  } 
+                  currentDate={calendarDate}
+                  setCurrentDate={setCalendarDate}
+                  selectedProfile={selectedProfile}
+                />
               </div>
             </div>
           )}

@@ -71,8 +71,10 @@ export const EdgeShowerBox = ({ trades, onStudyClick, refreshKey }: EdgeShowerBo
   const bestEdgesList = bestEdges.filter(([_, stats]) => stats.wins === topWinCount);
   
   return (
-    <div className="w-[1370px] h-[80px] bg-card border border-border rounded-lg flex items-center px-6 gap-6">
-      <div className="flex items-center gap-4 flex-1">
+    <div className="w-[1370px] bg-card border border-border rounded-lg flex flex-col items-center py-4 px-6 gap-3">
+      <h3 className="text-lg font-bold text-foreground">Your Best Edge</h3>
+      
+      <div className="flex items-center justify-center gap-6">
         {bestEdgesList.map(([edge, stats]) => (
           <div key={edge} className="flex items-center gap-3">
             <div className="px-4 py-2 rounded-full bg-purple-500 text-white font-semibold text-lg">
@@ -91,15 +93,12 @@ export const EdgeShowerBox = ({ trades, onStudyClick, refreshKey }: EdgeShowerBo
             </div>
             <Button
               onClick={() => onStudyClick(edge, stats.wins, stats.losses)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
             >
               Study The Trades
             </Button>
           </div>
         ))}
-      </div>
-      <div className="text-center">
-        <h3 className="text-lg font-bold text-foreground">Your Best Edge</h3>
       </div>
     </div>
   );

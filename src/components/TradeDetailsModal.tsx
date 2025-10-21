@@ -67,6 +67,70 @@ export const TradeDetailsModal = ({
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
+  // Load all trade data from localStorage when modal opens
+  useEffect(() => {
+    if (tradeKey) {
+      const tradeData = localStorage.getItem(tradeKey);
+      if (tradeData) {
+        const parsed = JSON.parse(tradeData);
+        setRating(parsed.rating || 0);
+        setTarget(parsed.target || "");
+        setStopLoss(parsed.stopLoss || "");
+        setHelpFindEdge(parsed.helpFindEdge || false);
+        setFreeJournal(parsed.freeJournal || "");
+        setCustomAnswers(parsed.customAnswers || {});
+        setEnergy(parsed.energy || 3);
+        setEnergyWhy(parsed.energyWhy || "");
+        setStress(parsed.stress || 3);
+        setStressWhy(parsed.stressWhy || "");
+        setConfidence(parsed.confidence || 3);
+        setConfidenceWhy(parsed.confidenceWhy || "");
+        setBias(parsed.bias || "");
+        setRegime(parsed.regime || "");
+        setVwap(parsed.vwap || "");
+        setKeyLevels(parsed.keyLevels || "");
+        setVolume(parsed.volume || "");
+        setFixTomorrow(parsed.fixTomorrow || "");
+        setAdditionalComments(parsed.additionalComments || "");
+      }
+    }
+  }, [tradeKey]);
+
+  // Save all trade data whenever any field changes
+  useEffect(() => {
+    if (tradeKey) {
+      const existingData = localStorage.getItem(tradeKey);
+      const parsed = existingData ? JSON.parse(existingData) : {};
+      
+      const updatedData = {
+        ...parsed,
+        rating,
+        target,
+        stopLoss,
+        helpFindEdge,
+        freeJournal,
+        customAnswers,
+        energy,
+        energyWhy,
+        stress,
+        stressWhy,
+        confidence,
+        confidenceWhy,
+        bias,
+        regime,
+        vwap,
+        keyLevels,
+        volume,
+        fixTomorrow,
+        additionalComments,
+      };
+      
+      localStorage.setItem(tradeKey, JSON.stringify(updatedData));
+    }
+  }, [tradeKey, rating, target, stopLoss, helpFindEdge, freeJournal, customAnswers, 
+      energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, bias, 
+      regime, vwap, keyLevels, volume, fixTomorrow, additionalComments]);
+
   // Get current profile's questions
   const [profileQuestions, setProfileQuestions] = useState<string[]>([]);
 

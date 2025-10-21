@@ -194,69 +194,73 @@ export const PnLChartModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] max-h-[85vh] bg-card border border-border">
+      <DialogContent className="max-w-[90vw] max-h-[85vh] bg-[#1a1a1a] border-none">
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 className="text-2xl font-bold text-white">
             {isYearlyView ? "Yearly" : "Monthly"} P&L Chart
           </h2>
           <div className="h-[65vh] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartDataWithSegments}>
+              <AreaChart 
+                data={interpolatedData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
                 <defs>
-                  <linearGradient id="colorPositive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#4ade80" stopOpacity={0} />
+                  <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.3} />
                   </linearGradient>
-                  <linearGradient id="colorNegative" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f87171" stopOpacity={0} />
-                    <stop offset="95%" stopColor="#f87171" stopOpacity={0.3} />
+                  <linearGradient id="colorRed" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} vertical={false} />
                 <XAxis
                   dataKey="date"
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  stroke="#666"
+                  tick={{ fill: "#888", fontSize: 11 }}
                   ticks={xAxisTicks}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  stroke="#666"
+                  tick={{ fill: "#888", fontSize: 11 }}
                   tickFormatter={(value) => `$${value.toFixed(0)}`}
-                  domain={[minPnL, maxPnL]}
+                  domain={[minPnL - Math.abs(minPnL) * 0.1, maxPnL + Math.abs(maxPnL) * 0.1]}
                   ticks={ticks}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
-                {/* Reference line at $0 */}
+                {/* Dashed horizontal line at $0 */}
                 <ReferenceLine 
                   y={0} 
-                  stroke="hsl(var(--muted-foreground))" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
+                  stroke="#666" 
+                  strokeWidth={1.5}
+                  strokeDasharray="8 8"
                 />
                 
-                {/* Green area for positive values */}
+                {/* Single continuous line with color-filled areas */}
                 <Area
                   type="monotone"
-                  dataKey="greenLine"
-                  stroke="#4ade80"
-                  strokeWidth={3}
-                  fill="url(#colorPositive)"
+                  dataKey="pnl"
+                  stroke="#10b981"
+                  strokeWidth={2.5}
+                  fill="url(#colorGreen)"
                   fillOpacity={1}
-                  connectNulls={false}
+                  isAnimationActive={false}
                 />
                 
-                {/* Red area for negative values */}
+                {/* Overlay red area for negative values */}
                 <Area
                   type="monotone"
-                  dataKey="redLine"
-                  stroke="#f87171"
-                  strokeWidth={3}
-                  fill="url(#colorNegative)"
+                  dataKey={(d) => d.pnl < 0 ? d.pnl : null}
+                  stroke="#ef4444"
+                  strokeWidth={2.5}
+                  fill="url(#colorRed)"
                   fillOpacity={1}
                   connectNulls={false}
+                  isAnimationActive={false}
                 />
               </AreaChart>
             </ResponsiveContainer>
