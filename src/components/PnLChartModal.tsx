@@ -59,8 +59,29 @@ export const PnLChartModal = ({
     };
   });
 
+  // Add interpolated points where line crosses $0
+  const interpolatedData: any[] = [];
+  for (let i = 0; i < chartData.length; i++) {
+    const current = chartData[i];
+    const prev = i > 0 ? chartData[i - 1] : null;
+    
+    if (prev && ((prev.pnl < 0 && current.pnl >= 0) || (prev.pnl >= 0 && current.pnl < 0))) {
+      // Calculate interpolated point at $0
+      const ratio = Math.abs(prev.pnl) / (Math.abs(prev.pnl) + Math.abs(current.pnl));
+      const interpolatedTimestamp = prev.timestamp + (current.timestamp - prev.timestamp) * ratio;
+      interpolatedData.push({
+        date: format(new Date(interpolatedTimestamp), isYearlyView ? "MMM dd" : "MMM dd"),
+        pnl: 0,
+        profit: 0,
+        timestamp: interpolatedTimestamp,
+      });
+    }
+    
+    interpolatedData.push(current);
+  }
+
   // Get unique dates for X-axis to avoid duplicates
-  const uniqueDates = Array.from(new Set(chartData.map(d => d.date)));
+  const uniqueDates = Array.from(new Set(interpolatedData.map(d => d.date)));
   const xAxisTicks = uniqueDates.filter((_, idx) => {
     // Show fewer ticks for better readability
     const step = Math.ceil(uniqueDates.length / 10);
@@ -68,8 +89,8 @@ export const PnLChartModal = ({
   });
 
   // Find min and max for chart domain
-  const minPnL = Math.min(...chartData.map((d) => d.pnl), 0);
-  const maxPnL = Math.max(...chartData.map((d) => d.pnl), 0);
+  const minPnL = Math.min(...interpolatedData.map((d) => d.pnl), 0);
+  const maxPnL = Math.max(...interpolatedData.map((d) => d.pnl), 0);
   
   // Calculate range and 25% increments
   const range = maxPnL - minPnL;
@@ -85,9 +106,7 @@ export const PnLChartModal = ({
   ].map(v => Math.round(v * 100) / 100);
 
   // Create segments for continuous line with color changes
-  const chartDataWithSegments = chartData.map((d, idx) => {
-    const isNegative = d.pnl < 0;
-    
+  const chartDataWithSegments = interpolatedData.map((d) => {
     return {
       ...d,
       // Only show green when above 0
