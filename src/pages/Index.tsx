@@ -5,9 +5,10 @@ import { TradeProviderModal } from "@/components/TradeProviderModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { CreateProfileModal } from "@/components/CreateProfileModal";
 import { QuestionEditorModal } from "@/components/QuestionEditorModal";
+import { PnLChartModal } from "@/components/PnLChartModal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Info, Settings } from "lucide-react";
+import { Upload, Info, Settings, TrendingUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseTradeFile } from "@/utils/tradeParser";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ const Index = () => {
   const [selectedProfile, setSelectedProfile] = useState("default");
   const [currentProfileName, setCurrentProfileName] = useState("");
   const [currentProfileId, setCurrentProfileId] = useState("");
+  const [showPnLChart, setShowPnLChart] = useState(false);
   
   const getMonthlyStats = () => {
     const currentMonth = calendarDate.getMonth();
@@ -152,34 +154,46 @@ const Index = () => {
                     </div>
                     
                     {/* Winners/Losers Box */}
-                    <div className="bg-card border border-border rounded-lg px-4 py-2">
-                      <div className="flex gap-6 items-center">
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Winners</div>
-                          <div className="text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
-                            {monthlyStats.winners}
+                    <div className="space-y-3">
+                      <div className="bg-card border border-border rounded-lg px-4 py-2">
+                        <div className="flex gap-6 items-center">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Winners</div>
+                            <div className="text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
+                              {monthlyStats.winners}
+                            </div>
                           </div>
-                        </div>
-                        
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="relative w-32 h-3 bg-red-500 rounded-full overflow-hidden">
-                            <div 
-                              className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
-                              style={{ width: `${monthlyStats.winnerPercentage}%` }}
-                            />
+                          
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="relative w-32 h-3 bg-red-500 rounded-full overflow-hidden">
+                              <div 
+                                className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
+                                style={{ width: `${monthlyStats.winnerPercentage}%` }}
+                              />
+                            </div>
+                            <div className="text-xs text-muted-foreground/60" style={{ fontWeight: 500 }}>
+                              Win Rate: {monthlyStats.winnerPercentage.toFixed(0)}%
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground/60" style={{ fontWeight: 500 }}>
-                            Win Rate: {monthlyStats.winnerPercentage.toFixed(0)}%
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Losers</div>
-                          <div className="text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
-                            {monthlyStats.losers}
+                          
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Losers</div>
+                            <div className="text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
+                              {monthlyStats.losers}
+                            </div>
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Open PnL Chart Button */}
+                      <Button
+                        onClick={() => setShowPnLChart(true)}
+                        className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                        variant="outline"
+                      >
+                        <TrendingUp className="w-4 h-4 mr-2" />
+                        Open PnL Chart
+                      </Button>
                     </div>
 
                     {/* Profit Ratio Box */}
@@ -328,6 +342,20 @@ const Index = () => {
         profileId={currentProfileId}
         onSave={(profileId) => setSelectedProfile(profileId)}
         onCancel={() => setShowSettings(true)}
+      />
+
+      <PnLChartModal
+        isOpen={showPnLChart}
+        onClose={() => setShowPnLChart(false)}
+        trades={useEstimatedCommissions 
+          ? trades.map(trade => ({
+              ...trade,
+              profit: trade.profit - getEstimatedCommission(trade.symbol)
+            }))
+          : trades
+        }
+        isYearlyView={isYearlyView}
+        currentDate={calendarDate}
       />
     </div>
   );

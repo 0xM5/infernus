@@ -401,7 +401,7 @@ export const TradeDetailsModal = ({
                     value={freeJournal}
                     onChange={setFreeJournal}
                     modules={modules}
-                    className="h-[calc(100%-50px)] bg-background rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-input [&_.ql-toolbar]:border-input"
+                    className="h-[calc(100%-50px)] bg-background rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-input [&_.ql-toolbar]:border-input [&_.ql-container]:bg-background [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[200px]"
                   />
                 </div>
               )}
