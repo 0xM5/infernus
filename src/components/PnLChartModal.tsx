@@ -1,5 +1,5 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceLine } from "recharts";
 import { format } from "date-fns";
 
 interface Trade {
@@ -124,26 +124,41 @@ export const PnLChartModal = ({
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
-                {/* Positive area */}
-                <Area
-                  type="monotone"
-                  dataKey="pnl"
-                  stroke="#4ade80"
-                  strokeWidth={3}
-                  fill="url(#colorPositive)"
-                  fillOpacity={1}
+                {/* Reference line at $0 */}
+                <ReferenceLine 
+                  y={0} 
+                  stroke="hsl(var(--muted-foreground))" 
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  label={{ value: '$0', fill: 'hsl(var(--muted-foreground))', fontSize: 12, position: 'left' }}
                 />
                 
-                {/* Draw line in red when below zero */}
-                {chartData.some(d => d.pnl < 0) && (
-                  <Line
+                {/* Green area for positive values */}
+                {chartData.some(d => d.pnl > 0) && (
+                  <Area
                     type="monotone"
                     dataKey="pnl"
-                    stroke="#f87171"
+                    stroke="#4ade80"
                     strokeWidth={3}
-                    dot={false}
-                    activeDot={{ r: 6 }}
+                    fill="url(#colorPositive)"
+                    fillOpacity={1}
+                    connectNulls
                   />
+                )}
+                
+                {/* Red area and line for negative values */}
+                {chartData.some(d => d.pnl < 0) && (
+                  <>
+                    <Area
+                      type="monotone"
+                      dataKey="pnl"
+                      stroke="#f87171"
+                      strokeWidth={3}
+                      fill="url(#colorNegative)"
+                      fillOpacity={1}
+                      connectNulls
+                    />
+                  </>
                 )}
               </AreaChart>
             </ResponsiveContainer>
