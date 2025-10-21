@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { TradeProviderModal } from "@/components/TradeProviderModal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Info, Minus } from "lucide-react";
+import { Upload, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseTradeFile } from "@/utils/tradeParser";
 import { toast } from "sonner";
@@ -29,41 +29,6 @@ const Index = () => {
   const [isYearlyView, setIsYearlyView] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [useEstimatedCommissions, setUseEstimatedCommissions] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0 });
-  
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    dragRef.current = {
-      startX: e.clientX - position.x,
-      startY: e.clientY - position.y,
-    };
-  };
-  
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      setPosition({
-        x: e.clientX - dragRef.current.startX,
-        y: e.clientY - dragRef.current.startY,
-      });
-    }
-  };
-  
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-  
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging]);
   
   const getMonthlyStats = () => {
     const currentMonth = calendarDate.getMonth();
@@ -153,19 +118,12 @@ const Index = () => {
           className={`relative bg-card border border-border rounded-3xl transition-all duration-500 ${
             isExpanded ? "w-[90vw] h-[85vh] p-8" : "w-[600px] h-[400px] p-12"
           } flex ${isExpanded ? "flex-col" : "items-center justify-center"}`}
-          style={isExpanded ? {
-            transform: `translate(${position.x}px, ${position.y}px)`,
-            cursor: isDragging ? 'grabbing' : 'default'
-          } : {}}
         >
           {!isExpanded ? (
             <JournalButton onClick={() => setIsExpanded(true)} />
           ) : (
             <div className="space-y-6 h-full flex flex-col">
-              <div 
-                className="flex items-center justify-between cursor-grab active:cursor-grabbing"
-                onMouseDown={handleMouseDown}
-              >
+              <div className="flex items-center justify-between">
                 <div className="space-y-4">
                   <h1 className="text-3xl font-bold text-foreground" style={{ fontWeight: 700 }}>
                     FindYourEdge
@@ -194,14 +152,14 @@ const Index = () => {
                           </div>
                         </div>
                         
-                        <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-col items-center gap-1">
                           <div className="relative w-32 h-3 bg-red-500 rounded-full overflow-hidden">
                             <div 
                               className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
                               style={{ width: `${monthlyStats.winnerPercentage}%` }}
                             />
                           </div>
-                          <div className="text-xs text-muted-foreground/60" style={{ fontWeight: 500 }}>
+                          <div className="text-[10px] text-muted-foreground/60" style={{ fontWeight: 500 }}>
                             Win Rate: {monthlyStats.winnerPercentage.toFixed(0)}%
                           </div>
                         </div>
@@ -291,11 +249,10 @@ const Index = () => {
                   />
                   <Button
                     variant="outline"
-                    size="icon"
                     onClick={() => setIsExpanded(false)}
-                    className="border-border h-9 w-9"
+                    className="border-border"
                   >
-                    <Minus className="h-4 w-4" />
+                    Collapse
                   </Button>
                 </div>
               </div>
