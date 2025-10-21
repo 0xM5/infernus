@@ -104,6 +104,12 @@ export const PnLChartModal = ({
     minPnL + increment * 3,
     maxPnL
   ].map(v => Math.round(v * 100) / 100);
+  
+  // Ensure $0 is included in ticks if it's within range
+  if (minPnL < 0 && maxPnL > 0 && !ticks.includes(0)) {
+    ticks.push(0);
+    ticks.sort((a, b) => a - b);
+  }
 
   // Create segments for continuous line with color changes
   const chartDataWithSegments = interpolatedData.map((d) => {
@@ -176,13 +182,6 @@ export const PnLChartModal = ({
                   stroke="hsl(var(--muted-foreground))" 
                   strokeWidth={2}
                   strokeDasharray="5 5"
-                  label={{ 
-                    value: '$0', 
-                    fill: 'hsl(var(--muted-foreground))', 
-                    fontSize: 14,
-                    fontWeight: 600,
-                    position: 'insideTopLeft'
-                  }}
                 />
                 
                 {/* Green area for positive values */}
