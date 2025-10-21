@@ -8,6 +8,7 @@ import { Upload, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseTradeFile } from "@/utils/tradeParser";
 import { toast } from "sonner";
+import { getEstimatedCommission } from "@/utils/commissionEstimates";
 
 export interface Trade {
   date: Date;
@@ -27,6 +28,7 @@ const Index = () => {
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [isYearlyView, setIsYearlyView] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [useEstimatedCommissions, setUseEstimatedCommissions] = useState(false);
   
   const getMonthlyStats = () => {
     const currentMonth = calendarDate.getMonth();
@@ -41,9 +43,17 @@ const Index = () => {
       }
     });
     
-    const totalPnL = monthlyTrades.reduce((sum, trade) => sum + trade.profit, 0);
-    const winningTrades = monthlyTrades.filter(trade => trade.profit > 0);
-    const losingTrades = monthlyTrades.filter(trade => trade.profit < 0);
+    // Apply estimated commissions if enabled
+    const tradesWithCommissions = useEstimatedCommissions
+      ? monthlyTrades.map(trade => ({
+          ...trade,
+          profit: trade.profit - getEstimatedCommission(trade.symbol)
+        }))
+      : monthlyTrades;
+    
+    const totalPnL = tradesWithCommissions.reduce((sum, trade) => sum + trade.profit, 0);
+    const winningTrades = tradesWithCommissions.filter(trade => trade.profit > 0);
+    const losingTrades = tradesWithCommissions.filter(trade => trade.profit < 0);
     const winners = winningTrades.length;
     const losers = losingTrades.length;
     const total = winners + losers;
@@ -208,6 +218,13 @@ const Index = () => {
                     />
                     <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Yearly</span>
                   </div>
+                  <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
+                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Est. Commission</span>
+                    <Switch 
+                      checked={useEstimatedCommissions} 
+                      onCheckedChange={setUseEstimatedCommissions}
+                    />
+                  </div>
                   <Button
                     variant="default"
                     className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -237,7 +254,13 @@ const Index = () => {
 
               <div className="flex-1 overflow-hidden">
                 <TradeCalendar 
-                  trades={trades} 
+                  trades={useEstimatedCommissions 
+                    ? trades.map(trade => ({
+                        ...trade,
+                        profit: trade.profit - getEstimatedCommission(trade.symbol)
+                      }))
+                    : trades
+                  } 
                   currentDate={calendarDate}
                   setCurrentDate={setCalendarDate}
                 />
