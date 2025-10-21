@@ -55,7 +55,16 @@ export const PnLChartModal = ({
       date: format(new Date(trade.date), isYearlyView ? "MMM dd" : "MMM dd"),
       pnl: parseFloat(cumulativePnL.toFixed(2)),
       profit: trade.profit,
+      timestamp: new Date(trade.date).getTime(),
     };
+  });
+
+  // Get unique dates for X-axis to avoid duplicates
+  const uniqueDates = Array.from(new Set(chartData.map(d => d.date)));
+  const xAxisTicks = uniqueDates.filter((_, idx) => {
+    // Show fewer ticks for better readability
+    const step = Math.ceil(uniqueDates.length / 10);
+    return idx % step === 0;
   });
 
   // Find min and max for chart domain
@@ -78,17 +87,13 @@ export const PnLChartModal = ({
   // Create segments for continuous line with color changes
   const chartDataWithSegments = chartData.map((d, idx) => {
     const isNegative = d.pnl < 0;
-    const prevIsNegative = idx > 0 ? chartData[idx - 1].pnl < 0 : false;
     
     return {
       ...d,
-      greenLine: !isNegative ? d.pnl : null,
-      redLine: isNegative ? d.pnl : null,
-      // For transitions, include both colors at crossing point
-      ...(idx > 0 && isNegative !== prevIsNegative ? {
-        greenLine: d.pnl,
-        redLine: d.pnl,
-      } : {})
+      // Only show green when above 0
+      greenLine: d.pnl >= 0 ? d.pnl : null,
+      // Only show red when below 0
+      redLine: d.pnl < 0 ? d.pnl : null,
     };
   });
 
@@ -134,6 +139,8 @@ export const PnLChartModal = ({
                   dataKey="date"
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  ticks={xAxisTicks}
+                  interval="preserveStartEnd"
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
@@ -160,7 +167,7 @@ export const PnLChartModal = ({
                   strokeWidth={3}
                   fill="url(#colorPositive)"
                   fillOpacity={1}
-                  connectNulls={true}
+                  connectNulls={false}
                 />
                 
                 {/* Red area for negative values */}
@@ -171,7 +178,7 @@ export const PnLChartModal = ({
                   strokeWidth={3}
                   fill="url(#colorNegative)"
                   fillOpacity={1}
-                  connectNulls={true}
+                  connectNulls={false}
                 />
               </AreaChart>
             </ResponsiveContainer>
