@@ -61,16 +61,24 @@ export const PnLChartModal = ({
   // Find min and max for chart domain
   const minPnL = Math.min(0, ...chartData.map((d) => d.pnl));
   const maxPnL = Math.max(0, ...chartData.map((d) => d.pnl));
+  
+  // Calculate range and 25% increments
+  const range = maxPnL - minPnL;
+  const increment = range * 0.25;
+  const yAxisMin = Math.floor(minPnL / increment) * increment;
+  const yAxisMax = Math.ceil(maxPnL / increment) * increment;
+  
+  // Generate ticks at 25% increments
+  const ticks = [];
+  for (let i = yAxisMin; i <= yAxisMax; i += increment) {
+    ticks.push(Math.round(i * 100) / 100);
+  }
 
-  // Split data into positive and negative regions
-  const positiveData = chartData.map((d) => ({
+  // Split data into positive and negative for coloring
+  const chartDataWithSplit = chartData.map((d) => ({
     ...d,
-    positivePnl: d.pnl >= 0 ? d.pnl : 0,
-  }));
-
-  const negativeData = chartData.map((d) => ({
-    ...d,
-    negativePnl: d.pnl < 0 ? d.pnl : 0,
+    positivePnl: d.pnl > 0 ? d.pnl : null,
+    negativePnl: d.pnl < 0 ? d.pnl : null,
   }));
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -99,7 +107,7 @@ export const PnLChartModal = ({
           </h2>
           <div className="h-[65vh] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={chartDataWithSplit}>
                 <defs>
                   <linearGradient id="colorPositive" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3} />
@@ -119,8 +127,9 @@ export const PnLChartModal = ({
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  tickFormatter={(value) => `$${value}`}
-                  domain={[minPnL * 1.1, maxPnL * 1.1]}
+                  tickFormatter={(value) => `$${value.toFixed(0)}`}
+                  domain={[yAxisMin, yAxisMax]}
+                  ticks={ticks}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
@@ -134,32 +143,26 @@ export const PnLChartModal = ({
                 />
                 
                 {/* Green area for positive values */}
-                {chartData.some(d => d.pnl > 0) && (
-                  <Area
-                    type="monotone"
-                    dataKey="pnl"
-                    stroke="#4ade80"
-                    strokeWidth={3}
-                    fill="url(#colorPositive)"
-                    fillOpacity={1}
-                    connectNulls
-                  />
-                )}
+                <Area
+                  type="monotone"
+                  dataKey="positivePnl"
+                  stroke="#4ade80"
+                  strokeWidth={3}
+                  fill="url(#colorPositive)"
+                  fillOpacity={1}
+                  connectNulls={false}
+                />
                 
-                {/* Red area and line for negative values */}
-                {chartData.some(d => d.pnl < 0) && (
-                  <>
-                    <Area
-                      type="monotone"
-                      dataKey="pnl"
-                      stroke="#f87171"
-                      strokeWidth={3}
-                      fill="url(#colorNegative)"
-                      fillOpacity={1}
-                      connectNulls
-                    />
-                  </>
-                )}
+                {/* Red area for negative values */}
+                <Area
+                  type="monotone"
+                  dataKey="negativePnl"
+                  stroke="#f87171"
+                  strokeWidth={3}
+                  fill="url(#colorNegative)"
+                  fillOpacity={1}
+                  connectNulls={false}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
