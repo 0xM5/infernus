@@ -46,10 +46,21 @@ const Index = () => {
   const [showStudyTrades, setShowStudyTrades] = useState(false);
   const [studyEdge, setStudyEdge] = useState<{ edge: string; wins: number; losses: number } | null>(null);
   const [edgesVersion, setEdgesVersion] = useState(0);
+  const [selectedAccountProfile, setSelectedAccountProfile] = useState("");
+  const [useCommission, setUseCommission] = useState(false);
+
   useEffect(() => {
     const saved = localStorage.getItem("edgeShowerEnabled");
     if (saved) {
       setEdgeShowerEnabled(JSON.parse(saved));
+    }
+
+    const savedAccounts = localStorage.getItem("tradeAccountProfiles");
+    if (savedAccounts) {
+      const accounts = JSON.parse(savedAccounts);
+      if (accounts.length > 0) {
+        setSelectedAccountProfile(accounts[0].id);
+      }
     }
   }, []);
 
@@ -92,12 +103,15 @@ const Index = () => {
       }
     });
     
-    // Apply estimated commissions if enabled
-    const tradesWithCommissions = useEstimatedCommissions
-      ? monthlyTrades.map(trade => ({
-          ...trade,
-          profit: trade.profit - getEstimatedCommission(trade.symbol)
-        }))
+    // Apply commissions if enabled
+    const tradesWithCommissions = useCommission
+      ? monthlyTrades.map(trade => {
+          const commissionValue = parseFloat(localStorage.getItem("userCommission") || "0");
+          return {
+            ...trade,
+            profit: trade.profit - commissionValue
+          };
+        })
       : monthlyTrades;
     
     const totalPnL = tradesWithCommissions.reduce((sum, trade) => sum + trade.profit, 0);
@@ -293,16 +307,16 @@ const Index = () => {
                     <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Yearly</span>
                   </div>
                   <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
-                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Est. Commission</span>
+                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Commission</span>
                     <Switch 
-                      checked={useEstimatedCommissions} 
-                      onCheckedChange={setUseEstimatedCommissions}
+                      checked={useCommission} 
+                      onCheckedChange={setUseCommission}
                     />
                   </div>
                   <Button
                     variant="default"
                     className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={() => setShowProviderModal(true)}
+                    onClick={() => document.getElementById("file-upload")?.click()}
                   >
                     <div className="flex items-center gap-2">
                       <Upload className="w-4 h-4" />
@@ -329,11 +343,14 @@ const Index = () => {
               {edgeShowerEnabled && (
                 <div className="flex justify-center">
                   <EdgeShowerBox 
-                    trades={useEstimatedCommissions 
-                      ? trades.map(trade => ({
-                          ...trade,
-                          profit: trade.profit - getEstimatedCommission(trade.symbol)
-                        }))
+                    trades={useCommission 
+                      ? trades.map(trade => {
+                          const commissionValue = parseFloat(localStorage.getItem("userCommission") || "0");
+                          return {
+                            ...trade,
+                            profit: trade.profit - commissionValue
+                          };
+                        })
                       : trades
                     }
                     onStudyClick={handleStudyClick}
@@ -344,13 +361,16 @@ const Index = () => {
 
               <div className="w-full max-w-[1370px] mx-auto" style={{ maxHeight: '758px' }}>
                 <TradeCalendar
-                  trades={useEstimatedCommissions
-                    ? trades.map(trade => ({
-                        ...trade,
-                        profit: trade.profit - getEstimatedCommission(trade.symbol)
-                      }))
+                  trades={useCommission
+                    ? trades.map(trade => {
+                        const commissionValue = parseFloat(localStorage.getItem("userCommission") || "0");
+                        return {
+                          ...trade,
+                          profit: trade.profit - commissionValue
+                        };
+                      })
                     : trades
-                  } 
+                  }
                   currentDate={calendarDate}
                   setCurrentDate={setCalendarDate}
                   selectedProfile={selectedProfile}
@@ -361,15 +381,6 @@ const Index = () => {
         </div>
       </div>
       
-      <TradeProviderModal
-        open={showProviderModal}
-        onClose={() => setShowProviderModal(false)}
-        onProviderSelect={(provider) => {
-          setShowProviderModal(false);
-          document.getElementById("file-upload")?.click();
-        }}
-      />
-
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
@@ -378,6 +389,8 @@ const Index = () => {
         onProfileChange={setSelectedProfile}
         edgeShowerEnabled={edgeShowerEnabled}
         onEdgeShowerChange={handleEdgeShowerChange}
+        selectedAccountProfile={selectedAccountProfile}
+        onAccountProfileChange={setSelectedAccountProfile}
       />
 
       <StudyTradesModal
@@ -415,11 +428,14 @@ const Index = () => {
       <PnLChartModal
         isOpen={showPnLChart}
         onClose={() => setShowPnLChart(false)}
-        trades={useEstimatedCommissions 
-          ? trades.map(trade => ({
-              ...trade,
-              profit: trade.profit - getEstimatedCommission(trade.symbol)
-            }))
+        trades={useCommission 
+          ? trades.map(trade => {
+              const commissionValue = parseFloat(localStorage.getItem("userCommission") || "0");
+              return {
+                ...trade,
+                profit: trade.profit - commissionValue
+              };
+            })
           : trades
         }
         isYearlyView={isYearlyView}

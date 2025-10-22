@@ -51,12 +51,12 @@ export const PnLChartModal = ({
   const generateDateRange = () => {
     const dates: Date[] = [];
     if (isYearlyView) {
-      // Generate dates for the entire year (first day of each month)
+      // Generate first day of each month for the entire year
       for (let month = 0; month < 12; month++) {
         dates.push(new Date(currentDate.getFullYear(), month, 1));
       }
     } else {
-      // Generate dates for the entire month
+      // Generate all days for the entire month
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -68,6 +68,11 @@ export const PnLChartModal = ({
   };
 
   const allDates = generateDateRange();
+
+  // Find the last trade date
+  const lastTradeDate = sortedTrades.length > 0 
+    ? new Date(sortedTrades[sortedTrades.length - 1].date)
+    : null;
 
   // Create a map of trade dates to cumulative P&L
   const tradeMap = new Map<string, { pnl: number; profit: number }>();
@@ -82,35 +87,37 @@ export const PnLChartModal = ({
     });
   });
 
-  // Build chart data with all dates
-  const chartData = allDates.map((date) => {
-    const dateKey = format(date, "yyyy-MM-dd");
-    const tradeData = tradeMap.get(dateKey);
-    
-    if (tradeData) {
-      return {
-        date: format(date, isYearlyView ? "MMM dd" : "MMM dd"),
-        pnl: tradeData.pnl,
-        profit: tradeData.profit,
-        timestamp: date.getTime(),
-      };
-    } else {
-      // Find the last known cumulative P&L before this date
-      let lastPnL = 0;
-      for (const [key, value] of tradeMap.entries()) {
-        const keyDate = new Date(key);
-        if (keyDate < date) {
-          lastPnL = value.pnl;
+  // Build chart data - only include data up to last trade date
+  const chartData = allDates
+    .filter((date) => !lastTradeDate || date <= lastTradeDate)
+    .map((date) => {
+      const dateKey = format(date, "yyyy-MM-dd");
+      const tradeData = tradeMap.get(dateKey);
+      
+      if (tradeData) {
+        return {
+          date: format(date, isYearlyView ? "MMM" : "d"),
+          pnl: tradeData.pnl,
+          profit: tradeData.profit,
+          timestamp: date.getTime(),
+        };
+      } else {
+        // Find the last known cumulative P&L before this date
+        let lastPnL = 0;
+        for (const [key, value] of tradeMap.entries()) {
+          const keyDate = new Date(key);
+          if (keyDate < date) {
+            lastPnL = value.pnl;
+          }
         }
+        return {
+          date: format(date, isYearlyView ? "MMM" : "d"),
+          pnl: lastPnL,
+          profit: 0,
+          timestamp: date.getTime(),
+        };
       }
-      return {
-        date: format(date, isYearlyView ? "MMM dd" : "MMM dd"),
-        pnl: lastPnL,
-        profit: 0,
-        timestamp: date.getTime(),
-      };
-    }
-  });
+    });
 
   // Add interpolated points where line crosses $0
   const interpolatedData: any[] = [];
@@ -133,36 +140,40 @@ export const PnLChartModal = ({
     interpolatedData.push(current);
   }
 
-  // Get unique dates for X-axis to avoid duplicates
-  const uniqueDates = Array.from(new Set(interpolatedData.map(d => d.date)));
-  const xAxisTicks = uniqueDates.filter((_, idx) => {
-    // Show fewer ticks for better readability
-    const step = Math.ceil(uniqueDates.length / 10);
-    return idx % step === 0;
-  });
+  // Get unique dates for X-axis ticks - 8 for monthly, 12 for yearly
+  const generateXAxisTicks = () => {
+    if (isYearlyView) {
+      // 12 ticks for yearly (Jan 1, Feb 1, Mar 1, etc.)
+      return allDates.slice(0, 12).map(d => format(d, "MMM"));
+    } else {
+      // 8 ticks for monthly: day 1, last day, and 6 evenly spaced between
+      const daysInMonth = allDates.length;
+      const ticks: string[] = [];
+      ticks.push(format(allDates[0], "d")); // First day
+      
+      const spacing = (daysInMonth - 2) / 6;
+      for (let i = 1; i <= 6; i++) {
+        const index = Math.round(i * spacing);
+        if (index < daysInMonth - 1) {
+          ticks.push(format(allDates[index], "d"));
+        }
+      }
+      
+      ticks.push(format(allDates[daysInMonth - 1], "d")); // Last day
+      return ticks;
+    }
+  };
 
-  // Find min and max for chart domain
+  const xAxisTicks = generateXAxisTicks();
+
+  // Find min and max for chart domain with 25% padding (zoomed out)
   const minPnL = Math.min(...interpolatedData.map((d) => d.pnl), 0);
   const maxPnL = Math.max(...interpolatedData.map((d) => d.pnl), 0);
   
-  // Calculate range and 25% increments
   const range = maxPnL - minPnL;
-  const increment = range / 4; // Divide range into 4 equal parts (25% each)
-  
-  // Generate ticks at 25% increments, ensuring we include the min and max
-  const ticks = [
-    minPnL,
-    minPnL + increment,
-    minPnL + increment * 2,
-    minPnL + increment * 3,
-    maxPnL
-  ].map(v => Math.round(v * 100) / 100);
-  
-  // Ensure $0 is included in ticks if it's within range
-  if (minPnL < 0 && maxPnL > 0 && !ticks.includes(0)) {
-    ticks.push(0);
-    ticks.sort((a, b) => a - b);
-  }
+  const padding = range * 0.25;
+  const yMin = minPnL - padding;
+  const yMax = maxPnL + padding;
 
   // Create segments for continuous line with color changes
   const chartDataWithSegments = interpolatedData.map((d) => {
@@ -227,8 +238,7 @@ export const PnLChartModal = ({
                   stroke="#666"
                   tick={{ fill: "#888", fontSize: 11 }}
                   tickFormatter={(value) => `$${value.toFixed(0)}`}
-                  domain={[minPnL - Math.abs(minPnL) * 0.1, maxPnL + Math.abs(maxPnL) * 0.1]}
-                  ticks={ticks}
+                  domain={[yMin, yMax]}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 

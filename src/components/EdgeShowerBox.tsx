@@ -71,8 +71,8 @@ export const EdgeShowerBox = ({ trades, onStudyClick, refreshKey }: EdgeShowerBo
   const bestEdgesList = bestEdges.filter(([_, stats]) => stats.wins === topWinCount);
   
   return (
-    <div className="w-[1370px] bg-card border border-border rounded-lg flex flex-col items-center py-4 px-6 gap-3">
-      <h3 className="text-lg font-bold text-foreground">Your Best Edge</h3>
+    <div className="w-[1370px] bg-card border border-border rounded-lg flex flex-col items-center justify-center py-4 px-6 gap-3">
+      <h3 className="text-lg font-bold text-foreground text-center">Your Best Edge</h3>
       
       <div className="flex items-center justify-center gap-6">
         {bestEdgesList.map(([edge, stats]) => (
@@ -80,12 +80,12 @@ export const EdgeShowerBox = ({ trades, onStudyClick, refreshKey }: EdgeShowerBo
             <div className="px-4 py-2 rounded-full bg-purple-500 text-white font-semibold text-lg">
               {edge}
             </div>
-            <div className="bg-background border border-border rounded-lg px-4 py-2 flex items-center gap-3">
+            <div className="bg-background border border-border rounded-lg px-4 py-2 flex items-center gap-3 h-12">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-semibold">Wins:</span>
                 <span className="text-sm font-bold text-green-400">{stats.wins}</span>
               </div>
-              <div className="w-px h-6 bg-border" />
+              <div className="w-px h-full bg-border" />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-semibold">Losses:</span>
                 <span className="text-sm font-bold text-red-400">{stats.losses}</span>

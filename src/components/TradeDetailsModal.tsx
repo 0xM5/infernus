@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
 import { CustomQuestionJournal } from "./CustomQuestionJournal";
+import { EdgeFinderWizard } from "./EdgeFinderWizard";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -46,6 +48,7 @@ export const TradeDetailsModal = ({
   const [helpFindEdge, setHelpFindEdge] = useState(false);
   const [freeJournal, setFreeJournal] = useState("");
   const [customAnswers, setCustomAnswers] = useState<{ [key: number]: string }>({});
+  const [showEdgeFinderWizard, setShowEdgeFinderWizard] = useState(false);
   
   // Track the current trade key for saving - use selectedTrade for accurate symbol
   const tradeKey = selectedTrade 
@@ -439,17 +442,13 @@ export const TradeDetailsModal = ({
             <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto">
               {selectedProfile === "default" && (
                 <div className="flex items-center gap-2 mb-4">
-                  <Checkbox
-                    id="help-edge"
-                    checked={helpFindEdge}
-                    onCheckedChange={(checked) => setHelpFindEdge(checked as boolean)}
-                  />
-                  <label
-                    htmlFor="help-edge"
-                    className="text-white font-semibold cursor-pointer"
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEdgeFinderWizard(true)}
+                    className="border-border"
                   >
                     Help me find my edge
-                  </label>
+                  </Button>
                 </div>
               )}
 
@@ -504,6 +503,12 @@ export const TradeDetailsModal = ({
             </div>
           </div>
         </div>
+
+        <EdgeFinderWizard
+          isOpen={showEdgeFinderWizard}
+          onClose={() => setShowEdgeFinderWizard(false)}
+          tradeKey={tradeKey}
+        />
       </DialogContent>
     </Dialog>
   );

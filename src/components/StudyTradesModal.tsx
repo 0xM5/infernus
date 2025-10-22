@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Check } from "lucide-react";
 import type { Trade } from "@/pages/Index";
 
@@ -94,21 +95,22 @@ export const StudyTradesModal = ({
 
             {tradeData && (
               <div className="space-y-4">
-                {tradeData.journal && (
+                {tradeData.freeJournal && (
                   <div className="bg-background border border-border rounded-lg p-4">
-                    <div className="text-sm font-semibold text-foreground mb-2">Journal Entry</div>
-                    <div 
-                      className="text-sm text-muted-foreground prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: tradeData.journal }}
+                    <div className="text-sm font-semibold text-foreground mb-2">Journal Notes</div>
+                    <Textarea
+                      value={tradeData.freeJournal.replace(/<[^>]*>/g, '')}
+                      readOnly
+                      className="bg-transparent border-none text-sm text-muted-foreground resize-none min-h-[150px]"
                     />
                   </div>
                 )}
 
-                {tradeData.answers && Object.keys(tradeData.answers).length > 0 && (
+                {tradeData.customAnswers && Object.keys(tradeData.customAnswers).length > 0 && (
                   <div className="bg-background border border-border rounded-lg p-4">
                     <div className="text-sm font-semibold text-foreground mb-3">Questions & Answers</div>
                     <div className="space-y-3">
-                      {Object.entries(tradeData.answers).map(([question, answer]) => (
+                      {Object.entries(tradeData.customAnswers).map(([question, answer]) => (
                         <div key={question}>
                           <div className="text-xs text-muted-foreground mb-1">{question}</div>
                           <div className="text-sm text-foreground">{answer as string}</div>
