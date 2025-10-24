@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { Trade } from "@/pages/Index";
+import { useToast } from "@/hooks/use-toast";
 
 interface EdgeShowerBoxProps {
   trades: Trade[];
@@ -8,6 +9,8 @@ interface EdgeShowerBoxProps {
 }
 
 export const EdgeShowerBox = ({ trades, onStudyClick, refreshKey }: EdgeShowerBoxProps) => {
+  const { toast } = useToast();
+  
   // Get all edges from trades
   const getEdgeStats = () => {
     const edgeMap: { [key: string]: { wins: number; losses: number } } = {};
@@ -92,7 +95,10 @@ export const EdgeShowerBox = ({ trades, onStudyClick, refreshKey }: EdgeShowerBo
               </div>
             </div>
             <Button
-              onClick={() => onStudyClick(edge, stats.wins, stats.losses)}
+              onClick={() => toast({ 
+                title: "This feature is coming soon!",
+                description: "We're working on bringing you detailed trade analysis."
+              })}
               className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
             >
               Study The Trades
