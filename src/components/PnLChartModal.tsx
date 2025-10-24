@@ -209,27 +209,29 @@ export const PnLChartModal = ({
               >
                 <defs>
                   <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.6} />
+                    <stop offset="95%" stopColor="#166534" stopOpacity={0.8} />
                   </linearGradient>
                   <linearGradient id="colorRed" x1="0" y1="1" x2="0" y2="0">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.6} />
+                    <stop offset="95%" stopColor="#7f1d1d" stopOpacity={0.8} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.2} vertical={false} />
                 <XAxis
                   dataKey="date"
-                  stroke="#666"
+                  stroke="#555"
                   tick={{ fill: "#888", fontSize: 11 }}
                   ticks={xAxisTicks}
                   interval="preserveStartEnd"
+                  axisLine={{ stroke: "#555" }}
                 />
                 <YAxis
-                  stroke="#666"
-                  tick={{ fill: "#888", fontSize: 11 }}
+                  stroke="#555"
+                  tick={{ fill: "#888", fontSize: 12 }}
                   tickFormatter={(value) => `$${value.toFixed(0)}`}
                   domain={[yMin, yMax]}
+                  axisLine={{ stroke: "#555" }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
@@ -238,14 +240,14 @@ export const PnLChartModal = ({
                   y={0} 
                   stroke="#666" 
                   strokeWidth={1.5}
-                  strokeDasharray="8 8"
+                  strokeDasharray="6 6"
                 />
                 
                 {/* Single continuous line with color-filled areas */}
                 <Area
                   type="monotone"
                   dataKey="pnl"
-                  stroke="#10b981"
+                  stroke="#22c55e"
                   strokeWidth={2.5}
                   fill="url(#colorGreen)"
                   fillOpacity={1}
@@ -256,7 +258,7 @@ export const PnLChartModal = ({
                 <Area
                   type="monotone"
                   dataKey={(d) => d.pnl < 0 ? d.pnl : null}
-                  stroke="#ef4444"
+                  stroke="#dc2626"
                   strokeWidth={2.5}
                   fill="url(#colorRed)"
                   fillOpacity={1}
