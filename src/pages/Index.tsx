@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { TradeProviderModal } from "@/components/TradeProviderModal";
@@ -29,6 +31,8 @@ export interface Trade {
 }
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [showProviderModal, setShowProviderModal] = useState(false);
@@ -48,6 +52,12 @@ const Index = () => {
   const [edgesVersion, setEdgesVersion] = useState(0);
   const [selectedAccountProfile, setSelectedAccountProfile] = useState("");
   const [useCommission, setUseCommission] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     const saved = localStorage.getItem("edgeShowerEnabled");
@@ -171,6 +181,18 @@ const Index = () => {
       toast.error("Error parsing trade file");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-background flex items-center justify-center">
+        <div className="text-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen w-full bg-background flex items-center justify-center p-8">

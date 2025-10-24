@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -6,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Plus, X, Pencil, Check } from "lucide-react";
+import { Plus, X, Pencil, Check, LogOut } from "lucide-react";
 import { DeleteProfileModal } from "./DeleteProfileModal";
 import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +49,8 @@ export const SettingsModal = ({
   onAccountProfileChange,
 }: SettingsModalProps) => {
   const { toast: toastHook } = useToast();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<QuestionProfile[]>([
     { id: "default", name: "Default", questions: [] }
   ]);
@@ -172,6 +176,13 @@ export const SettingsModal = ({
   const handleCancelRename = () => {
     setEditingProfileId(null);
     setEditingName("");
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("Logged out successfully");
+    onClose();
+    navigate("/auth");
   };
 
   return (
@@ -318,6 +329,17 @@ export const SettingsModal = ({
                 className="opacity-50"
               />
             </div>
+          </div>
+
+          <div className="pt-4 border-t border-border">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
           </div>
         </div>
 
