@@ -225,7 +225,7 @@ const Index = () => {
                                 style={{ width: `${monthlyStats.winnerPercentage}%` }}
                               />
                             </div>
-                            <div className="text-xs text-muted-foreground/60" style={{ fontWeight: 500 }}>
+                            <div className="text-xs text-muted-foreground/60 mt-1" style={{ fontWeight: 500 }}>
                               Win Rate: {monthlyStats.winnerPercentage.toFixed(0)}%
                             </div>
                           </div>
