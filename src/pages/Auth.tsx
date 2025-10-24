@@ -201,9 +201,9 @@ const Auth = () => {
         <Card className="relative w-[450px] border-border bg-card">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
-              FindYourEdge
+              Infernus
               <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">.</span>
-              com
+              app
             </CardTitle>
             <CardDescription>
               Sign in to your trading journal
