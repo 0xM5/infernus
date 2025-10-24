@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, X } from "lucide-react";
 import { DeleteProfileModal } from "./DeleteProfileModal";
 import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 interface TradeAccountProfile {
   id: string;
@@ -43,6 +44,7 @@ export const SettingsModal = ({
   selectedAccountProfile,
   onAccountProfileChange,
 }: SettingsModalProps) => {
+  const { toast: toastHook } = useToast();
   const [profiles, setProfiles] = useState<QuestionProfile[]>([
     { id: "default", name: "Default", questions: [] }
   ]);
@@ -197,7 +199,14 @@ export const SettingsModal = ({
               <span className="text-sm text-muted-foreground">Display your best edge</span>
               <Switch 
                 checked={edgeShowerEnabled} 
-                onCheckedChange={onEdgeShowerChange}
+                onCheckedChange={() => {
+                  toastHook({
+                    title: "This feature is coming soon!",
+                    description: "We're working on bringing you the Edge Shower feature."
+                  });
+                }}
+                disabled
+                className="opacity-50"
               />
             </div>
           </div>
