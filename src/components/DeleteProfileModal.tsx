@@ -25,6 +25,9 @@ export const DeleteProfileModal = ({
           <p className="text-muted-foreground">
             Are you sure you want to delete <span className="font-semibold text-foreground">"{profileName}"</span>?
           </p>
+          <p className="text-muted-foreground mt-2">
+            If this is your active profile, the first remaining profile will be automatically selected.
+          </p>
           <p className="text-destructive font-semibold mt-3">
             Once deleted, your data is gone from our database forever.
           </p>

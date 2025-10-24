@@ -4,7 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Plus, X } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Plus, X, Pencil, Check } from "lucide-react";
 import { DeleteProfileModal } from "./DeleteProfileModal";
 import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
@@ -52,18 +54,38 @@ export const SettingsModal = ({
   const [commission, setCommission] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<TradeAccountProfile | null>(null);
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const savedProfiles = localStorage.getItem("questionProfiles");
     if (savedProfiles) {
       const parsed = JSON.parse(savedProfiles);
       setProfiles([{ id: "default", name: "Default", questions: [] }, ...parsed]);
     }
 
-    const savedAccountProfiles = localStorage.getItem("tradeAccountProfiles");
+    let savedAccountProfiles = localStorage.getItem("tradeAccountProfiles");
+    let profiles: TradeAccountProfile[] = [];
+    
     if (savedAccountProfiles) {
-      setAccountProfiles(JSON.parse(savedAccountProfiles));
+      profiles = JSON.parse(savedAccountProfiles);
     }
+    
+    // If no profiles exist, create a default one
+    if (profiles.length === 0) {
+      const defaultProfile: TradeAccountProfile = {
+        id: `profile_${Date.now()}`,
+        name: "Profile 1",
+        createdAt: new Date(),
+      };
+      profiles = [defaultProfile];
+      localStorage.setItem("tradeAccountProfiles", JSON.stringify(profiles));
+      onAccountProfileChange(defaultProfile.id);
+    }
+    
+    setAccountProfiles(profiles);
 
     const savedCommission = localStorage.getItem("userCommission");
     if (savedCommission) {
@@ -96,11 +118,20 @@ export const SettingsModal = ({
   const confirmDeleteProfile = () => {
     if (!profileToDelete) return;
     
+    // Prevent deletion of last profile
+    if (accountProfiles.length === 1) {
+      toast.error("You must have at least one profile");
+      setDeleteModalOpen(false);
+      setProfileToDelete(null);
+      return;
+    }
+    
     const updated = accountProfiles.filter((p) => p.id !== profileToDelete.id);
     setAccountProfiles(updated);
     localStorage.setItem("tradeAccountProfiles", JSON.stringify(updated));
     
-    if (selectedAccountProfile === profileToDelete.id && updated.length > 0) {
+    // If deleting the selected profile, select the first remaining one
+    if (selectedAccountProfile === profileToDelete.id) {
       onAccountProfileChange(updated[0].id);
     }
     
@@ -114,6 +145,35 @@ export const SettingsModal = ({
     localStorage.setItem("userCommission", value);
   };
 
+  const handleStartRename = (profile: TradeAccountProfile) => {
+    setEditingProfileId(profile.id);
+    setEditingName(profile.name);
+  };
+
+  const handleSaveRename = () => {
+    if (!editingProfileId) return;
+    
+    const trimmedName = editingName.trim();
+    if (!trimmedName) {
+      toast.error("Profile name cannot be empty");
+      return;
+    }
+    
+    const updated = accountProfiles.map(p => 
+      p.id === editingProfileId ? { ...p, name: trimmedName } : p
+    );
+    setAccountProfiles(updated);
+    localStorage.setItem("tradeAccountProfiles", JSON.stringify(updated));
+    setEditingProfileId(null);
+    setEditingName("");
+    toast.success("Profile renamed");
+  };
+
+  const handleCancelRename = () => {
+    setEditingProfileId(null);
+    setEditingName("");
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] animate-scale-in bg-card border-border">
@@ -124,30 +184,79 @@ export const SettingsModal = ({
         <div className="space-y-6 py-4">
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground">Trade Account Profile</label>
-            <div className="space-y-2">
-              {accountProfiles.map((profile) => (
-                <div key={profile.id} className="flex items-center gap-2 bg-background border border-border rounded-lg px-4 py-2">
-                  <span className="flex-1 text-sm text-foreground">{profile.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteProfile(profile)}
-                    className="hover:bg-destructive/20 hover:text-destructive"
+            <RadioGroup value={selectedAccountProfile} onValueChange={onAccountProfileChange}>
+              <div className="space-y-2">
+                {accountProfiles.map((profile) => (
+                  <div 
+                    key={profile.id} 
+                    className={`flex items-center gap-2 bg-background border rounded-lg px-4 py-2 transition-colors ${
+                      selectedAccountProfile === profile.id ? 'border-primary' : 'border-border'
+                    }`}
                   >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                className="w-full border-border"
-                onClick={handleCreateAccountProfile}
-                disabled={accountProfiles.length >= 3}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Profile {accountProfiles.length >= 3 && "(Max 3)"}
-              </Button>
-            </div>
+                    <RadioGroupItem value={profile.id} id={profile.id} />
+                    <Label 
+                      htmlFor={profile.id} 
+                      className="flex-1 cursor-pointer"
+                    >
+                      {editingProfileId === profile.id ? (
+                        <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+                          <Input
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveRename();
+                              if (e.key === 'Escape') handleCancelRename();
+                            }}
+                            className="h-7 text-sm"
+                            autoFocus
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleSaveRename}
+                            className="h-7 w-7 hover:bg-primary/20 hover:text-primary"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-foreground">{profile.name}</span>
+                      )}
+                    </Label>
+                    {editingProfileId !== profile.id && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleStartRename(profile)}
+                          className="h-7 w-7 hover:bg-primary/20 hover:text-primary"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteProfile(profile)}
+                          className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
+                          disabled={accountProfiles.length === 1}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </RadioGroup>
+            <Button
+              variant="outline"
+              className="w-full border-border mt-2"
+              onClick={handleCreateAccountProfile}
+              disabled={accountProfiles.length >= 3}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Profile {accountProfiles.length >= 3 && "(Max 3)"}
+            </Button>
           </div>
 
           <div className="space-y-2">
