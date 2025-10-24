@@ -16,6 +16,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [accessKey, setAccessKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const { user, signIn, signUp, signOut, resetPassword } = useAuth();
@@ -87,14 +89,30 @@ const Auth = () => {
       return;
     }
 
+    if (!nickname.trim()) {
+      toast.error("Nickname is required");
+      return;
+    }
+
+    if (!accessKey.trim()) {
+      toast.error("Access key is required");
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signUp(email, password);
+    const { error } = await signUp(email, password, nickname, accessKey);
     
     if (error) {
       if (error.message.includes("User already registered")) {
         toast.error("This email is already registered");
       } else if (error.message.includes("Password should be at least")) {
         toast.error("Password should be at least 6 characters");
+      } else if (error.message.includes("Invalid access key")) {
+        toast.error("Invalid access key");
+      } else if (error.message.includes("Access key already used")) {
+        toast.error("This access key has already been used");
+      } else if (error.message.includes("Access key expired")) {
+        toast.error("This access key has expired");
       } else {
         toast.error(error.message);
       }
@@ -245,6 +263,18 @@ const Auth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="signup-nickname">Nickname</Label>
+                    <Input
+                      id="signup-nickname"
+                      type="text"
+                      placeholder="Your nickname"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      required
+                      className="bg-background border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
                       id="signup-email"
@@ -276,6 +306,18 @@ const Auth = () => {
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="bg-background border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="access-key">Access Key</Label>
+                    <Input
+                      id="access-key"
+                      type="text"
+                      placeholder="Enter your access key"
+                      value={accessKey}
+                      onChange={(e) => setAccessKey(e.target.value)}
                       required
                       className="bg-background border-border"
                     />

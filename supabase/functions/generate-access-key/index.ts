@@ -1,0 +1,64 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { type, expiresAt } = await req.json();
+
+    // Validate the type
+    const validTypes = ['24_hours', '72_hours', 'weekly', 'monthly', 'unlimited'];
+    if (!validTypes.includes(type)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid access key type' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Generate a random access key
+    const key = crypto.randomUUID().replace(/-/g, '').toUpperCase().substring(0, 16);
+
+    // Insert the access key
+    const { data, error } = await supabase
+      .from('access_keys')
+      .insert({
+        key,
+        type,
+        expires_at: expiresAt || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        key: data.key,
+        type: data.type,
+        expires_at: data.expires_at,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});

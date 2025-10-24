@@ -14,33 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
-      profiles: {
+      access_keys: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
-          updated_at: string
+          is_used: boolean
+          key: string
+          type: Database["public"]["Enums"]["access_key_type"]
+          used_at: string | null
+          used_by: string | null
         }
         Insert: {
           created_at?: string
-          id: string
-          updated_at?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          key: string
+          type: Database["public"]["Enums"]["access_key_type"]
+          used_at?: string | null
+          used_by?: string | null
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
-          updated_at?: string
+          is_used?: boolean
+          key?: string
+          type?: Database["public"]["Enums"]["access_key_type"]
+          used_at?: string | null
+          used_by?: string | null
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          access_key_id: string | null
+          account_expires_at: string | null
+          created_at: string
+          id: string
+          nickname: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_key_id?: string | null
+          account_expires_at?: string | null
+          created_at?: string
+          id: string
+          nickname?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_key_id?: string | null
+          account_expires_at?: string | null
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_access_key_id_fkey"
+            columns: ["access_key_id"]
+            isOneToOne: false
+            referencedRelation: "access_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      validate_access_key: {
+        Args: { p_key: string; p_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
+      access_key_type:
+        | "24_hours"
+        | "72_hours"
+        | "weekly"
+        | "monthly"
+        | "unlimited"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -167,6 +225,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      access_key_type: [
+        "24_hours",
+        "72_hours",
+        "weekly",
+        "monthly",
+        "unlimited",
+      ],
+    },
   },
 } as const

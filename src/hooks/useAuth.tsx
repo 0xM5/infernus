@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, nickname: string, accessKey: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
 }
@@ -47,17 +47,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, nickname: string, accessKey: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    // First, sign up the user
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
+        data: {
+          nickname: nickname,
+        },
       },
     });
-    return { error };
+
+    if (signUpError) {
+      return { error: signUpError };
+    }
+
+    // If signup successful, validate the access key
+    if (signUpData.user) {
+      const { data: validationResult, error: validationError } = await supabase.rpc(
+        'validate_access_key',
+        {
+          p_key: accessKey,
+          p_user_id: signUpData.user.id,
+        }
+      );
+
+      if (validationError) {
+        // If validation fails, sign out the user
+        await supabase.auth.signOut();
+        return { error: validationError };
+      }
+
+      // Type assertion for the validation result
+      const result = validationResult as { valid: boolean; error?: string };
+      
+      // Check if the key validation returned an error
+      if (result && !result.valid) {
+        // Sign out if key is invalid
+        await supabase.auth.signOut();
+        return { error: { message: result.error || 'Invalid access key' } };
+      }
+    }
+
+    return { error: null };
   };
 
   const signOut = async () => {
