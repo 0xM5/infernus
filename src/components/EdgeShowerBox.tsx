@@ -76,8 +76,8 @@ export const EdgeShowerBox = ({ trades, onStudyClick, refreshKey }: EdgeShowerBo
       
       <div className="flex items-center justify-center gap-6">
         {bestEdgesList.map(([edge, stats]) => (
-          <div key={edge} className="flex items-center gap-3">
-            <div className="px-4 py-2 rounded-full bg-purple-500 text-white font-semibold text-lg">
+          <div key={edge} className="flex items-center justify-center gap-3">
+            <div className="px-4 py-2 rounded-full bg-purple-500 text-white font-semibold">
               {edge}
             </div>
             <div className="bg-background border border-border rounded-lg px-4 py-2 flex items-center gap-3 h-12">
