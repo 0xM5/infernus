@@ -140,27 +140,18 @@ export const PnLChartModal = ({
     interpolatedData.push(current);
   }
 
-  // Get unique dates for X-axis ticks - 8 for monthly, 12 for yearly
+  // Get unique dates for X-axis ticks - only first and last day for monthly, 12 for yearly
   const generateXAxisTicks = () => {
     if (isYearlyView) {
       // 12 ticks for yearly (Jan 1, Feb 1, Mar 1, etc.)
       return allDates.slice(0, 12).map(d => format(d, "MMM"));
     } else {
-      // 8 ticks for monthly: day 1, last day, and 6 evenly spaced between
+      // Only 2 ticks for monthly: first day and last day
       const daysInMonth = allDates.length;
-      const ticks: string[] = [];
-      ticks.push(format(allDates[0], "d")); // First day
-      
-      const spacing = (daysInMonth - 2) / 6;
-      for (let i = 1; i <= 6; i++) {
-        const index = Math.round(i * spacing);
-        if (index < daysInMonth - 1) {
-          ticks.push(format(allDates[index], "d"));
-        }
-      }
-      
-      ticks.push(format(allDates[daysInMonth - 1], "d")); // Last day
-      return ticks;
+      return [
+        format(allDates[0], "MMM dd"),
+        format(allDates[daysInMonth - 1], "MMM dd")
+      ];
     }
   };
 

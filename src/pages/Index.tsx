@@ -103,13 +103,15 @@ const Index = () => {
       }
     });
     
-    // Apply commissions if enabled
+    // Apply commissions if enabled (divide by 2, then subtract per contract)
     const tradesWithCommissions = useCommission
       ? monthlyTrades.map(trade => {
           const commissionValue = parseFloat(localStorage.getItem("userCommission") || "0");
+          const commissionPerContract = commissionValue / 2;
+          const totalCommission = commissionPerContract * (trade.quantity || 1);
           return {
             ...trade,
-            profit: trade.profit - commissionValue
+            profit: trade.profit - totalCommission
           };
         })
       : monthlyTrades;
