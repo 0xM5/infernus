@@ -42,82 +42,34 @@ export const PnLChartModal = ({
     }
   });
 
-  // Sort trades by date
-  const sortedTrades = [...filteredTrades].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  // Generate full month/year date range
-  const generateDateRange = () => {
-    const dates: Date[] = [];
-    if (isYearlyView) {
-      // Generate first day of each month for the entire year
-      for (let month = 0; month < 12; month++) {
-        dates.push(new Date(currentDate.getFullYear(), month, 1));
-      }
-    } else {
-      // Generate all days for the entire month
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      for (let day = 1; day <= daysInMonth; day++) {
-        dates.push(new Date(year, month, day));
-      }
+  // Sort trades by date and time
+  const sortedTrades = [...filteredTrades].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    const timeCompare = dateA.getTime() - dateB.getTime();
+    
+    // If same day, sort by entry time if available
+    if (timeCompare === 0 && a.entryTime && b.entryTime) {
+      return a.entryTime.localeCompare(b.entryTime);
     }
-    return dates;
-  };
-
-  const allDates = generateDateRange();
-
-  // Find the last trade date
-  const lastTradeDate = sortedTrades.length > 0 
-    ? new Date(sortedTrades[sortedTrades.length - 1].date)
-    : null;
-
-  // Create a map of trade dates to cumulative P&L
-  const tradeMap = new Map<string, { pnl: number; profit: number }>();
-  let cumulativePnL = 0;
-  
-  sortedTrades.forEach((trade) => {
-    cumulativePnL += trade.profit;
-    const dateKey = format(new Date(trade.date), "yyyy-MM-dd");
-    tradeMap.set(dateKey, {
-      pnl: parseFloat(cumulativePnL.toFixed(2)),
-      profit: trade.profit,
-    });
+    return timeCompare;
   });
 
-  // Build chart data - only include data up to last trade date
-  const chartData = allDates
-    .filter((date) => !lastTradeDate || date <= lastTradeDate)
-    .map((date) => {
-      const dateKey = format(date, "yyyy-MM-dd");
-      const tradeData = tradeMap.get(dateKey);
-      
-      if (tradeData) {
-        return {
-          date: format(date, isYearlyView ? "MMM" : "d"),
-          pnl: tradeData.pnl,
-          profit: tradeData.profit,
-          timestamp: date.getTime(),
-        };
-      } else {
-        // Find the last known cumulative P&L before this date
-        let lastPnL = 0;
-        for (const [key, value] of tradeMap.entries()) {
-          const keyDate = new Date(key);
-          if (keyDate < date) {
-            lastPnL = value.pnl;
-          }
-        }
-        return {
-          date: format(date, isYearlyView ? "MMM" : "d"),
-          pnl: lastPnL,
-          profit: 0,
-          timestamp: date.getTime(),
-        };
-      }
-    });
+  // Build chart data with each individual trade
+  let cumulativePnL = 0;
+  const chartData = sortedTrades.map((trade, index) => {
+    cumulativePnL += trade.profit;
+    const tradeDate = new Date(trade.date);
+    
+    return {
+      date: format(tradeDate, isYearlyView ? "MMM dd" : "MMM dd"),
+      pnl: parseFloat(cumulativePnL.toFixed(2)),
+      profit: trade.profit,
+      timestamp: tradeDate.getTime(),
+      tradeNumber: index + 1,
+      symbol: trade.symbol,
+    };
+  });
 
   // Add interpolated points where line crosses $0
   const interpolatedData: any[] = [];
@@ -140,22 +92,10 @@ export const PnLChartModal = ({
     interpolatedData.push(current);
   }
 
-  // Get unique dates for X-axis ticks - only first and last day for monthly, 12 for yearly
-  const generateXAxisTicks = () => {
-    if (isYearlyView) {
-      // 12 ticks for yearly (Jan 1, Feb 1, Mar 1, etc.)
-      return allDates.slice(0, 12).map(d => format(d, "MMM"));
-    } else {
-      // Only 2 ticks for monthly: first day and last day
-      const daysInMonth = allDates.length;
-      return [
-        format(allDates[0], "MMM dd"),
-        format(allDates[daysInMonth - 1], "MMM dd")
-      ];
-    }
-  };
-
-  const xAxisTicks = generateXAxisTicks();
+  // Get X-axis ticks - show first and last trade dates
+  const xAxisTicks = chartData.length > 0 
+    ? [chartData[0].date, chartData[chartData.length - 1].date]
+    : [];
 
   // Find min and max for chart domain with 25% padding (zoomed out)
   const minPnL = Math.min(...interpolatedData.map((d) => d.pnl), 0);
@@ -179,15 +119,21 @@ export const PnLChartModal = ({
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-sm text-muted-foreground mb-1">{payload[0].payload.date}</p>
+          <p className="text-sm text-muted-foreground mb-1">
+            {data.symbol ? `${data.symbol} - ` : ""}{data.date}
+          </p>
           <p className={`text-lg font-bold ${payload[0].value >= 0 ? "text-green-400" : "text-red-400"}`}>
-            {payload[0].value >= 0 ? "+" : ""}${payload[0].value.toFixed(2)}
+            Cumulative: {payload[0].value >= 0 ? "+" : ""}${payload[0].value.toFixed(2)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Trade: {payload[0].payload.profit >= 0 ? "+" : ""}${payload[0].payload.profit.toFixed(2)}
+            This Trade: {data.profit >= 0 ? "+" : ""}${data.profit.toFixed(2)}
           </p>
+          {data.tradeNumber && (
+            <p className="text-xs text-muted-foreground">Trade #{data.tradeNumber}</p>
+          )}
         </div>
       );
     }
