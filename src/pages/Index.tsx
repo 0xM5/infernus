@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { TradeProviderModal } from "@/components/TradeProviderModal";
@@ -12,11 +13,12 @@ import { EdgeShowerBox } from "@/components/EdgeShowerBox";
 import { StudyTradesModal } from "@/components/StudyTradesModal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Info, Settings, TrendingUp } from "lucide-react";
+import { Upload, Info, Settings, TrendingUp, LogOut } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseTradeFile } from "@/utils/tradeParser";
 import { toast } from "sonner";
 import { getEstimatedCommission } from "@/utils/commissionEstimates";
+import { format } from "date-fns";
 
 export interface Trade {
   date: Date;
@@ -31,7 +33,7 @@ export interface Trade {
 }
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -52,12 +54,45 @@ const Index = () => {
   const [edgesVersion, setEdgesVersion] = useState(0);
   const [selectedAccountProfile, setSelectedAccountProfile] = useState("");
   const [useCommission, setUseCommission] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ nickname: string | null; account_expires_at: string | null } | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('nickname, account_expires_at')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) {
+          setUserProfile(data);
+        }
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
+
+  const formatExpirationDate = () => {
+    if (!userProfile?.account_expires_at) {
+      return <span className="text-yellow-400">Unlimited Access</span>;
+    }
+    
+    const expiryDate = new Date(userProfile.account_expires_at);
+    return format(expiryDate, "EEEE, MMMM d 'at' h:mmaaa 'EST'");
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("edgeShowerEnabled");
@@ -212,11 +247,14 @@ const Index = () => {
             <div className="space-y-6 h-full flex flex-col">
               <div className="flex items-center justify-between">
                 <div className="space-y-4">
-                  <h1 className="text-3xl font-bold text-foreground" style={{ fontWeight: 700 }}>
-                    FindYourEdge
-                    <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">.</span>
-                    com
-                  </h1>
+                  <div>
+                    <h1 className="text-2xl font-bold text-foreground" style={{ fontWeight: 700 }}>
+                      Welcome to Infernus Beta <span className="text-red-400">v0.01b</span>, <span className="font-bold">{userProfile?.nickname || 'User'}</span>
+                    </h1>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Expires On: {formatExpirationDate()}
+                    </div>
+                  </div>
                   
                   <div className="flex gap-4 items-center">
                     {/* Monthly/Total PnL Box */}
@@ -403,6 +441,22 @@ const Index = () => {
             </div>
           )}
         </div>
+        
+        {/* Logout button at bottom */}
+        {isExpanded && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{userProfile?.nickname || 'User'}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="border-border hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        )}
       </div>
       
       <SettingsModal
