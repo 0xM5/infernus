@@ -83,15 +83,35 @@ export const TradeDetailsModal = ({
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
-  // Load trade data from database
+  // Load trade data from database with hydration guard to avoid loops
   useEffect(() => {
-    if (currentTrade) {
-      setRating(currentTrade.rating || 0);
-      setTarget(currentTrade.target?.toString() || "");
-      setStopLoss(currentTrade.stop_loss?.toString() || "");
-      
-      if (entry?.content) {
-        const content = entry.content as any;
+    if (!currentTrade) return;
+
+    setRating(currentTrade.rating || 0);
+    setTarget(currentTrade.target?.toString() || "");
+    setStopLoss(currentTrade.stop_loss?.toString() || "");
+
+    if (entry?.content) {
+      const content = entry.content as any;
+
+      const isSame =
+        JSON.stringify(content.edges || []) === JSON.stringify(selectedEdges) &&
+        JSON.stringify(content.customAnswers || {}) === JSON.stringify(customAnswers) &&
+        (content.energy ?? 3) === energy &&
+        (content.energyWhy ?? "") === energyWhy &&
+        (content.stress ?? 3) === stress &&
+        (content.stressWhy ?? "") === stressWhy &&
+        (content.confidence ?? 3) === confidence &&
+        (content.confidenceWhy ?? "") === confidenceWhy &&
+        (content.bias ?? "") === bias &&
+        (content.regime ?? "") === regime &&
+        (content.vwap ?? "") === vwap &&
+        (content.keyLevels ?? "") === keyLevels &&
+        (content.volume ?? "") === volume &&
+        (content.fixTomorrow ?? "") === fixTomorrow &&
+        (content.additionalComments ?? "") === additionalComments;
+
+      if (!isSame) {
         setSelectedEdges(content.edges || []);
         setCustomAnswers(content.customAnswers || {});
         setEnergy(content.energy || 3);
@@ -150,6 +170,12 @@ export const TradeDetailsModal = ({
         fixTomorrow,
         additionalComments,
       };
+
+      // Prevent save loop: only save if content actually changed
+      if (entry?.content && JSON.stringify(entry.content) === JSON.stringify(journalContent)) {
+        return;
+      }
+
       updateEntry(journalContent, selectedProfile === "default" ? "standard_questions" : "custom_questions");
     }
   }, [selectedEdges, customAnswers, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
