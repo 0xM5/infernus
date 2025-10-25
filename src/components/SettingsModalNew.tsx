@@ -208,10 +208,10 @@ export const SettingsModalNew = ({
     };
     localStorage.setItem("customGradient", JSON.stringify(gradient));
     
-    // Apply gradient to body
+    // Apply gradient to body with !important to override Tailwind
     const gradientStyle = `linear-gradient(135deg, hsl(${bgHue} ${bgSaturation}% ${bgLightness}%), hsl(${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%))`;
-    document.body.style.backgroundImage = gradientStyle;
-    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.setProperty('background-image', gradientStyle, 'important');
+    document.body.style.setProperty('background-attachment', 'fixed', 'important');
     
     setGradientPopoverOpen(false);
     toast.success("Background updated");
@@ -227,8 +227,10 @@ export const SettingsModalNew = ({
     
     localStorage.removeItem("customGradient");
     const defaultGradient = `linear-gradient(135deg, hsl(263 70% 50%), hsl(0 84% 60%))`;
-    document.body.style.backgroundImage = defaultGradient;
-    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.setProperty('background-image', defaultGradient, 'important');
+    document.body.style.setProperty('background-attachment', 'fixed', 'important');
+    
+    setGradientPopoverOpen(false);
     toast.success("Reset to default gradient");
   };
 
