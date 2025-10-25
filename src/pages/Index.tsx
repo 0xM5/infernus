@@ -1,8 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  // If user is already authenticated, they shouldn't see the landing page
+  useEffect(() => {
+    if (user && !loading) {
+      // User is authenticated - they're already in the app
+      // For now, we just don't redirect them, they can use the app
+    }
+  }, [user, loading]);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative" style={{ background: "linear-gradient(to bottom, #000000, #0a0a0a)" }}>
@@ -34,17 +45,26 @@ const Index = () => {
           </p>
         </div>
         
-        {/* Login Button */}
-        <Button 
-          onClick={() => navigate('/auth')}
-          className="text-white font-semibold px-8 py-3 text-lg rounded-xl"
-          style={{ 
-            backgroundColor: 'rgb(57, 57, 57)',
-            fontFamily: 'Inter'
-          }}
-        >
-          Login
-        </Button>
+        {/* Login Button - Only show if not authenticated */}
+        {!user && (
+          <Button 
+            onClick={() => navigate('/auth')}
+            className="text-white font-semibold px-8 py-3 text-lg rounded-xl"
+            style={{ 
+              backgroundColor: 'rgb(57, 57, 57)',
+              fontFamily: 'Inter'
+            }}
+          >
+            Login
+          </Button>
+        )}
+        
+        {/* Show welcome message if authenticated */}
+        {user && (
+          <div className="text-muted-foreground" style={{ fontFamily: 'Inter' }}>
+            Welcome back! You're logged in.
+          </div>
+        )}
         
         {/* Discord Contact */}
         <div className="flex items-center gap-2 text-muted-foreground mt-4">
