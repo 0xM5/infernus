@@ -141,22 +141,38 @@ const Index = () => {
     const dayStr = format(calendarDate, 'yyyy-MM-dd');
 
     try {
-      // Ensure a single SCRATCHPAD trade exists for this day
-      let tradeId: string | null = null;
-      const { data: existingTrade, error: findErr } = await supabase
+      // Find all SCRATCHPAD trades for this day and ensure only one remains
+      const { data: scratchTrades, error: tradesErr } = await supabase
         .from('trades')
-        .select('id')
+        .select('id, created_at')
         .eq('profile_id', activeProfile.id)
         .eq('user_id', user.id)
         .eq('date', dayStr)
         .eq('symbol', 'SCRATCHPAD')
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
-      if (findErr && (findErr as any).code !== 'PGRST116') throw findErr;
+      if (tradesErr) throw tradesErr;
 
-      if (existingTrade?.id) {
-        tradeId = existingTrade.id;
+      let keepTradeId: string | null = null;
+
+      if (scratchTrades && scratchTrades.length > 0) {
+        keepTradeId = scratchTrades[0].id as string;
+        const extraIds = scratchTrades.slice(1).map((t: any) => t.id as string);
+        if (extraIds.length > 0) {
+          // Delete any journal entries tied to extra SCRATCHPAD trades, then remove those trades
+          await supabase
+            .from('journal_entries')
+            .delete()
+            .in('trade_id', extraIds)
+            .eq('user_id', user.id);
+
+          await supabase
+            .from('trades')
+            .delete()
+            .in('id', extraIds);
+        }
       } else {
+        // Create the single SCRATCHPAD trade for this day
         const { data: inserted, error: insertErr } = await supabase
           .from('trades')
           .insert({
@@ -169,51 +185,35 @@ const Index = () => {
           .select('id')
           .single();
         if (insertErr) throw insertErr;
-        tradeId = inserted.id as string;
+        keepTradeId = inserted.id as string;
       }
 
-      if (!tradeId) throw new Error('Could not ensure scratchpad trade');
+      if (!keepTradeId) throw new Error('Could not ensure scratchpad trade');
 
-      // Upsert a single free_form journal entry for that trade
-      const { data: existingEntry, error: entryFindErr } = await supabase
+      // Overwrite any previous notes for that trade (remove all entries then insert one)
+      await supabase
         .from('journal_entries')
-        .select('id')
-        .eq('trade_id', tradeId)
-        .eq('profile_id', activeProfile.id)
-        .eq('user_id', user.id)
-        .eq('entry_type', 'free_form')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .delete()
+        .eq('trade_id', keepTradeId)
+        .eq('user_id', user.id);
 
-      if (entryFindErr && (entryFindErr as any).code !== 'PGRST116') throw entryFindErr;
+      const { error: insErr } = await supabase
+        .from('journal_entries')
+        .insert({
+          trade_id: keepTradeId,
+          profile_id: activeProfile.id,
+          user_id: user.id,
+          entry_type: 'free_form',
+          content: { html: content }
+        });
+      if (insErr) throw insErr;
 
-      if (existingEntry?.id) {
-        const { error: updErr } = await supabase
-          .from('journal_entries')
-          .update({ content: { html: content } })
-          .eq('id', existingEntry.id);
-        if (updErr) throw updErr;
-      } else {
-        const { error: insErr } = await supabase
-          .from('journal_entries')
-          .insert({
-            trade_id: tradeId,
-            profile_id: activeProfile.id,
-            user_id: user.id,
-            entry_type: 'free_form',
-            content: { html: content }
-          });
-        if (insErr) throw insErr;
-      }
-
-      toast.success("Scratchpad saved to the selected day");
-      // Refresh trades so calendar updates immediately
+      toast.success('Scratchpad saved to the selected day');
       try { (refetchTrades as any)?.(); } catch {}
       setShowScratchpad(false);
     } catch (error) {
-      console.error("Error saving scratchpad:", error);
-      toast.error("Failed to save scratchpad notes");
+      console.error('Error saving scratchpad:', error);
+      toast.error('Failed to save scratchpad notes');
     }
   };
 
