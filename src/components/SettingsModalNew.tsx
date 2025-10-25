@@ -208,10 +208,11 @@ export const SettingsModalNew = ({
     };
     localStorage.setItem("customGradient", JSON.stringify(gradient));
     
-    // Apply gradient to body with !important to override Tailwind
-    const gradientStyle = `linear-gradient(135deg, hsl(${bgHue} ${bgSaturation}% ${bgLightness}%), hsl(${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%))`;
-    document.body.style.setProperty('background-image', gradientStyle, 'important');
-    document.body.style.setProperty('background-attachment', 'fixed', 'important');
+    // Update CSS variables so the background updates immediately
+    const start = `${bgHue} ${bgSaturation}% ${bgLightness}%`;
+    const end = `${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%`;
+    document.documentElement.style.setProperty('--background-gradient-start', start);
+    document.documentElement.style.setProperty('--background-gradient-end', end);
     
     setGradientPopoverOpen(false);
     toast.success("Background updated");
@@ -226,9 +227,8 @@ export const SettingsModalNew = ({
     setSecondaryLightness(60);
     
     localStorage.removeItem("customGradient");
-    const defaultGradient = `linear-gradient(135deg, hsl(263 70% 50%), hsl(0 84% 60%))`;
-    document.body.style.setProperty('background-image', defaultGradient, 'important');
-    document.body.style.setProperty('background-attachment', 'fixed', 'important');
+    document.documentElement.style.setProperty('--background-gradient-start', '263 70% 50%');
+    document.documentElement.style.setProperty('--background-gradient-end', '0 84% 60%');
     
     setGradientPopoverOpen(false);
     toast.success("Reset to default gradient");

@@ -99,15 +99,13 @@ const Index = () => {
   useEffect(() => {
     const savedGradient = localStorage.getItem("customGradient");
     if (savedGradient) {
-      const gradient = JSON.parse(savedGradient);
-      const gradientStyle = `linear-gradient(135deg, hsl(${gradient.bgHue} ${gradient.bgSaturation}% ${gradient.bgLightness}%), hsl(${gradient.secondaryHue} ${gradient.secondarySaturation}% ${gradient.secondaryLightness}%))`;
-      document.body.style.setProperty('background-image', gradientStyle, 'important');
-      document.body.style.setProperty('background-attachment', 'fixed', 'important');
+      const g = JSON.parse(savedGradient);
+      document.documentElement.style.setProperty('--background-gradient-start', `${g.bgHue} ${g.bgSaturation}% ${g.bgLightness}%`);
+      document.documentElement.style.setProperty('--background-gradient-end', `${g.secondaryHue} ${g.secondarySaturation}% ${g.secondaryLightness}%`);
     } else {
-      // Apply default gradient
-      const defaultGradient = `linear-gradient(135deg, hsl(263 70% 50%), hsl(0 84% 60%))`;
-      document.body.style.setProperty('background-image', defaultGradient, 'important');
-      document.body.style.setProperty('background-attachment', 'fixed', 'important');
+      // Defaults
+      document.documentElement.style.setProperty('--background-gradient-start', '263 70% 50%');
+      document.documentElement.style.setProperty('--background-gradient-end', '0 84% 60%');
     }
   }, []);
 
@@ -335,7 +333,7 @@ const Index = () => {
 
   if (loading || profilesLoading) {
     return (
-      <div className="min-h-screen w-full bg-background flex items-center justify-center">
+      <div className="min-h-screen w-full flex items-center justify-center">
         <div className="text-foreground">Loading...</div>
       </div>
     );
@@ -346,10 +344,16 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-background flex items-center justify-center p-8">
+    <div className="min-h-screen w-full flex items-center justify-center p-8">
       <div className="relative">
-        {/* Purple gradient glow */}
-        <div className="absolute inset-0 bg-gradient-purple blur-3xl opacity-70 rounded-3xl" />
+        {/* Background gradient glow tied to custom variables */}
+        <div
+          className="absolute inset-0 blur-3xl opacity-70 rounded-3xl"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, hsl(var(--background-gradient-start)), hsl(var(--background-gradient-end)))",
+          }}
+        />
         
         {/* Main container */}
         <div

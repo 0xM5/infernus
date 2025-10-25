@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 
 interface ImageZoomModalProps {
@@ -11,6 +11,9 @@ export const ImageZoomModal = ({ isOpen, onClose, imageSrc }: ImageZoomModalProp
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-black/95 border-border">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Image preview</DialogTitle>
+        </DialogHeader>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
