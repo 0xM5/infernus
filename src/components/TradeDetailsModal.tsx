@@ -66,7 +66,7 @@ export const TradeDetailsModal = ({
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   const [showEdgeFinderWizard, setShowEdgeFinderWizard] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [customAnswers, setCustomAnswers] = useState<{ [key: string]: string }>({});
+  const [customAnswers, setCustomAnswers] = useState<Record<number, string>>({});
   
   // Journal questions state
   const [energy, setEnergy] = useState(3);
@@ -112,8 +112,15 @@ export const TradeDetailsModal = ({
         (content.additionalComments ?? "") === additionalComments;
 
       if (!isSame) {
+        const rawCA = content.customAnswers || {};
+        const normalizedCA: Record<number, string> = {};
+        Object.entries(rawCA).forEach(([k, v]: [string, any]) => {
+          const m = /^question_(-?\d+)$/.exec(k);
+          const key = m ? Number(m[1]) : Number(k);
+          if (!Number.isNaN(key)) normalizedCA[key] = typeof v === 'string' ? v : String(v ?? '');
+        });
         setSelectedEdges(content.edges || []);
-        setCustomAnswers(content.customAnswers || {});
+        setCustomAnswers(normalizedCA);
         setEnergy(content.energy || 3);
         setEnergyWhy(content.energyWhy || "");
         setStress(content.stress || 3);
@@ -487,7 +494,7 @@ export const TradeDetailsModal = ({
                   questions={profileQuestions}
                   answers={customAnswers}
                   onAnswerChange={(index, value) => {
-                    setCustomAnswers(prev => ({ ...prev, [`question_${index}`]: value }));
+                    setCustomAnswers(prev => ({ ...prev, [index]: value }));
                   }}
                   onImageUpload={uploadImage}
                 />

@@ -68,11 +68,12 @@ export const useTrades = (profileId: string | undefined, userId: string | undefi
 
     try {
       if (trade.id) {
-        // Update existing trade
+        // Update existing trade (omit immutable/foreign key fields)
+        const { id, user_id: _userId, profile_id: _profileId, ...updates } = trade as any;
         const { error } = await supabase
           .from('trades')
-          .update(trade)
-          .eq('id', trade.id);
+          .update(updates)
+          .eq('id', id as string);
 
         if (error) throw error;
 
