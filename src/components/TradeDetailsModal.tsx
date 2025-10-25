@@ -7,6 +7,7 @@ import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
 import { CustomQuestionJournal } from "./CustomQuestionJournal";
 import { EdgeFinderSummary } from "./EdgeFinderSummary";
+import { RichJournalEditor } from "./RichJournalEditor";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAuth } from "@/hooks/useAuth";
 import { useTrades } from "@/hooks/useTrades";
@@ -436,6 +437,9 @@ export const TradeDetailsModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] h-[85vh] p-0 bg-transparent border-none shadow-none">
+        <div className="sr-only">
+          <h2>Trade Details</h2>
+        </div>
         <div className="flex gap-6 h-full min-h-0">
           {/* Left side - Trade Details */}
           <div className="w-[250px] bg-muted rounded-xl p-6 space-y-4 overflow-y-auto">
@@ -682,19 +686,12 @@ export const TradeDetailsModal = ({
               ) : (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">Journal Entry</label>
-                  <div className="main-journal-editor h-[420px] relative z-30 rounded-xl border-2 border-primary/40 bg-background/60">
-                    <ReactQuill
-                      ref={mainJournalRef}
-                      theme="snow"
-                      value={additionalComments}
-                      onChange={setAdditionalComments}
-                      modules={modules}
-                      formats={formats}
-                      readOnly={false}
-                      placeholder="Type your journal entry here..."
-                      className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-border [&_.ql-toolbar]:border-border [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4"
-                    />
-                  </div>
+                  <RichJournalEditor
+                    value={additionalComments}
+                    onChange={setAdditionalComments}
+                    onImageUpload={uploadImage}
+                    height={420}
+                  />
                 </div>
               )}
             </div>
