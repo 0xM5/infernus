@@ -60,6 +60,12 @@ export const useTradingProfiles = (userId: string | undefined) => {
       if (error) throw error;
 
       setProfiles([...profiles, data]);
+      
+      // Set as active if it's the first profile
+      if (profiles.length === 0) {
+        setActiveProfile(data);
+      }
+      
       toast({
         title: 'Profile created',
         description: `${name} has been created successfully.`,
