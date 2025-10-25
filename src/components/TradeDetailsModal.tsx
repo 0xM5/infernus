@@ -8,6 +8,8 @@ import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
 import { CustomQuestionJournal } from "./CustomQuestionJournal";
 import { EdgeFinderWizard } from "./EdgeFinderWizard";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { useAuth } from "@/hooks/useAuth";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -40,6 +42,9 @@ export const TradeDetailsModal = ({
   selectedProfile,
   selectedTrade,
 }: TradeDetailsModalProps) => {
+  const { user } = useAuth();
+  const { uploadImage } = useImageUpload(user?.id);
+  
   const [rating, setRating] = useState(0);
   const [target, setTarget] = useState("");
   const [stopLoss, setStopLoss] = useState("");
@@ -459,6 +464,7 @@ export const TradeDetailsModal = ({
                   onAnswerChange={(index, value) => {
                     setCustomAnswers((prev) => ({ ...prev, [index]: value }));
                   }}
+                  onImageUpload={uploadImage}
                 />
               ) : helpFindEdge ? (
                 <JournalQuestions

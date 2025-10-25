@@ -267,7 +267,7 @@ const Index = () => {
                       Welcome to Infernus Beta <span className="text-red-400">v0.01b</span>, <span className="font-bold">{userProfile?.nickname || 'User'}</span>
                     </h1>
                     <div className="text-sm text-muted-foreground mt-1">
-                      Expires On: {formatExpirationDate()} | Profile: {activeProfile?.name || 'Loading...'}
+                      Expires On: {formatExpirationDate()}
                     </div>
                   </div>
                   

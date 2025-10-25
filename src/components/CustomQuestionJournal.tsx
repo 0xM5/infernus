@@ -1,26 +1,67 @@
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { useRef } from "react";
 
 interface CustomQuestionJournalProps {
   questions: string[];
   answers: { [key: number]: string };
   onAnswerChange: (index: number, value: string) => void;
+  onImageUpload?: (file: File) => Promise<string | null>;
 }
 
 export const CustomQuestionJournal = ({
   questions,
   answers,
   onAnswerChange,
+  onImageUpload,
 }: CustomQuestionJournalProps) => {
-  const modules = {
-    toolbar: [
-      [{ font: [] }, { size: [] }],
-      ["bold", "italic", "underline"],
-      [{ color: [] }, { background: [] }],
-      ["image"],
-      ["clean"],
-    ],
+  const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
+
+  const imageHandler = (index: number) => {
+    return function(this: any) {
+      const input = document.createElement('input');
+      input.setAttribute('type', 'file');
+      input.setAttribute('accept', 'image/*');
+      input.click();
+
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (file && onImageUpload) {
+          const url = await onImageUpload(file);
+          if (url) {
+            const quill = quillRefs.current[index]?.getEditor();
+            if (quill) {
+              const range = quill.getSelection(true);
+              quill.insertEmbed(range.index, 'image', url);
+            }
+          }
+        }
+      };
+    };
   };
+
+  const getModules = (index: number) => ({
+    toolbar: {
+      container: [
+        [{ font: [] }, { size: [] }],
+        ["bold", "italic", "underline"],
+        [{ color: [] }, { background: [] }],
+        ["image"],
+        ["clean"],
+      ],
+      handlers: {
+        image: imageHandler(index),
+      },
+    },
+    clipboard: {
+      matchVisual: false,
+      matchers: [
+        ['img', (node: any, delta: any) => {
+          return delta;
+        }]
+      ]
+    }
+  });
 
   return (
     <div className="space-y-6">
@@ -31,10 +72,11 @@ export const CustomQuestionJournal = ({
           </h3>
           <div className="h-[200px]">
             <ReactQuill
+              ref={(el) => (quillRefs.current[index] = el)}
               theme="snow"
               value={answers[index] || ""}
               onChange={(value) => onAnswerChange(index, value)}
-              modules={modules}
+              modules={getModules(index)}
               className="h-[150px] bg-background rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-input [&_.ql-toolbar]:border-input [&_.ql-container]:bg-background [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[100px]"
             />
           </div>
@@ -48,10 +90,11 @@ export const CustomQuestionJournal = ({
         </h3>
         <div className="h-[250px]">
           <ReactQuill
+            ref={(el) => (quillRefs.current[-1] = el)}
             theme="snow"
             value={answers[-1] || ""}
             onChange={(value) => onAnswerChange(-1, value)}
-            modules={modules}
+            modules={getModules(-1)}
             className="h-[200px] bg-background rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-input [&_.ql-toolbar]:border-input [&_.ql-container]:bg-background [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[150px]"
           />
         </div>

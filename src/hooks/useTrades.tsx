@@ -95,7 +95,23 @@ export const useTrades = (profileId: string | undefined, userId: string | undefi
     if (!userId || !profileId) return;
 
     try {
-      const tradesWithIds = newTrades.map(trade => ({
+      // Filter out duplicates by checking existing trades (same date + symbol)
+      const uniqueTrades = newTrades.filter(newTrade => {
+        return !trades.some(existingTrade => 
+          existingTrade.date === newTrade.date && 
+          existingTrade.symbol === newTrade.symbol
+        );
+      });
+
+      if (uniqueTrades.length === 0) {
+        toast({
+          title: 'No new trades',
+          description: 'All trades already exist in the database.',
+        });
+        return [];
+      }
+
+      const tradesWithIds = uniqueTrades.map(trade => ({
         ...trade,
         user_id: userId,
         profile_id: profileId,
@@ -110,9 +126,10 @@ export const useTrades = (profileId: string | undefined, userId: string | undefi
 
       setTrades([...trades, ...(data || [])]);
       
+      const skippedCount = newTrades.length - uniqueTrades.length;
       toast({
         title: 'Trades imported',
-        description: `${data?.length || 0} trades imported successfully.`,
+        description: `${data?.length || 0} trades imported successfully.${skippedCount > 0 ? ` ${skippedCount} duplicate(s) skipped.` : ''}`,
       });
 
       return data;
