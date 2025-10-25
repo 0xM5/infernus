@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Check } from "lucide-react";
-import type { Trade } from "@/pages/Index";
+import type { Trade } from "@/types/trade";
 
 interface StudyTradesModalProps {
   isOpen: boolean;

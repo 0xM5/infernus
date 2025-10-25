@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import type { Trade } from "@/pages/Index";
+import type { Trade } from "@/types/trade";
 
 interface EdgeShowerBoxProps {
   trades: Trade[];
