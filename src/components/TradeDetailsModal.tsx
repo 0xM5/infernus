@@ -554,7 +554,8 @@ export const TradeDetailsModal = ({
         </div>
         <div className="flex gap-6 h-full min-h-0">
           {/* Left side - Trade Details */}
-          <div className="w-[250px] bg-muted rounded-xl p-6 space-y-4 overflow-y-auto">
+          <div className="w-[250px] bg-muted rounded-xl p-6 flex flex-col">
+            <div className="flex-1 overflow-y-auto space-y-4">
             <h2
               className="text-xl text-white mb-6"
               style={{ fontWeight: 700, fontFamily: "Inter" }}
@@ -722,6 +723,22 @@ export const TradeDetailsModal = ({
               </Button>
             </div>
             )}
+            </div>
+            
+            {/* Delete button at bottom for scratchpad */}
+            {dayTrades[0]?.symbol === 'SCRATCHPAD' && (
+              <div className="flex justify-center pt-4 border-t border-border mt-4">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteScratchpadDialog(true)}
+                  className="gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Scratchpad
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Right side - Edge Tags and Journal */}
@@ -772,17 +789,6 @@ export const TradeDetailsModal = ({
                       height={600}
                       readOnly={!isScratchpadEditing}
                     />
-                  </div>
-                  <div className="flex justify-start mt-4">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setShowDeleteScratchpadDialog(true)}
-                      className="gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete Scratchpad
-                    </Button>
                   </div>
                 </div>
               ) : selectedProfile === "default" && (
