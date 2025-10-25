@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
 import { CustomQuestionJournal } from "./CustomQuestionJournal";
 import { EdgeFinderWizard } from "./EdgeFinderWizard";
+import { EdgeFinderSummary } from "./EdgeFinderSummary";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAuth } from "@/hooks/useAuth";
 import { useTrades } from "@/hooks/useTrades";
@@ -75,6 +76,11 @@ export const TradeDetailsModal = ({
   const [showEdgeFinderWizard, setShowEdgeFinderWizard] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [customAnswers, setCustomAnswers] = useState<Record<number, string>>({});
+  const [edgeFinderResponses, setEdgeFinderResponses] = useState<any>(null);
+  const [edgeFinderCompleted, setEdgeFinderCompleted] = useState(false);
+  
+  // Ref for main journal quill editor - fix: use regular variable instead
+  let mainJournalRef: ReactQuill | null = null;
   
   // Journal questions state
   const [energy, setEnergy] = useState(3);
@@ -90,6 +96,40 @@ export const TradeDetailsModal = ({
   const [volume, setVolume] = useState("");
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
+
+  // Handle paste events for images in main journal
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file && uploadImage) {
+            e.preventDefault();
+            
+            // Check if we're focused on the main journal
+            const activeElement = document.activeElement;
+            const isMainJournal = activeElement?.closest('.ql-editor') !== null;
+            
+            if (isMainJournal && mainJournalRef) {
+              uploadImage(file).then(url => {
+                if (url && mainJournalRef) {
+                  const quill = mainJournalRef.getEditor();
+                  const range = quill.getSelection(true);
+                  quill.insertEmbed(range.index, 'image', url);
+                }
+              });
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [uploadImage, mainJournalRef]);
 
   // Load trade data from database - reset state when trade changes, then load from entry
   useEffect(() => {
@@ -116,6 +156,18 @@ export const TradeDetailsModal = ({
     setVolume("");
     setFixTomorrow("");
     setAdditionalComments("");
+
+    // Check if Edge Finder wizard was completed for this trade
+    const edgeFinderComplete = localStorage.getItem(`edge_finder_complete_${currentTrade.id}`);
+    const savedEdgeFinderData = localStorage.getItem(`edge_finder_${currentTrade.id}`);
+    
+    if (edgeFinderComplete && savedEdgeFinderData) {
+      setEdgeFinderCompleted(true);
+      setEdgeFinderResponses(JSON.parse(savedEdgeFinderData));
+    } else {
+      setEdgeFinderCompleted(false);
+      setEdgeFinderResponses(null);
+    }
 
     // Then load from entry if it exists for this specific trade
     if (entry?.content && entry.trade_id === currentTrade.id) {
@@ -503,7 +555,7 @@ export const TradeDetailsModal = ({
             {/* Journal Section */}
             <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto">
               {selectedProfile === "default" && (
-                <div className="flex items-center gap-2 mb-4">
+                <div className="space-y-4 mb-4">
                   <Button
                     variant="outline"
                     onClick={() => setShowEdgeFinderWizard(true)}
@@ -511,6 +563,16 @@ export const TradeDetailsModal = ({
                   >
                     Discover My Edge
                   </Button>
+                  
+                  {edgeFinderCompleted && edgeFinderResponses && (
+                    <EdgeFinderSummary
+                      responses={edgeFinderResponses}
+                      onUpdate={(updatedResponses) => {
+                        setEdgeFinderResponses(updatedResponses);
+                        localStorage.setItem(`edge_finder_${currentTrade?.id}`, JSON.stringify(updatedResponses));
+                      }}
+                    />
+                  )}
                 </div>
               )}
 
@@ -527,11 +589,14 @@ export const TradeDetailsModal = ({
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">Journal Entry</label>
                   <ReactQuill
+                    ref={(el) => {
+                      if (el) mainJournalRef = el;
+                    }}
                     theme="snow"
                     value={additionalComments}
                     onChange={setAdditionalComments}
                     modules={modules}
-                    className="rounded-xl [&_.ql-container]:bg-muted [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground"
+                    className="rounded-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground"
                     style={{ height: '400px' }}
                   />
                 </div>

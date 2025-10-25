@@ -1,7 +1,8 @@
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import BlotFormatter from "quill-blot-formatter";
+
 
 try {
   // @ts-ignore
@@ -23,6 +24,42 @@ export const CustomQuestionJournal = ({
   onImageUpload,
 }: CustomQuestionJournalProps) => {
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
+
+  // Handle paste events for images
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file && onImageUpload) {
+            e.preventDefault();
+            
+            // Find the active quill editor
+            const activeElement = document.activeElement;
+            const activeQuill = Object.values(quillRefs.current).find(
+              ref => ref?.getEditor().root === activeElement || ref?.getEditor().root.contains(activeElement)
+            );
+            
+            if (activeQuill) {
+              onImageUpload(file).then(url => {
+                if (url) {
+                  const quill = activeQuill.getEditor();
+                  const range = quill.getSelection(true);
+                  quill.insertEmbed(range.index, 'image', url);
+                }
+              });
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [onImageUpload]);
 
   const imageHandler = (index: number) => {
     return function(this: any) {
@@ -85,7 +122,7 @@ export const CustomQuestionJournal = ({
               value={answers[index] || ""}
               onChange={(value) => onAnswerChange(index, value)}
               modules={getModules(index)}
-              className="h-[150px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-muted [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[100px]"
+              className="h-[150px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[100px]"
             />
           </div>
         </div>
@@ -103,7 +140,7 @@ export const CustomQuestionJournal = ({
             value={answers[-1] || ""}
             onChange={(value) => onAnswerChange(-1, value)}
             modules={getModules(-1)}
-            className="h-[200px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-muted [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[150px]"
+            className="h-[200px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[150px]"
           />
         </div>
       </div>

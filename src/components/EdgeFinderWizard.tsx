@@ -52,6 +52,8 @@ export const EdgeFinderWizard = ({ isOpen, onClose, tradeKey }: EdgeFinderWizard
     if (currentStep < 14) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Save completed status
+      localStorage.setItem(`edge_finder_complete_${tradeKey}`, 'true');
       onClose();
     }
   };
