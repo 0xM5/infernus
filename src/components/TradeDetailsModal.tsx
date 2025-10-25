@@ -66,6 +66,7 @@ export const TradeDetailsModal = ({
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
   const [showEdgeFinderWizard, setShowEdgeFinderWizard] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [customAnswers, setCustomAnswers] = useState<{ [key: string]: string }>({});
   
   // Journal questions state
   const [energy, setEnergy] = useState(3);
@@ -92,6 +93,7 @@ export const TradeDetailsModal = ({
       if (entry?.content) {
         const content = entry.content as any;
         setSelectedEdges(content.edges || []);
+        setCustomAnswers(content.customAnswers || {});
         setEnergy(content.energy || 3);
         setEnergyWhy(content.energyWhy || "");
         setStress(content.stress || 3);
@@ -107,7 +109,7 @@ export const TradeDetailsModal = ({
         setAdditionalComments(content.additionalComments || "");
       }
     }
-  }, [currentTrade, entry]);
+  }, [currentTrade?.id, entry?.id]);
 
   // Auto-save trade basic fields
   useEffect(() => {
@@ -133,6 +135,7 @@ export const TradeDetailsModal = ({
     if (currentTrade?.id && selectedProfile && user?.id) {
       const journalContent = {
         edges: selectedEdges,
+        customAnswers,
         energy,
         energyWhy,
         stress,
@@ -149,7 +152,7 @@ export const TradeDetailsModal = ({
       };
       updateEntry(journalContent, selectedProfile === "default" ? "standard_questions" : "custom_questions");
     }
-  }, [selectedEdges, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
+  }, [selectedEdges, customAnswers, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
       bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments]);
 
   // Get current profile's questions
@@ -456,10 +459,9 @@ export const TradeDetailsModal = ({
               {selectedProfile !== "default" ? (
                 <CustomQuestionJournal
                   questions={profileQuestions}
-                  answers={(entry?.content as any) || {}}
+                  answers={customAnswers}
                   onAnswerChange={(index, value) => {
-                    const currentAnswers = (entry?.content as any) || {};
-                    updateEntry({ ...currentAnswers, [`question_${index}`]: value }, "custom_questions");
+                    setCustomAnswers(prev => ({ ...prev, [`question_${index}`]: value }));
                   }}
                   onImageUpload={uploadImage}
                 />
