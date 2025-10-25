@@ -73,11 +73,9 @@ const Index = () => {
               need.
             </p>
             
-            <div className="border border-border rounded-lg p-6 max-w-md mx-auto mt-8" style={{ backgroundColor: 'hsl(0 0% 7%)' }}>
+            <div className="border border-border rounded-lg p-6 max-w-md mx-auto mt-6" style={{ backgroundColor: 'hsl(0 0% 7%)' }}>
               <p className="text-sm text-muted-foreground text-gray-300 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Infernus.app is in private beta. It's being built for{" "}
-                <span className="text-foreground text-white font-medium">traders who want to improve</span>,
-                not traders who want to feel good about themselves.
+                Infernus.app is in private beta. It's being built for traders who want to improve and not break the bank doing so.
               </p>
             </div>
             
