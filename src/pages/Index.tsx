@@ -13,7 +13,6 @@ import { QuestionEditorModal } from "@/components/QuestionEditorModal";
 import { PnLChartModal } from "@/components/PnLChartModal";
 import { EdgeShowerBox } from "@/components/EdgeShowerBox";
 import { StudyTradesModal } from "@/components/StudyTradesModal";
-import { ScratchpadModal } from "@/components/ScratchpadModal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Upload, Info, Settings, TrendingUp, LogOut, StickyNote } from "lucide-react";
@@ -71,7 +70,6 @@ const Index = () => {
   const [edgesVersion, setEdgesVersion] = useState(0);
   const [useCommission, setUseCommission] = useState(false);
   const [userProfile, setUserProfile] = useState<{ nickname: string | null; account_expires_at: string | null } | null>(null);
-  const [showScratchpad, setShowScratchpad] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -132,7 +130,7 @@ const Index = () => {
     navigate("/auth");
   };
 
-  const handleSaveScratchpad = async (content: string) => {
+  const handleCreateBlankScratchpad = async () => {
     if (!activeProfile || !user) {
       toast.error("Please wait for profile to load...");
       return;
@@ -141,7 +139,7 @@ const Index = () => {
     const dayStr = format(new Date(), 'yyyy-MM-dd');
 
     try {
-      // Find all SCRATCHPAD trades for this day and ensure only one remains
+      // Find all SCRATCHPAD trades for today and ensure only one remains
       const { data: scratchTrades, error: tradesErr } = await supabase
         .from('trades')
         .select('id, created_at')
@@ -156,23 +154,11 @@ const Index = () => {
       let keepTradeId: string | null = null;
 
       if (scratchTrades && scratchTrades.length > 0) {
-        keepTradeId = scratchTrades[0].id as string;
-        const extraIds = scratchTrades.slice(1).map((t: any) => t.id as string);
-        if (extraIds.length > 0) {
-          // Delete any journal entries tied to extra SCRATCHPAD trades, then remove those trades
-          await supabase
-            .from('journal_entries')
-            .delete()
-            .in('trade_id', extraIds)
-            .eq('user_id', user.id);
-
-          await supabase
-            .from('trades')
-            .delete()
-            .in('id', extraIds);
-        }
+        // Already exists, just notify user
+        toast.success("Scratchpad already exists for today. Click on today's date to edit it.");
+        return;
       } else {
-        // Create the single SCRATCHPAD trade for this day
+        // Create the single SCRATCHPAD trade for today
         const { data: inserted, error: insertErr } = await supabase
           .from('trades')
           .insert({
@@ -188,15 +174,9 @@ const Index = () => {
         keepTradeId = inserted.id as string;
       }
 
-      if (!keepTradeId) throw new Error('Could not ensure scratchpad trade');
+      if (!keepTradeId) throw new Error('Could not create scratchpad trade');
 
-      // Overwrite any previous notes for that trade (remove all entries then insert one)
-      await supabase
-        .from('journal_entries')
-        .delete()
-        .eq('trade_id', keepTradeId)
-        .eq('user_id', user.id);
-
+      // Create blank journal entry
       const { error: insErr } = await supabase
         .from('journal_entries')
         .insert({
@@ -204,16 +184,15 @@ const Index = () => {
           profile_id: activeProfile.id,
           user_id: user.id,
           entry_type: 'free_form',
-          content: { html: content }
+          content: { html: '' }
         });
       if (insErr) throw insErr;
 
-      toast.success('Scratchpad saved to the selected day');
-      try { (refetchTrades as any)?.(); } catch {}
-      setShowScratchpad(false);
+      toast.success("Blank scratchpad created for today. Click on today's date to edit it.");
+      try { refetchTrades(); } catch {}
     } catch (error) {
-      console.error('Error saving scratchpad:', error);
-      toast.error('Failed to save scratchpad notes');
+      console.error('Error creating scratchpad:', error);
+      toast.error('Failed to create scratchpad');
     }
   };
 
@@ -507,7 +486,7 @@ const Index = () => {
                   </Button>
                   <Button
                     variant="default"
-                    onClick={() => setShowScratchpad(true)}
+                    onClick={handleCreateBlankScratchpad}
                     className="cursor-pointer bg-warning hover:bg-warning/90 text-warning-foreground flex items-center gap-2"
                   >
                     <StickyNote className="w-4 h-4" />
@@ -686,13 +665,6 @@ const Index = () => {
         currentDate={calendarDate}
       />
 
-      <ScratchpadModal
-        open={showScratchpad}
-        onOpenChange={setShowScratchpad}
-        onSave={handleSaveScratchpad}
-        currentDate={calendarDate}
-        userId={user?.id}
-      />
     </div>
   );
 };
