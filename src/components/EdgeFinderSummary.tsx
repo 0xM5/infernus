@@ -28,10 +28,15 @@ interface EdgeFinderSummaryProps {
     fixTomorrow: string;
   };
   onUpdate: (responses: any) => void;
+  // Optional controlled edit modal props
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const EdgeFinderSummary = ({ responses, onUpdate }: EdgeFinderSummaryProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+export const EdgeFinderSummary = ({ responses, onUpdate, open, onOpenChange }: EdgeFinderSummaryProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isEditing = typeof open === 'boolean' ? open : internalOpen;
+  const setIsEditing = onOpenChange ?? setInternalOpen;
   const [editedResponses, setEditedResponses] = useState(responses);
 
   const handleSave = () => {

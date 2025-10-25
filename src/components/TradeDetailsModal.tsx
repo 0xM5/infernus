@@ -6,7 +6,6 @@ import { Star, Trash2 } from "lucide-react";
 import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
 import { CustomQuestionJournal } from "./CustomQuestionJournal";
-import { EdgeFinderWizard } from "./EdgeFinderWizard";
 import { EdgeFinderSummary } from "./EdgeFinderSummary";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,11 +78,11 @@ export const TradeDetailsModal = ({
   const [stopLoss, setStopLoss] = useState("");
   const [edges, setEdges] = useState<string[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
-  const [showEdgeFinderWizard, setShowEdgeFinderWizard] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [customAnswers, setCustomAnswers] = useState<Record<number, string>>({});
   const [edgeFinderResponses, setEdgeFinderResponses] = useState<any>(null);
   const [edgeFinderCompleted, setEdgeFinderCompleted] = useState(false);
+  const [edgeEditOpen, setEdgeEditOpen] = useState(false);
   
   // Ref for main journal quill editor
   const mainJournalRef = useRef<ReactQuill | null>(null);
@@ -627,19 +626,45 @@ export const TradeDetailsModal = ({
                 <div className="space-y-4 mb-4">
                   <Button
                     variant="outline"
-                    onClick={() => setShowEdgeFinderWizard(true)}
+                    onClick={() => {
+                      if (!edgeFinderResponses) {
+                        setEdgeFinderResponses({
+                          energy: 3,
+                          stress: 3,
+                          confidence: 3,
+                          sleepHours: "",
+                          sleepMinutes: "",
+                          ateLastNight: "",
+                          ateMorning: "",
+                          caffeine: "",
+                          exercise: "",
+                          marketConditionTrending: false,
+                          marketConditionRange: false,
+                          vwapAbove: false,
+                          vwapBelow: false,
+                          volumeSpeedingUp: false,
+                          volumeStalling: false,
+                          keyLevels: "",
+                          whyTrade: "",
+                          fixTomorrow: "",
+                        });
+                      }
+                      setEdgeEditOpen(true);
+                    }}
                     className="border-border"
                   >
                     Discover My Edge
                   </Button>
-                  
-                  {edgeFinderCompleted && edgeFinderResponses && (
+                  {edgeFinderResponses && (
                     <EdgeFinderSummary
                       responses={edgeFinderResponses}
                       onUpdate={(updatedResponses) => {
                         setEdgeFinderResponses(updatedResponses);
+                        setEdgeFinderCompleted(true);
                         localStorage.setItem(`edge_finder_${currentTrade?.id}`, JSON.stringify(updatedResponses));
                       }}
+                      open={edgeEditOpen}
+                      onOpenChange={setEdgeEditOpen}
                     />
                   )}
                 </div>
@@ -657,7 +682,7 @@ export const TradeDetailsModal = ({
               ) : (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">Journal Entry</label>
-                  <div className="main-journal-editor h-[420px] relative rounded-xl border-2 border-primary/40 bg-background/60">
+                  <div className="main-journal-editor h-[420px] relative z-30 rounded-xl border-2 border-primary/40 bg-background/60">
                     <ReactQuill
                       ref={mainJournalRef}
                       theme="snow"
@@ -675,12 +700,6 @@ export const TradeDetailsModal = ({
             </div>
           </div>
         </div>
-
-        <EdgeFinderWizard
-          isOpen={showEdgeFinderWizard}
-          onClose={() => setShowEdgeFinderWizard(false)}
-          tradeKey={currentTrade?.id || ""}
-        />
 
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
