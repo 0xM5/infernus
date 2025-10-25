@@ -61,9 +61,8 @@ serve(async (req) => {
       );
     }
 
-    // Generate a random access key (26 characters)
-    const key = crypto.randomUUID().replace(/-/g, '').toLowerCase() + 
-                crypto.randomUUID().replace(/-/g, '').toLowerCase().substring(0, 6);
+    // Generate a random access key
+    const key = crypto.randomUUID().replace(/-/g, '').toUpperCase().substring(0, 16);
 
     // Insert the access key
     const { data, error } = await supabase
