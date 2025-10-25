@@ -1,19 +1,22 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Star, Trash2 } from "lucide-react";
 import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
 import { CustomQuestionJournal } from "./CustomQuestionJournal";
 import { EdgeFinderWizard } from "./EdgeFinderWizard";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAuth } from "@/hooks/useAuth";
+import { useTrades } from "@/hooks/useTrades";
+import { useJournalEntries } from "@/hooks/useJournalEntries";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 interface Trade {
+  id?: string;
   date: Date;
   profit: number;
   symbol: string;
@@ -23,6 +26,9 @@ interface Trade {
   exitPrice?: number;
   entryTime?: string;
   exitTime?: string;
+  rating?: number;
+  target?: number;
+  stop_loss?: number;
 }
 
 interface TradeDetailsModalProps {
@@ -44,21 +50,22 @@ export const TradeDetailsModal = ({
 }: TradeDetailsModalProps) => {
   const { user } = useAuth();
   const { uploadImage } = useImageUpload(user?.id);
+  const { saveTrade, deleteTrade } = useTrades(selectedProfile, user?.id);
+  
+  const currentTrade = selectedTrade && trades.find(t => 
+    t.date.toISOString() === selectedTrade.date.toISOString() && 
+    t.symbol === selectedTrade.symbol
+  );
+  
+  const { entry, updateEntry } = useJournalEntries(currentTrade?.id, selectedProfile, user?.id);
   
   const [rating, setRating] = useState(0);
   const [target, setTarget] = useState("");
   const [stopLoss, setStopLoss] = useState("");
   const [edges, setEdges] = useState<string[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<string[]>([]);
-  const [helpFindEdge, setHelpFindEdge] = useState(false);
-  const [freeJournal, setFreeJournal] = useState("");
-  const [customAnswers, setCustomAnswers] = useState<{ [key: number]: string }>({});
   const [showEdgeFinderWizard, setShowEdgeFinderWizard] = useState(false);
-  
-  // Track the current trade key for saving - use selectedTrade for accurate symbol
-  const tradeKey = selectedTrade 
-    ? `trade_${selectedTrade.date.toISOString()}_${selectedTrade.symbol}`
-    : '';
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Journal questions state
   const [energy, setEnergy] = useState(3);
@@ -75,49 +82,57 @@ export const TradeDetailsModal = ({
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
-  // Load all trade data from localStorage when modal opens
+  // Load trade data from database
   useEffect(() => {
-    if (tradeKey) {
-      const tradeData = localStorage.getItem(tradeKey);
-      if (tradeData) {
-        const parsed = JSON.parse(tradeData);
-        setRating(parsed.rating || 0);
-        setTarget(parsed.target || "");
-        setStopLoss(parsed.stopLoss || "");
-        setHelpFindEdge(parsed.helpFindEdge || false);
-        setFreeJournal(parsed.freeJournal || "");
-        setCustomAnswers(parsed.customAnswers || {});
-        setEnergy(parsed.energy || 3);
-        setEnergyWhy(parsed.energyWhy || "");
-        setStress(parsed.stress || 3);
-        setStressWhy(parsed.stressWhy || "");
-        setConfidence(parsed.confidence || 3);
-        setConfidenceWhy(parsed.confidenceWhy || "");
-        setBias(parsed.bias || "");
-        setRegime(parsed.regime || "");
-        setVwap(parsed.vwap || "");
-        setKeyLevels(parsed.keyLevels || "");
-        setVolume(parsed.volume || "");
-        setFixTomorrow(parsed.fixTomorrow || "");
-        setAdditionalComments(parsed.additionalComments || "");
+    if (currentTrade) {
+      setRating(currentTrade.rating || 0);
+      setTarget(currentTrade.target?.toString() || "");
+      setStopLoss(currentTrade.stop_loss?.toString() || "");
+      
+      if (entry?.content) {
+        const content = entry.content as any;
+        setSelectedEdges(content.edges || []);
+        setEnergy(content.energy || 3);
+        setEnergyWhy(content.energyWhy || "");
+        setStress(content.stress || 3);
+        setStressWhy(content.stressWhy || "");
+        setConfidence(content.confidence || 3);
+        setConfidenceWhy(content.confidenceWhy || "");
+        setBias(content.bias || "");
+        setRegime(content.regime || "");
+        setVwap(content.vwap || "");
+        setKeyLevels(content.keyLevels || "");
+        setVolume(content.volume || "");
+        setFixTomorrow(content.fixTomorrow || "");
+        setAdditionalComments(content.additionalComments || "");
       }
     }
-  }, [tradeKey]);
+  }, [currentTrade, entry]);
 
-  // Save all trade data whenever any field changes
+  // Auto-save trade basic fields
   useEffect(() => {
-    if (tradeKey) {
-      const existingData = localStorage.getItem(tradeKey);
-      const parsed = existingData ? JSON.parse(existingData) : {};
-      
-      const updatedData = {
-        ...parsed,
-        rating,
-        target,
-        stopLoss,
-        helpFindEdge,
-        freeJournal,
-        customAnswers,
+    if (currentTrade?.id && selectedProfile && user?.id) {
+      const timeoutId = setTimeout(() => {
+        saveTrade({
+          ...currentTrade,
+          id: currentTrade.id,
+          profile_id: selectedProfile,
+          user_id: user.id,
+          date: currentTrade.date.toISOString().split('T')[0],
+          rating: rating || undefined,
+          target: target ? parseFloat(target) : undefined,
+          stop_loss: stopLoss ? parseFloat(stopLoss) : undefined,
+        });
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [rating, target, stopLoss]);
+
+  // Auto-save journal data
+  useEffect(() => {
+    if (currentTrade?.id && selectedProfile && user?.id) {
+      const journalContent = {
+        edges: selectedEdges,
         energy,
         energyWhy,
         stress,
@@ -132,12 +147,10 @@ export const TradeDetailsModal = ({
         fixTomorrow,
         additionalComments,
       };
-      
-      localStorage.setItem(tradeKey, JSON.stringify(updatedData));
+      updateEntry(journalContent, selectedProfile === "default" ? "standard_questions" : "custom_questions");
     }
-  }, [tradeKey, rating, target, stopLoss, helpFindEdge, freeJournal, customAnswers, 
-      energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, bias, 
-      regime, vwap, keyLevels, volume, fixTomorrow, additionalComments]);
+  }, [selectedEdges, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
+      bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments]);
 
   // Get current profile's questions
   const [profileQuestions, setProfileQuestions] = useState<string[]>([]);
@@ -165,37 +178,12 @@ export const TradeDetailsModal = ({
     }
   }, []);
 
-  // Load selected edges for this specific trade
-  useEffect(() => {
-    if (tradeKey && selectedDate) {
-      const tradeData = localStorage.getItem(tradeKey);
-      if (tradeData) {
-        const parsed = JSON.parse(tradeData);
-        if (parsed.edges && Array.isArray(parsed.edges)) {
-          setSelectedEdges(parsed.edges);
-        }
-      }
-    }
-  }, [tradeKey, selectedDate]);
-
   // Save edges to localStorage whenever they change
   useEffect(() => {
     if (edges.length > 0) {
       localStorage.setItem("tradeEdges", JSON.stringify(edges));
     }
   }, [edges]);
-
-  // Save selected edges for this specific trade whenever they change
-  useEffect(() => {
-    if (tradeKey && selectedDate) {
-      const existingData = localStorage.getItem(tradeKey);
-      const parsed = existingData ? JSON.parse(existingData) : {};
-      parsed.edges = selectedEdges;
-      localStorage.setItem(tradeKey, JSON.stringify(parsed));
-      // Notify other components (EdgeShower, Index) that edges have changed
-      window.dispatchEvent(new Event("tradeEdgesUpdated"));
-    }
-  }, [selectedEdges, tradeKey, selectedDate]);
 
   if (!selectedDate) return null;
 
@@ -248,6 +236,14 @@ export const TradeDetailsModal = ({
     setSelectedEdges((prev) =>
       prev.includes(edge) ? prev.filter((e) => e !== edge) : [...prev, edge]
     );
+  };
+
+  const handleDeleteTrade = async () => {
+    if (currentTrade?.id) {
+      await deleteTrade(currentTrade.id);
+      setShowDeleteDialog(false);
+      onClose();
+    }
   };
 
   const modules = {
@@ -444,7 +440,7 @@ export const TradeDetailsModal = ({
             </div>
 
             {/* Journal Section */}
-            <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto">
+            <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto relative">
               {selectedProfile === "default" && (
                 <div className="flex items-center gap-2 mb-4">
                   <Button
@@ -460,13 +456,14 @@ export const TradeDetailsModal = ({
               {selectedProfile !== "default" ? (
                 <CustomQuestionJournal
                   questions={profileQuestions}
-                  answers={customAnswers}
+                  answers={(entry?.content as any) || {}}
                   onAnswerChange={(index, value) => {
-                    setCustomAnswers((prev) => ({ ...prev, [index]: value }));
+                    const currentAnswers = (entry?.content as any) || {};
+                    updateEntry({ ...currentAnswers, [`question_${index}`]: value }, "custom_questions");
                   }}
                   onImageUpload={uploadImage}
                 />
-              ) : helpFindEdge ? (
+              ) : (
                 <JournalQuestions
                   energy={energy}
                   energyWhy={energyWhy}
@@ -495,17 +492,17 @@ export const TradeDetailsModal = ({
                   onFixTomorrowChange={setFixTomorrow}
                   onAdditionalCommentsChange={setAdditionalComments}
                 />
-              ) : (
-                <div className="h-full">
-                  <ReactQuill
-                    theme="snow"
-                    value={freeJournal}
-                    onChange={setFreeJournal}
-                    modules={modules}
-                    className="h-[calc(100%-50px)] bg-background rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-input [&_.ql-toolbar]:border-input [&_.ql-container]:bg-background [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[200px]"
-                  />
-                </div>
               )}
+              
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                className="absolute bottom-4 right-4"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Trade
+              </Button>
             </div>
           </div>
         </div>
@@ -513,8 +510,25 @@ export const TradeDetailsModal = ({
         <EdgeFinderWizard
           isOpen={showEdgeFinderWizard}
           onClose={() => setShowEdgeFinderWizard(false)}
-          tradeKey={tradeKey}
+          tradeKey={currentTrade?.id || ""}
         />
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Once deleted, this trade is gone forever. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteTrade} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete Forever
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
