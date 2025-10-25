@@ -1,19 +1,30 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const [countdown, setCountdown] = useState(3);
 
-  // If user is already authenticated, they shouldn't see the landing page
+  // If user is already authenticated, redirect to journal after 3 seconds
   useEffect(() => {
     if (user && !loading) {
-      // User is authenticated - they're already in the app
-      // For now, we just don't redirect them, they can use the app
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate('/dashboard');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
     }
-  }, [user, loading]);
+  }, [user, loading, navigate]);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative" style={{ background: "linear-gradient(to bottom, #000000, #0a0a0a)" }}>
@@ -59,10 +70,10 @@ const Index = () => {
           </Button>
         )}
         
-        {/* Show welcome message if authenticated */}
+        {/* Show countdown message if authenticated */}
         {user && (
-          <div className="text-muted-foreground" style={{ fontFamily: 'Inter' }}>
-            Welcome back! You're logged in.
+          <div className="text-muted-foreground text-lg" style={{ fontFamily: 'Inter' }}>
+            Redirecting to journal in {countdown}...
           </div>
         )}
         
