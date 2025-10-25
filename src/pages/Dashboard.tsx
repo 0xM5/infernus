@@ -419,84 +419,86 @@ const Index = () => {
                       </div>
                     </div>
                     
-                    {/* Winners/Losers Box */}
-                    <div className="space-y-2 sm:space-y-3 flex-shrink-0">
-                      <div className="bg-card border border-border rounded-lg px-3 sm:px-4 py-2">
-                        <div className="flex gap-3 sm:gap-6 items-center flex-wrap justify-center sm:justify-start">
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Winners</div>
-                            <div className="text-base sm:text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
-                              {monthlyStats.winners}
+                    {/* Winners/Losers Box with Win/Loss Ratio */}
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch flex-shrink-0">
+                      <div className="space-y-2 sm:space-y-3">
+                        <div className="bg-card border border-border rounded-lg px-3 sm:px-4 py-2">
+                          <div className="flex gap-3 sm:gap-6 items-center flex-wrap justify-center sm:justify-start">
+                            <div>
+                              <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Winners</div>
+                              <div className="text-base sm:text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
+                                {monthlyStats.winners}
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="relative w-24 sm:w-32 h-3 bg-red-500 rounded-full overflow-hidden">
-                              <div 
-                                className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
-                                style={{ width: `${monthlyStats.winnerPercentage}%` }}
-                              />
+                            
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="relative w-24 sm:w-32 h-3 bg-red-500 rounded-full overflow-hidden">
+                                <div 
+                                  className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
+                                  style={{ width: `${monthlyStats.winnerPercentage}%` }}
+                                />
+                              </div>
+                              <div className="text-xs text-muted-foreground/60 mt-1" style={{ fontWeight: 500 }}>
+                                Win Rate: {monthlyStats.winnerPercentage.toFixed(0)}%
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground/60 mt-1" style={{ fontWeight: 500 }}>
-                              Win Rate: {monthlyStats.winnerPercentage.toFixed(0)}%
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Losers</div>
-                            <div className="text-base sm:text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
-                              {monthlyStats.losers}
+                            
+                            <div>
+                              <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Losers</div>
+                              <div className="text-base sm:text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
+                                {monthlyStats.losers}
+                              </div>
                             </div>
                           </div>
                         </div>
+                        
+                        {/* Open PnL Chart Button */}
+                        <Button
+                          onClick={() => setShowPnLChart(true)}
+                          className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                          variant="outline"
+                        >
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          Open PnL Chart
+                        </Button>
                       </div>
-                      
-                      {/* Open PnL Chart Button */}
-                      <Button
-                        onClick={() => setShowPnLChart(true)}
-                        className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
-                        variant="outline"
-                      >
-                        <TrendingUp className="w-4 h-4 mr-2" />
-                        Open PnL Chart
-                      </Button>
-                    </div>
 
-                    {/* Profit Ratio Box */}
-                    <div className="bg-card border border-border rounded-lg px-3 sm:px-4 py-2 sm:py-3 flex-shrink-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="text-xs text-muted-foreground" style={{ fontWeight: 600 }}>Win/Loss Ratio</div>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Average outcome of all trades</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                        <div className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontWeight: 800 }}>
-                          {monthlyStats.profitRatio.toFixed(2)}
+                      {/* Profit Ratio Box */}
+                      <div className="bg-card border border-border rounded-lg px-3 sm:px-4 py-2 sm:py-3 flex-shrink-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="text-xs text-muted-foreground" style={{ fontWeight: 600 }}>Win/Loss Ratio</div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Average outcome of all trades</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
-                        {/* Semi-circle visualization */}
-                        <div className="relative w-12 h-6 overflow-hidden">
-                          <div 
-                            className="w-12 h-12 rounded-full"
-                            style={{
-                              background: `conic-gradient(from 180deg, #f87171 0deg ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg, #4ade80 ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg 180deg)`
-                            }}
-                          />
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                          <div className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontWeight: 800 }}>
+                            {monthlyStats.profitRatio.toFixed(2)}
+                          </div>
+                          {/* Semi-circle visualization */}
+                          <div className="relative w-12 h-6 overflow-hidden">
+                            <div 
+                              className="w-12 h-12 rounded-full"
+                              style={{
+                                background: `conic-gradient(from 180deg, #f87171 0deg ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg, #4ade80 ${((monthlyStats.avgWinner / (monthlyStats.avgWinner + Math.abs(monthlyStats.avgLoser))) * 180)}deg 180deg)`
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="text-sm font-semibold text-green-400">
-                          ${monthlyStats.avgWinner.toFixed(1)}
-                        </div>
-                        <div className="text-sm font-semibold text-red-400">
-                          -${Math.abs(monthlyStats.avgLoser).toFixed(1)}
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="text-sm font-semibold text-green-400">
+                            ${monthlyStats.avgWinner.toFixed(1)}
+                          </div>
+                          <div className="text-sm font-semibold text-red-400">
+                            -${Math.abs(monthlyStats.avgLoser).toFixed(1)}
+                          </div>
                         </div>
                       </div>
                     </div>
