@@ -106,8 +106,8 @@ export const useJournalEntries = (
 
   // Debounced save function for auto-sync
   const debouncedSave = useCallback(
-    debounce(async (entryData: JournalEntry) => {
-      if (!userId || !profileId || !tradeId) return;
+    debounce(async (entryData: JournalEntry, currentProfileId: string, currentUserId: string, currentTradeId: string) => {
+      if (!currentUserId || !currentProfileId || !currentTradeId) return;
 
       setSaving(true);
       try {
@@ -124,9 +124,9 @@ export const useJournalEntries = (
           const { data, error } = await supabase
             .from('journal_entries')
             .insert([{
-              trade_id: tradeId,
-              profile_id: profileId,
-              user_id: userId,
+              trade_id: currentTradeId,
+              profile_id: currentProfileId,
+              user_id: currentUserId,
               entry_type: entryData.entry_type,
               content: entryData.content,
             }])
@@ -148,7 +148,7 @@ export const useJournalEntries = (
         setSaving(false);
       }
     }, 1000),
-    [userId, profileId, tradeId]
+    []
   );
 
   // Ensure pending autosave runs on page unload/unmount
@@ -164,17 +164,19 @@ export const useJournalEntries = (
   }, [debouncedSave]);
   
   const updateEntry = (content: any, entryType: JournalEntry['entry_type']) => {
+    if (!userId || !profileId || !tradeId) return;
+    
     const updatedEntry = {
       ...entry,
-      trade_id: tradeId!,
-      profile_id: profileId!,
-      user_id: userId!,
+      trade_id: tradeId,
+      profile_id: profileId,
+      user_id: userId,
       entry_type: entryType,
       content,
     } as JournalEntry;
 
     setEntry(updatedEntry);
-    debouncedSave(updatedEntry);
+    debouncedSave(updatedEntry, profileId, userId, tradeId);
   };
 
   return {
