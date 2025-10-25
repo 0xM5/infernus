@@ -27,7 +27,12 @@ export const useTrades = (profileId: string | undefined, userId: string | undefi
 
   useEffect(() => {
     if (profileId && userId) {
+      setLoading(true);
+      setTrades([]); // Clear previous trades when switching profiles
       fetchTrades();
+    } else {
+      setTrades([]);
+      setLoading(false);
     }
   }, [profileId, userId]);
 
@@ -38,6 +43,7 @@ export const useTrades = (profileId: string | undefined, userId: string | undefi
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(profileId)) {
       console.error('Invalid profile ID format:', profileId);
+      setTrades([]);
       setLoading(false);
       return;
     }

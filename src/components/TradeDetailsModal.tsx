@@ -14,6 +14,7 @@ import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { useTradingProfiles } from "@/hooks/useTradingProfiles";
 
 interface Trade {
   id?: string;
@@ -50,14 +51,14 @@ export const TradeDetailsModal = ({
 }: TradeDetailsModalProps) => {
   const { user } = useAuth();
   const { uploadImage } = useImageUpload(user?.id);
-  const { saveTrade, deleteTrade } = useTrades(selectedProfile, user?.id);
-  
+  const { activeProfile } = useTradingProfiles(user?.id);
+  const { saveTrade, deleteTrade } = useTrades(activeProfile?.id, user?.id);
   const currentTrade = selectedTrade && trades.find(t => 
     t.date.toISOString() === selectedTrade.date.toISOString() && 
     t.symbol === selectedTrade.symbol
   );
   
-  const { entry, updateEntry } = useJournalEntries(currentTrade?.id, selectedProfile, user?.id);
+  const { entry, updateEntry } = useJournalEntries(currentTrade?.id, activeProfile?.id, user?.id);
   
   const [rating, setRating] = useState(0);
   const [target, setTarget] = useState("");
@@ -137,7 +138,7 @@ export const TradeDetailsModal = ({
       setFixTomorrow(content.fixTomorrow || "");
       setAdditionalComments(content.additionalComments || "");
     }
-  }, [currentTrade?.id, entry?.trade_id]);
+  }, [selectedTrade?.date?.toISOString(), selectedTrade?.symbol, currentTrade?.id, entry?.trade_id, activeProfile?.id]);
 
   // Auto-save trade basic fields
   useEffect(() => {

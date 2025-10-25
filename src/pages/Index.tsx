@@ -23,6 +23,7 @@ import { getEstimatedCommission } from "@/utils/commissionEstimates";
 import { format } from "date-fns";
 
 export interface Trade {
+  id?: string;
   date: Date;
   profit: number;
   symbol: string;
@@ -44,6 +45,7 @@ const Index = () => {
   
   // Convert DB trades to display format
   const trades: Trade[] = dbTrades.map(t => ({
+    id: t.id,
     date: new Date(t.date),
     profit: t.profit,
     symbol: t.symbol,
