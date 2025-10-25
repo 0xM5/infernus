@@ -19,6 +19,8 @@ import "react-quill/dist/quill.snow.css";
 import { useTradingProfiles } from "@/hooks/useTradingProfiles";
 import BlotFormatter from "quill-blot-formatter";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { debounce } from "lodash-es";
 
 // Register image resize/move module once
 try {
@@ -110,6 +112,7 @@ export const TradeDetailsModal = ({
   const [volume, setVolume] = useState("");
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
+  const scratchpadEntryIdRef = useRef<string | null>(null);
 
   const imageHandler = () => {
     return function(this: any) {
@@ -205,6 +208,75 @@ export const TradeDetailsModal = ({
     }
 }, [selectedTrade?.date?.toISOString(), selectedTrade?.symbol, currentTrade?.id, entry?.trade_id, activeProfile?.id]);
 
+  // Load latest scratchpad content directly by trade_id
+  useEffect(() => {
+    if (currentTrade?.id && currentTrade.symbol === 'SCRATCHPAD') {
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from('journal_entries')
+            .select('id, content')
+            .eq('trade_id', currentTrade.id)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (!error && data) {
+            scratchpadEntryIdRef.current = (data as any).id || null;
+            const html = (data as any).content?.html ?? '';
+            setAdditionalComments(typeof html === 'string' ? html : '');
+          } else {
+            scratchpadEntryIdRef.current = null;
+            setAdditionalComments('');
+          }
+        } catch (err) {
+          console.error('Error loading scratchpad:', err);
+        }
+      })();
+    }
+  }, [currentTrade?.id, currentTrade?.symbol]);
+
+  // Debounced scratchpad autosave (uses current IDs to avoid stale closures)
+  const debouncedScratchSave = useCallback(
+    debounce(async (html: string, tradeId?: string, profileId?: string, userId?: string) => {
+      if (!tradeId || !profileId || !userId) return;
+      try {
+        const existingId = scratchpadEntryIdRef.current;
+        if (existingId) {
+          const { error } = await supabase
+            .from('journal_entries')
+            .update({ content: { html } })
+            .eq('id', existingId);
+          if (error) throw error;
+        } else {
+          const { data, error } = await supabase
+            .from('journal_entries')
+            .insert({
+              trade_id: tradeId,
+              profile_id: profileId,
+              user_id: userId,
+              entry_type: 'free_form',
+              content: { html }
+            })
+            .select('id')
+            .single();
+          if (error) throw error;
+          scratchpadEntryIdRef.current = (data as any)?.id ?? null;
+        }
+      } catch (e) {
+        console.error('Scratchpad autosave error:', e);
+        toast.error('Failed to auto-save journal entry');
+      }
+    }, 1000),
+    []
+  );
+
+  // Trigger scratchpad autosave
+  useEffect(() => {
+    if (currentTrade?.symbol === 'SCRATCHPAD') {
+      debouncedScratchSave(additionalComments, currentTrade?.id, activeProfile?.id, user?.id);
+    }
+  }, [additionalComments, currentTrade?.id, currentTrade?.symbol, activeProfile?.id, user?.id, debouncedScratchSave]);
+
   // Auto-save trade basic fields
   useEffect(() => {
     if (currentTrade?.id && selectedProfile && user?.id) {
@@ -232,19 +304,12 @@ export const TradeDetailsModal = ({
   // Auto-save journal data
   useEffect(() => {
     if (currentTrade?.id && activeProfile?.id && user?.id) {
-      if (currentTrade.symbol === 'SCRATCHPAD') {
-        const scratchContent = { html: additionalComments };
-        // Avoid saving empty notes
-        const plain = (additionalComments || '').replace(/<[^>]*>/g, '').trim();
-        if (plain.length === 0) return;
-        if (entry?.content && JSON.stringify(entry.content) === JSON.stringify(scratchContent)) {
-          return;
-        }
-        updateEntry(scratchContent, 'free_form');
-        return;
-      }
+    if (currentTrade.symbol === 'SCRATCHPAD') {
+      // Handled by dedicated scratchpad autosave above
+      return;
+    }
 
-      const journalContent = {
+    const journalContent = {
         edges: selectedEdges,
         customAnswers,
         energy,
