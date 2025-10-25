@@ -170,7 +170,7 @@ export const TradeDetailsModal = ({
     if (entry?.content && entry.trade_id === currentTrade.id) {
       const content = entry.content as any;
 
-      if ((entry as any).entry_type === 'scratchpad') {
+      if (currentTrade.symbol === 'SCRATCHPAD') {
         setAdditionalComments(content?.html || "");
       } else {
         const rawCA = content.customAnswers || {};

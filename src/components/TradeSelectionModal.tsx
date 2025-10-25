@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Trade } from "@/pages/Index";
 
@@ -17,7 +17,9 @@ export const TradeSelectionModal = ({
 }: TradeSelectionModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-card">
+      <DialogContent className="max-w-md bg-card" aria-describedby="trade-selection-desc">
+        <DialogTitle className="sr-only">Select Entry</DialogTitle>
+        <DialogDescription id="trade-selection-desc" className="sr-only">Choose between scratchpad notes or a trade entry.</DialogDescription>
         <div className="space-y-4">
           <h2 className="text-xl text-white font-bold">
             Select What to View
