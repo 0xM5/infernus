@@ -615,7 +615,7 @@ export const TradeDetailsModal = ({
               ) : (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">Journal Entry</label>
-                  <div className="main-journal-editor">
+                  <div className="main-journal-editor relative z-10 pointer-events-auto h-[300px]">
                     <ReactQuill
                       ref={mainJournalRef}
                       theme="snow"
@@ -623,8 +623,7 @@ export const TradeDetailsModal = ({
                       onChange={setAdditionalComments}
                       modules={modules}
                       readOnly={false}
-                      className="rounded-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground"
-                      style={{ height: '400px' }}
+                      className="h-[260px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[220px]"
                     />
                   </div>
                 </div>
