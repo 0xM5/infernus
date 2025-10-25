@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,19 +14,45 @@ export const useTradingProfiles = (userId: string | undefined) => {
   const [activeProfile, setActiveProfile] = useState<TradingProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const fetchControllerRef = useRef<AbortController | null>(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     if (userId) {
-      fetchProfiles();
+      // Cancel any pending requests
+      if (fetchControllerRef.current) {
+        fetchControllerRef.current.abort();
+      }
+      
+      // Debounce to prevent multiple rapid requests
+      timeoutId = setTimeout(() => {
+        fetchProfiles();
+      }, 100);
+    } else {
+      setLoading(false);
     }
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (fetchControllerRef.current) {
+        fetchControllerRef.current.abort();
+      }
+    };
   }, [userId]);
 
   const fetchProfiles = async () => {
     try {
+      // Create new abort controller for this request
+      fetchControllerRef.current = new AbortController();
+      
       const { data, error } = await supabase
         .from('trading_profiles')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true })
+        .abortSignal(fetchControllerRef.current.signal);
 
       if (error) throw error;
 
@@ -36,10 +62,27 @@ export const useTradingProfiles = (userId: string | undefined) => {
       if (data && data.length > 0 && !activeProfile) {
         setActiveProfile(data[0]);
       }
+      
+      // Reset retry count on success
+      retryCountRef.current = 0;
     } catch (error: any) {
+      // Don't show error if request was aborted (normal behavior)
+      if (error.name === 'AbortError') {
+        return;
+      }
+      
+      // Retry logic for network errors
+      if (error.message?.includes('Failed to fetch') && retryCountRef.current < maxRetries) {
+        retryCountRef.current++;
+        console.log(`Retrying profile fetch (attempt ${retryCountRef.current}/${maxRetries})...`);
+        setTimeout(() => fetchProfiles(), 1000 * retryCountRef.current);
+        return;
+      }
+      
+      console.error('Error loading profiles:', error);
       toast({
         title: 'Error loading profiles',
-        description: error.message,
+        description: error.message || 'Please check your connection and try again',
         variant: 'destructive',
       });
     } finally {
