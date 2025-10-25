@@ -18,6 +18,7 @@ import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useTradingProfiles } from "@/hooks/useTradingProfiles";
 import BlotFormatter from "quill-blot-formatter";
+import { toast } from "sonner";
 
 // Register image resize/move module once
 try {
@@ -616,24 +617,54 @@ export const TradeDetailsModal = ({
           {/* Right side - Edge Tags and Journal */}
           <div className="flex-1 flex flex-col gap-4 min-h-0">
             {/* Edge Tags */}
-            <div className="w-full bg-primary/20 rounded-xl p-6 border-2 border-primary">
-              <h2
-                className="text-xl text-white mb-4"
-                style={{ fontWeight: 700, fontFamily: "Inter" }}
-              >
-                What was the edge?
-              </h2>
-              <EdgeSelector
-                edges={edges}
-                selectedEdges={selectedEdges}
-                onEdgesChange={setEdges}
-                onEdgeSelect={toggleEdgeSelection}
-              />
-            </div>
+            {dayTrades[0]?.symbol !== 'SCRATCHPAD' && (
+              <div className="w-full bg-primary/20 rounded-xl p-6 border-2 border-primary">
+                <h2
+                  className="text-xl text-white mb-4"
+                  style={{ fontWeight: 700, fontFamily: "Inter" }}
+                >
+                  What was the edge?
+                </h2>
+                <EdgeSelector
+                  edges={edges}
+                  selectedEdges={selectedEdges}
+                  onEdgesChange={setEdges}
+                  onEdgeSelect={toggleEdgeSelection}
+                />
+              </div>
+            )}
 
             {/* Journal Section */}
             <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto">
-              {selectedProfile === "default" && (
+              {dayTrades[0]?.symbol === 'SCRATCHPAD' ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">Scratchpad Notes</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const editor = mainJournalRef.current?.getEditor();
+                        if (editor) {
+                          editor.enable();
+                          toast.success("Editing enabled");
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    </Button>
+                  </div>
+                  <div className="[&_.ql-editor]:text-white [&_.ql-toolbar]:hidden">
+                    <RichJournalEditor
+                      value={additionalComments}
+                      onChange={setAdditionalComments}
+                      onImageUpload={uploadImage}
+                      height={600}
+                    />
+                  </div>
+                </div>
+              ) : selectedProfile === "default" && (
                 <div className="space-y-4 mb-4">
                   <Button
                     variant="outline"
@@ -681,7 +712,7 @@ export const TradeDetailsModal = ({
                 </div>
               )}
 
-              {selectedProfile !== "default" ? (
+              {dayTrades[0]?.symbol !== 'SCRATCHPAD' && selectedProfile !== "default" ? (
                 <CustomQuestionJournal
                   questions={profileQuestions}
                   answers={customAnswers}
@@ -690,7 +721,7 @@ export const TradeDetailsModal = ({
                   }}
                   onImageUpload={uploadImage}
                 />
-              ) : (
+              ) : dayTrades[0]?.symbol !== 'SCRATCHPAD' ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-semibold text-foreground">Journal Entry</label>
@@ -712,7 +743,7 @@ export const TradeDetailsModal = ({
                     height={420}
                   />
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

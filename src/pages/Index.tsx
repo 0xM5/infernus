@@ -471,6 +471,13 @@ const Index = () => {
                   >
                     <Settings className="w-4 h-4" />
                   </Button>
+                  <Button
+                    onClick={() => setShowScratchpad(true)}
+                    className="bg-warning hover:bg-warning/90 text-black font-semibold shadow-md flex items-center gap-2"
+                  >
+                    <StickyNote className="w-4 h-4" />
+                    Scratchpad
+                  </Button>
                   <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
                     <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Monthly</span>
                     <Switch 
@@ -531,16 +538,6 @@ const Index = () => {
                   />
                 </div>
               )}
-
-              <div className="flex justify-center mb-4">
-                <Button
-                  onClick={() => setShowScratchpad(true)}
-                  className="bg-warning hover:bg-warning-light text-warning-foreground font-semibold px-6 py-2"
-                >
-                  <StickyNote className="w-4 h-4 mr-2" />
-                  Scratchpad
-                </Button>
-              </div>
 
               <div className="w-full max-w-[1370px] mx-auto" style={{ maxHeight: '758px' }}>
                 <TradeCalendar

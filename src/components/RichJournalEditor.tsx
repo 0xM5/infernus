@@ -132,7 +132,7 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
         onChange={onChange}
         modules={modules}
         placeholder={placeholder}
-        className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-card [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-border [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4"
+        className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-card [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-border [&_.ql-editor]:text-white [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4 [&_.ql-editor.ql-blank::before]:text-muted-foreground"
       />
     </div>
   );

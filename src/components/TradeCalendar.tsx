@@ -72,11 +72,13 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
     if (dayTrades.length === 0) return null;
     
     const hasScratchpad = dayTrades.some(t => t.symbol === "SCRATCHPAD");
+    const onlyScratchpad = dayTrades.length === 1 && hasScratchpad;
     const totalProfit = dayTrades.reduce((sum, trade) => sum + trade.profit, 0);
     return {
       profit: totalProfit,
       count: dayTrades.length,
-      isScratchpad: hasScratchpad
+      isScratchpad: hasScratchpad,
+      onlyScratchpad
     };
   };
 
@@ -152,8 +154,8 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                 key={day}
                 className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                   dayStats
-                    ? dayStats.isScratchpad
-                      ? "bg-warning/20 border-warning cursor-pointer"
+                    ? dayStats.onlyScratchpad
+                      ? "bg-warning border-warning cursor-pointer"
                       : dayStats.profit >= 0
                         ? "bg-success border-success-light cursor-pointer"
                         : "bg-destructive border-destructive-light cursor-pointer"
@@ -161,13 +163,13 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                 }`}
                 onClick={() => handleDayClick(day, dayStats)}
               >
-                <div className={`text-sm ${dayStats ? dayStats.isScratchpad ? "text-warning" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
+                <div className={`text-sm ${dayStats ? dayStats.onlyScratchpad ? "text-black" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                   {day}
                 </div>
                 {dayStats && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    {dayStats.isScratchpad ? (
-                      <div className="text-xs text-warning" style={{ fontWeight: 700 }}>
+                    {dayStats.onlyScratchpad ? (
+                      <div className="text-xs text-black" style={{ fontWeight: 700 }}>
                         Scratchpad
                       </div>
                     ) : (
@@ -216,8 +218,8 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                   key={day}
                   className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                     dayStats
-                      ? dayStats.isScratchpad
-                        ? "bg-warning/20 border-warning cursor-pointer"
+                      ? dayStats.onlyScratchpad
+                        ? "bg-warning border-warning cursor-pointer"
                         : dayStats.profit >= 0
                           ? "bg-success border-success-light cursor-pointer"
                           : "bg-destructive border-destructive-light cursor-pointer"
@@ -225,13 +227,13 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                   }`}
                   onClick={() => handleDayClick(day, dayStats)}
                 >
-                  <div className={`text-sm ${dayStats ? dayStats.isScratchpad ? "text-warning" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
+                  <div className={`text-sm ${dayStats ? dayStats.onlyScratchpad ? "text-black" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                     {day}
                   </div>
                   {dayStats && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      {dayStats.isScratchpad ? (
-                        <div className="text-xs text-warning" style={{ fontWeight: 700 }}>
+                      {dayStats.onlyScratchpad ? (
+                        <div className="text-xs text-black" style={{ fontWeight: 700 }}>
                           Scratchpad
                         </div>
                       ) : (
