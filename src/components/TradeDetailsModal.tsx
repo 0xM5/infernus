@@ -135,6 +135,23 @@ export const TradeDetailsModal = ({
         setFixTomorrow(content.fixTomorrow || "");
         setAdditionalComments(content.additionalComments || "");
       }
+    } else {
+      // Reset to defaults when no entry exists for this trade
+      setSelectedEdges([]);
+      setCustomAnswers({});
+      setEnergy(3);
+      setEnergyWhy("");
+      setStress(3);
+      setStressWhy("");
+      setConfidence(3);
+      setConfidenceWhy("");
+      setBias("");
+      setRegime("");
+      setVwap("");
+      setKeyLevels("");
+      setVolume("");
+      setFixTomorrow("");
+      setAdditionalComments("");
     }
   }, [currentTrade?.id, entry?.id]);
 
@@ -454,6 +471,16 @@ export const TradeDetailsModal = ({
                   </div>
                 </div>
               )}
+
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                className="w-full mt-4"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Trade
+              </Button>
             </div>
           </div>
 
@@ -476,7 +503,7 @@ export const TradeDetailsModal = ({
             </div>
 
             {/* Journal Section */}
-            <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto relative">
+            <div className="flex-1 min-h-0 bg-muted rounded-xl p-6 overflow-y-auto">
               {selectedProfile === "default" && (
                 <div className="flex items-center gap-2 mb-4">
                   <Button
@@ -528,16 +555,6 @@ export const TradeDetailsModal = ({
                   onAdditionalCommentsChange={setAdditionalComments}
                 />
               )}
-              
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowDeleteDialog(true)}
-                className="absolute bottom-4 right-4"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Trade
-              </Button>
             </div>
           </div>
         </div>
