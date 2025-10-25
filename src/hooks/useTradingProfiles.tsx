@@ -94,13 +94,56 @@ export const useTradingProfiles = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      // Check if profile with this name already exists
+      const { data: existingProfiles } = await supabase
+        .from('trading_profiles')
+        .select('name')
+        .eq('user_id', userId);
+      
+      let finalName = name;
+      
+      // If duplicate, generate a unique name
+      if (existingProfiles?.some(p => p.name === name)) {
+        let counter = 1;
+        while (existingProfiles.some(p => p.name === `${name} ${counter}`)) {
+          counter++;
+        }
+        finalName = `${name} ${counter}`;
+      }
+      
       const { data, error } = await supabase
         .from('trading_profiles')
-        .insert([{ user_id: userId, name, commission: 0 }])
+        .insert([{ user_id: userId, name: finalName, commission: 0 }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // If still a duplicate error, try with timestamp
+        if (error.code === '23505') {
+          const timestamp = Date.now();
+          const timestampName = `${name} ${timestamp}`;
+          const { data: retryData, error: retryError } = await supabase
+            .from('trading_profiles')
+            .insert([{ user_id: userId, name: timestampName, commission: 0 }])
+            .select()
+            .single();
+          
+          if (retryError) throw retryError;
+          
+          setProfiles([...profiles, retryData]);
+          if (profiles.length === 0) {
+            setActiveProfile(retryData);
+          }
+          
+          toast({
+            title: 'Profile created',
+            description: `${timestampName} has been created successfully.`,
+          });
+          
+          return retryData;
+        }
+        throw error;
+      }
 
       setProfiles([...profiles, data]);
       
@@ -111,14 +154,15 @@ export const useTradingProfiles = (userId: string | undefined) => {
       
       toast({
         title: 'Profile created',
-        description: `${name} has been created successfully.`,
+        description: `${finalName} has been created successfully.`,
       });
       
       return data;
     } catch (error: any) {
+      console.error('Error creating profile:', error);
       toast({
         title: 'Error creating profile',
-        description: error.message,
+        description: error.message || 'Please try again',
         variant: 'destructive',
       });
     }

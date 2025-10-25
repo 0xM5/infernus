@@ -95,12 +95,22 @@ const Index = () => {
     fetchUserProfile();
   }, [user]);
 
-  // Create default profile if none exist
+  // Create default profile if none exist - with safety check
   useEffect(() => {
-    if (!profilesLoading && profiles.length === 0 && user) {
-      createProfile("Profile 1");
+    let timeoutId: NodeJS.Timeout;
+    
+    if (!profilesLoading && profiles.length === 0 && user && !loading) {
+      // Wait a bit to ensure fetch is complete
+      timeoutId = setTimeout(() => {
+        // Double-check profiles are still empty
+        if (profiles.length === 0) {
+          createProfile("Profile 1");
+        }
+      }, 500);
     }
-  }, [profilesLoading, profiles, user]);
+    
+    return () => clearTimeout(timeoutId);
+  }, [profilesLoading, profiles.length, user, loading]);
 
   const formatExpirationDate = () => {
     if (!userProfile?.account_expires_at) {
