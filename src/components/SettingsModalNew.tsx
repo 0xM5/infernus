@@ -10,6 +10,16 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, X, Pencil, Check, LogOut, Info } from "lucide-react";
 import { DeleteProfileModal } from "./DeleteProfileModal";
 import { toast } from "sonner";
@@ -64,6 +74,7 @@ export const SettingsModalNew = ({
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [commission, setCommission] = useState("");
+  const [deleteQuestionProfileId, setDeleteQuestionProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -136,6 +147,26 @@ export const SettingsModalNew = ({
   const handleCancelRename = () => {
     setEditingProfileId(null);
     setEditingName("");
+  };
+
+  const handleDeleteQuestionProfile = (profileId: string) => {
+    setDeleteQuestionProfileId(profileId);
+  };
+
+  const confirmDeleteQuestionProfile = () => {
+    if (!deleteQuestionProfileId) return;
+    
+    const updatedProfiles = questionProfiles.filter(p => p.id !== deleteQuestionProfileId);
+    const customProfiles = updatedProfiles.filter(p => p.id !== "default");
+    localStorage.setItem("questionProfiles", JSON.stringify(customProfiles));
+    setQuestionProfiles(updatedProfiles);
+    
+    if (selectedProfile === deleteQuestionProfileId) {
+      onProfileChange("default");
+    }
+    
+    setDeleteQuestionProfileId(null);
+    toast.success("Question profile deleted");
   };
 
   const handleLogout = async () => {
@@ -267,9 +298,24 @@ export const SettingsModalNew = ({
               </SelectTrigger>
               <SelectContent className="bg-popover border-border">
                 {questionProfiles.map((profile) => (
-                  <SelectItem key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </SelectItem>
+                  <div key={profile.id} className="flex items-center group hover:bg-accent">
+                    <SelectItem value={profile.id} className="flex-1">
+                      {profile.name}
+                    </SelectItem>
+                    {profile.id !== "default" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteQuestionProfile(profile.id);
+                        }}
+                        className="h-7 w-7 mr-2 opacity-0 group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 ))}
                 <div className="border-t border-border mt-2 pt-2">
                   <Button
@@ -327,6 +373,23 @@ export const SettingsModalNew = ({
           onConfirm={confirmDeleteProfile}
           profileName={profileToDelete?.name || ""}
         />
+
+        <AlertDialog open={!!deleteQuestionProfileId} onOpenChange={() => setDeleteQuestionProfileId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Question Profile</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this question profile? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteQuestionProfile} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
