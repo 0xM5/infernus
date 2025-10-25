@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -60,6 +61,7 @@ const Index = () => {
       <div className="min-h-screen w-full flex flex-col items-center justify-between bg-background text-foreground py-12 px-4">
         <div className="flex-1 flex flex-col items-center justify-center max-w-3xl w-full">
           <div className="text-center space-y-4">
+            <img src={logo} alt="Infernus Logo" className="w-24 h-24 mx-auto mb-4" />
             <h1 className="text-6xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
               Infernus<span className="text-primary">.</span>app
             </h1>
