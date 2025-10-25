@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Slider } from "@/components/ui/slider";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,6 +76,12 @@ export const SettingsModalNew = ({
   const [editingName, setEditingName] = useState("");
   const [commission, setCommission] = useState("");
   const [deleteQuestionProfileId, setDeleteQuestionProfileId] = useState<string | null>(null);
+  const [bgHue, setBgHue] = useState(263);
+  const [bgSaturation, setBgSaturation] = useState(70);
+  const [bgLightness, setBgLightness] = useState(50);
+  const [secondaryHue, setSecondaryHue] = useState(0);
+  const [secondarySaturation, setSecondarySaturation] = useState(84);
+  const [secondaryLightness, setSecondaryLightness] = useState(60);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -87,6 +94,18 @@ export const SettingsModalNew = ({
 
     if (activeProfile) {
       setCommission(activeProfile.commission?.toString() || "0");
+    }
+
+    // Load saved gradient or use defaults
+    const savedGradient = localStorage.getItem("customGradient");
+    if (savedGradient) {
+      const gradient = JSON.parse(savedGradient);
+      setBgHue(gradient.bgHue);
+      setBgSaturation(gradient.bgSaturation);
+      setBgLightness(gradient.bgLightness);
+      setSecondaryHue(gradient.secondaryHue);
+      setSecondarySaturation(gradient.secondarySaturation);
+      setSecondaryLightness(gradient.secondaryLightness);
     }
   }, [isOpen, activeProfile]);
 
@@ -175,6 +194,42 @@ export const SettingsModalNew = ({
     onClose();
     navigate("/auth");
   };
+
+  const handleGradientChange = () => {
+    const gradient = {
+      bgHue,
+      bgSaturation,
+      bgLightness,
+      secondaryHue,
+      secondarySaturation,
+      secondaryLightness,
+    };
+    localStorage.setItem("customGradient", JSON.stringify(gradient));
+    
+    // Apply gradient to body
+    const gradientStyle = `linear-gradient(135deg, hsl(${bgHue} ${bgSaturation}% ${bgLightness}%), hsl(${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%))`;
+    document.body.style.backgroundImage = gradientStyle;
+    document.body.style.backgroundAttachment = 'fixed';
+  };
+
+  const resetToDefaultGradient = () => {
+    setBgHue(263);
+    setBgSaturation(70);
+    setBgLightness(50);
+    setSecondaryHue(0);
+    setSecondarySaturation(84);
+    setSecondaryLightness(60);
+    
+    localStorage.removeItem("customGradient");
+    const defaultGradient = `linear-gradient(135deg, hsl(263 70% 50%), hsl(0 84% 60%))`;
+    document.body.style.backgroundImage = defaultGradient;
+    document.body.style.backgroundAttachment = 'fixed';
+    toast.success("Reset to default gradient");
+  };
+
+  useEffect(() => {
+    handleGradientChange();
+  }, [bgHue, bgSaturation, bgLightness, secondaryHue, secondarySaturation, secondaryLightness]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -349,6 +404,97 @@ export const SettingsModalNew = ({
                 disabled
                 className="opacity-50"
               />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-foreground">Background</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToDefaultGradient}
+                className="text-xs"
+              >
+                Default
+              </Button>
+            </div>
+            
+            <div className="space-y-4 bg-background border border-border rounded-lg p-4">
+              <div 
+                className="w-full h-16 rounded-lg"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, hsl(${bgHue} ${bgSaturation}% ${bgLightness}%), hsl(${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%))`
+                }}
+              />
+              
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Primary Hue</Label>
+                  <Slider
+                    value={[bgHue]}
+                    onValueChange={([value]) => setBgHue(value)}
+                    max={360}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-xs text-muted-foreground">Primary Saturation</Label>
+                  <Slider
+                    value={[bgSaturation]}
+                    onValueChange={([value]) => setBgSaturation(value)}
+                    max={100}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-xs text-muted-foreground">Primary Lightness</Label>
+                  <Slider
+                    value={[bgLightness]}
+                    onValueChange={([value]) => setBgLightness(value)}
+                    max={100}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-border">
+                  <Label className="text-xs text-muted-foreground">Secondary Hue</Label>
+                  <Slider
+                    value={[secondaryHue]}
+                    onValueChange={([value]) => setSecondaryHue(value)}
+                    max={360}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-xs text-muted-foreground">Secondary Saturation</Label>
+                  <Slider
+                    value={[secondarySaturation]}
+                    onValueChange={([value]) => setSecondarySaturation(value)}
+                    max={100}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-xs text-muted-foreground">Secondary Lightness</Label>
+                  <Slider
+                    value={[secondaryLightness]}
+                    onValueChange={([value]) => setSecondaryLightness(value)}
+                    max={100}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

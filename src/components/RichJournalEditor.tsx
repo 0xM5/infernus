@@ -1,7 +1,8 @@
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import BlotFormatter from "quill-blot-formatter";
+import { ImageZoomModal } from "./ImageZoomModal";
 
 // Register once (safe in try/catch)
 try {
@@ -27,6 +28,7 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
   readOnly = false,
 }) => {
   const quillRef = useRef<ReactQuill | null>(null);
+  const [zoomImageSrc, setZoomImageSrc] = useState<string | null>(null);
 
   const imageHandler = () => {
     return function (this: any) {
@@ -122,21 +124,49 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
     return () => root.removeEventListener("paste", handlePaste as any);
   }, [onImageUpload]);
 
+  // Handle image clicks for zoom
+  useEffect(() => {
+    const quill = (quillRef.current as any)?.getEditor?.();
+    const root = quill?.root as HTMLElement | undefined;
+    if (!root) return;
+
+    const handleImageClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "IMG") {
+        const imgSrc = target.getAttribute("src");
+        if (imgSrc) {
+          setZoomImageSrc(imgSrc);
+        }
+      }
+    };
+
+    root.addEventListener("click", handleImageClick);
+    return () => root.removeEventListener("click", handleImageClick);
+  }, []);
+
   return (
-    <div
-      className="rounded-xl border border-border bg-card overflow-hidden"
-      style={{ height }}
-    >
-      <ReactQuill
-        ref={quillRef}
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={modules}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-card [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-border [&_.ql-editor]:text-white [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4 [&_.ql-editor.ql-blank::before]:text-muted-foreground"
+    <>
+      <div
+        className="rounded-xl border border-border bg-card overflow-hidden"
+        style={{ height }}
+      >
+        <ReactQuill
+          ref={quillRef}
+          theme="snow"
+          value={value}
+          onChange={onChange}
+          modules={modules}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-card [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-border [&_.ql-editor]:text-white [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4 [&_.ql-editor.ql-blank::before]:text-muted-foreground [&_.ql-editor_img]:cursor-pointer [&_.ql-editor_img]:hover:opacity-80 [&_.ql-editor_img]:transition-opacity"
+        />
+      </div>
+      
+      <ImageZoomModal
+        isOpen={!!zoomImageSrc}
+        onClose={() => setZoomImageSrc(null)}
+        imageSrc={zoomImageSrc || ""}
       />
-    </div>
+    </>
   );
 };

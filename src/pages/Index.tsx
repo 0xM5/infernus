@@ -95,6 +95,22 @@ const Index = () => {
     fetchUserProfile();
   }, [user]);
 
+  // Apply saved gradient on mount
+  useEffect(() => {
+    const savedGradient = localStorage.getItem("customGradient");
+    if (savedGradient) {
+      const gradient = JSON.parse(savedGradient);
+      const gradientStyle = `linear-gradient(135deg, hsl(${gradient.bgHue} ${gradient.bgSaturation}% ${gradient.bgLightness}%), hsl(${gradient.secondaryHue} ${gradient.secondarySaturation}% ${gradient.secondaryLightness}%))`;
+      document.body.style.backgroundImage = gradientStyle;
+      document.body.style.backgroundAttachment = 'fixed';
+    } else {
+      // Apply default gradient
+      const defaultGradient = `linear-gradient(135deg, hsl(263 70% 50%), hsl(0 84% 60%))`;
+      document.body.style.backgroundImage = defaultGradient;
+      document.body.style.backgroundAttachment = 'fixed';
+    }
+  }, []);
+
   // Create default profile if none exist - with safety check
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
