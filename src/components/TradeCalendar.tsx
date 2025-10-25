@@ -28,7 +28,8 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
     const nonScratchTrades = allDayTrades.filter(t => t.symbol !== 'SCRATCHPAD');
     const scratchpadTrade = allDayTrades.find(t => t.symbol === 'SCRATCHPAD') || null;
 
-    if (nonScratchTrades.length > 1) {
+    // If multiple trades, or if there's both a trade and scratchpad, show selection modal
+    if (nonScratchTrades.length > 1 || (nonScratchTrades.length === 1 && scratchpadTrade)) {
       setIsSelectionModalOpen(true);
     } else if (nonScratchTrades.length === 1) {
       setSelectedTrade(nonScratchTrades[0]);
