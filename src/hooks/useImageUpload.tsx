@@ -27,12 +27,14 @@ export const useImageUpload = (userId: string | undefined) => {
 
       if (error) throw error;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
+      // Get signed URL for private bucket (valid for 1 hour)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from('journal-images')
-        .getPublicUrl(data.path);
+        .createSignedUrl(data.path, 3600);
 
-      return urlData.publicUrl;
+      if (urlError) throw urlError;
+
+      return urlData.signedUrl;
     } catch (error: any) {
       toast({
         title: 'Upload failed',

@@ -255,11 +255,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       validate_access_key: {
         Args: { p_key: string; p_user_id: string }
         Returns: Json
@@ -272,6 +300,7 @@ export type Database = {
         | "weekly"
         | "monthly"
         | "unlimited"
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -406,6 +435,7 @@ export const Constants = {
         "monthly",
         "unlimited",
       ],
+      app_role: ["admin", "user"],
     },
   },
 } as const

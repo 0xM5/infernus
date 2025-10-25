@@ -9,8 +9,17 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const emailSchema = z.string().email("Invalid email address");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+const emailSchema = z.string().email("Invalid email address").max(255, "Email too long");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters").max(128, "Password too long");
+const nicknameSchema = z.string()
+  .trim()
+  .min(1, "Nickname is required")
+  .max(50, "Nickname must be 50 characters or less")
+  .regex(/^[a-zA-Z0-9_-]+$/, "Nickname can only contain letters, numbers, dash and underscore");
+const accessKeySchema = z.string()
+  .trim()
+  .length(16, "Access key must be exactly 16 characters")
+  .regex(/^[A-Z0-9]+$/, "Invalid access key format");
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -89,14 +98,24 @@ const Auth = () => {
       return;
     }
 
-    if (!nickname.trim()) {
-      toast.error("Nickname is required");
-      return;
+    // Validate nickname
+    try {
+      nicknameSchema.parse(nickname);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
     }
 
-    if (!accessKey.trim()) {
-      toast.error("Access key is required");
-      return;
+    // Validate access key
+    try {
+      accessKeySchema.parse(accessKey);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
     }
 
     setLoading(true);
