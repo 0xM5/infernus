@@ -556,7 +556,7 @@ export const TradeDetailsModal = ({
           {/* Left side - Trade Details */}
           <div className="w-[250px] bg-muted rounded-xl p-6 space-y-4 overflow-y-auto">
             <h2
-              className={`text-xl mb-6 ${dayTrades[0]?.symbol === 'SCRATCHPAD' ? 'text-warning' : 'text-white'}`}
+              className="text-xl text-white mb-6"
               style={{ fontWeight: 700, fontFamily: "Inter" }}
             >
               {dayTrades[0]?.symbol === 'SCRATCHPAD' ? 'Scratchpad' : 'Trade Details'}
