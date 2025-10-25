@@ -347,8 +347,8 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-8">
-      <div className="relative">
+    <div className="min-h-screen w-full flex items-center justify-center p-2 sm:p-4 md:p-8">
+      <div className="relative w-full">
         {/* Background gradient glow tied to custom variables */}
         <div
           className="absolute inset-0 blur-3xl opacity-70 rounded-3xl"
@@ -361,17 +361,19 @@ const Index = () => {
         {/* Main container */}
         <div
           className={`relative bg-card border border-border rounded-3xl transition-all duration-500 ${
-            isExpanded ? `w-[90vw] max-w-[1350px] ${edgeShowerEnabled ? 'h-auto max-h-[790px]' : 'h-[85vh] max-h-[790px]'} p-8` : "w-[600px] h-[400px] p-12"
+            isExpanded 
+              ? `w-full max-w-[1350px] ${edgeShowerEnabled ? 'h-auto' : 'min-h-[400px]'} p-3 sm:p-4 md:p-6 lg:p-8 mx-auto` 
+              : "w-full max-w-[600px] h-[300px] sm:h-[400px] p-8 sm:p-12 mx-auto"
           } flex ${isExpanded ? "flex-col" : "items-center justify-center"}`}
         >
           {!isExpanded ? (
             <JournalButton onClick={() => setIsExpanded(true)} />
           ) : (
-            <div className="space-y-6 h-full flex flex-col">
-              <div className="flex items-center justify-between">
-                <div className="space-y-4">
+            <div className="space-y-4 sm:space-y-6 h-full flex flex-col">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div className="space-y-3 sm:space-y-4 w-full lg:w-auto">
                   <div>
-                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-2" style={{ fontWeight: 700 }}>
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground flex items-center gap-2 flex-wrap" style={{ fontWeight: 700 }}>
                       Infernus Beta <span style={{ color: 'rgb(77, 77, 77)' }}>v0.01b</span>
                       <TooltipProvider>
                         <Tooltip>
@@ -406,30 +408,30 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  <div className="flex gap-4 items-center">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center w-full overflow-x-auto">
                     {/* Monthly/Total PnL Box */}
-                    <div className="bg-card border border-border rounded-lg px-6 py-3">
-                      <div className="text-sm text-muted-foreground mb-1" style={{ fontWeight: 600 }}>
+                    <div className="bg-card border border-border rounded-lg px-4 sm:px-6 py-2 sm:py-3 flex-shrink-0">
+                      <div className="text-xs sm:text-sm text-muted-foreground mb-1" style={{ fontWeight: 600 }}>
                         {isYearlyView ? 'Total PnL' : 'Monthly PnL'}
                       </div>
-                      <div className={`text-2xl font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 800 }}>
+                      <div className={`text-xl sm:text-2xl font-bold ${monthlyStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ fontWeight: 800 }}>
                         {monthlyStats.totalPnL >= 0 ? '$' : '-$'}{Math.abs(monthlyStats.totalPnL).toFixed(2)}
                       </div>
                     </div>
                     
                     {/* Winners/Losers Box */}
-                    <div className="space-y-3">
-                      <div className="bg-card border border-border rounded-lg px-4 py-2">
-                        <div className="flex gap-6 items-center">
+                    <div className="space-y-2 sm:space-y-3 flex-shrink-0">
+                      <div className="bg-card border border-border rounded-lg px-3 sm:px-4 py-2">
+                        <div className="flex gap-3 sm:gap-6 items-center flex-wrap justify-center sm:justify-start">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Winners</div>
-                            <div className="text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
+                            <div className="text-base sm:text-lg font-bold text-green-400 border border-green-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
                               {monthlyStats.winners}
                             </div>
                           </div>
                           
                           <div className="flex flex-col items-center gap-2">
-                            <div className="relative w-32 h-3 bg-red-500 rounded-full overflow-hidden">
+                            <div className="relative w-24 sm:w-32 h-3 bg-red-500 rounded-full overflow-hidden">
                               <div 
                                 className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-300"
                                 style={{ width: `${monthlyStats.winnerPercentage}%` }}
@@ -442,7 +444,7 @@ const Index = () => {
                           
                           <div>
                             <div className="text-xs text-muted-foreground mb-1" style={{ fontWeight: 600 }}>Losers</div>
-                            <div className="text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
+                            <div className="text-base sm:text-lg font-bold text-red-400 border border-red-500/30 rounded px-2 py-0.5 inline-block" style={{ fontWeight: 700 }}>
                               {monthlyStats.losers}
                             </div>
                           </div>
@@ -461,7 +463,7 @@ const Index = () => {
                     </div>
 
                     {/* Profit Ratio Box */}
-                    <div className="bg-card border border-border rounded-lg px-4 py-3">
+                    <div className="bg-card border border-border rounded-lg px-3 sm:px-4 py-2 sm:py-3 flex-shrink-0">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="text-xs text-muted-foreground" style={{ fontWeight: 600 }}>Win/Loss Ratio</div>
                         <TooltipProvider>
@@ -475,8 +477,8 @@ const Index = () => {
                           </Tooltip>
                         </TooltipProvider>
                       </div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="text-2xl font-bold text-foreground" style={{ fontWeight: 800 }}>
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                        <div className="text-xl sm:text-2xl font-bold text-foreground" style={{ fontWeight: 800 }}>
                           {monthlyStats.profitRatio.toFixed(2)}
                         </div>
                         {/* Semi-circle visualization */}
@@ -501,33 +503,33 @@ const Index = () => {
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-4 items-center justify-end">
+                <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 items-center justify-start lg:justify-end w-full lg:w-auto">
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => setShowSettings(true)}
-                    className="border-border"
+                    className="border-border flex-shrink-0"
                   >
                     <Settings className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="default"
                     onClick={handleCreateBlankScratchpad}
-                    className="cursor-pointer bg-warning hover:bg-warning/90 text-warning-foreground flex items-center gap-2"
+                    className="cursor-pointer bg-warning hover:bg-warning/90 text-warning-foreground flex items-center gap-2 text-xs sm:text-sm flex-shrink-0"
                   >
-                    <StickyNote className="w-4 h-4" />
-                    Scratchpad
+                    <StickyNote className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Scratchpad</span>
                   </Button>
-                  <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
-                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Monthly</span>
+                  <div className="flex items-center gap-1 sm:gap-2 bg-card border border-border rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 flex-shrink-0">
+                    <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap" style={{ fontWeight: 600 }}>Monthly</span>
                     <Switch 
                       checked={isYearlyView} 
                       onCheckedChange={setIsYearlyView}
                     />
-                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Yearly</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap" style={{ fontWeight: 600 }}>Yearly</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
-                    <span className="text-sm text-muted-foreground" style={{ fontWeight: 600 }}>Commission</span>
+                  <div className="flex items-center gap-1 sm:gap-2 bg-card border border-border rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 flex-shrink-0">
+                    <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap" style={{ fontWeight: 600 }}>Commission</span>
                     <Switch 
                       checked={useCommission} 
                       onCheckedChange={setUseCommission}
@@ -535,12 +537,13 @@ const Index = () => {
                   </div>
                   <Button
                     variant="default"
-                    className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm flex-shrink-0"
                     onClick={() => document.getElementById("file-upload")?.click()}
                   >
-                    <div className="flex items-center gap-2">
-                      <Upload className="w-4 h-4" />
-                      Import Trades
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Import Trades</span>
+                      <span className="sm:hidden">Import</span>
                     </div>
                   </Button>
                   <input
@@ -553,7 +556,7 @@ const Index = () => {
                   <Button
                     variant="outline"
                     onClick={() => setIsExpanded(false)}
-                    className="border-border"
+                    className="border-border text-xs sm:text-sm flex-shrink-0"
                   >
                     Collapse
                   </Button>
@@ -579,7 +582,7 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="w-full max-w-[1370px] mx-auto" style={{ maxHeight: '758px' }}>
+              <div className="w-full max-w-[1370px] mx-auto overflow-x-auto">
                 <TradeCalendar
                   trades={useCommission
                     ? trades.map(trade => {
@@ -603,15 +606,15 @@ const Index = () => {
         
         {/* Logout button - inside main container */}
         {isExpanded && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{userProfile?.nickname || 'User'}</span>
+          <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+            <span className="text-xs sm:text-sm text-muted-foreground">{userProfile?.nickname || 'User'}</span>
             <Button
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="border-border hover:bg-destructive hover:text-destructive-foreground"
+              className="border-border hover:bg-destructive hover:text-destructive-foreground text-xs sm:text-sm"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Logout
             </Button>
           </div>
