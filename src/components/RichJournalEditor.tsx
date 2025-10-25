@@ -122,7 +122,7 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
 
   return (
     <div
-      className="rounded-xl border-2 border-primary/40 bg-background/60"
+      className="rounded-xl border border-border bg-card overflow-hidden"
       style={{ height }}
     >
       <ReactQuill
@@ -132,10 +132,8 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
         onChange={onChange}
         modules={modules}
         placeholder={placeholder}
-        className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-border [&_.ql-toolbar]:border-border [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4"
+        className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-card [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-border [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4"
       />
     </div>
   );
 };
-
-export default RichJournalEditor;

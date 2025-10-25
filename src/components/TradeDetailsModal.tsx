@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Star, Trash2 } from "lucide-react";
+import { Star, Trash2, Info } from "lucide-react";
 import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
 import { CustomQuestionJournal } from "./CustomQuestionJournal";
@@ -12,6 +12,7 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import { useAuth } from "@/hooks/useAuth";
 import { useTrades } from "@/hooks/useTrades";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -685,7 +686,19 @@ export const TradeDetailsModal = ({
                 />
               ) : (
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Journal Entry</label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-foreground">Journal Entry</label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">Write a detailed reason for taking this trade. Future you will need this context when reviewing performance.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <RichJournalEditor
                     value={additionalComments}
                     onChange={setAdditionalComments}
