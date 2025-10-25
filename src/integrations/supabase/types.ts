@@ -47,6 +47,81 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_questions: {
+        Row: {
+          created_at: string
+          id: string
+          profile_name: string
+          questions: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_name: string
+          questions: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_name?: string
+          questions?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          content: Json
+          created_at: string
+          entry_type: string
+          id: string
+          profile_id: string
+          trade_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          entry_type: string
+          id?: string
+          profile_id: string
+          trade_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          entry_type?: string
+          id?: string
+          profile_id?: string
+          trade_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "trading_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           access_key_id: string | null
@@ -81,6 +156,104 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trades: {
+        Row: {
+          created_at: string
+          date: string
+          entry_price: number | null
+          exit_price: number | null
+          id: string
+          mistake: string | null
+          profile_id: string
+          profit: number
+          quantity: number | null
+          rating: number | null
+          setup: string | null
+          side: string | null
+          stop_loss: number | null
+          symbol: string
+          target: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          mistake?: string | null
+          profile_id: string
+          profit: number
+          quantity?: number | null
+          rating?: number | null
+          setup?: string | null
+          side?: string | null
+          stop_loss?: number | null
+          symbol: string
+          target?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          mistake?: string | null
+          profile_id?: string
+          profit?: number
+          quantity?: number | null
+          rating?: number | null
+          setup?: string | null
+          side?: string | null
+          stop_loss?: number | null
+          symbol?: string
+          target?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trades_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "trading_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trading_profiles: {
+        Row: {
+          commission: number | null
+          created_at: string
+          id: string
+          name: string
+          selected_question_profile: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          selected_question_profile?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          selected_question_profile?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
