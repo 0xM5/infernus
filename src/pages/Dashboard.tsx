@@ -335,7 +335,14 @@ const Index = () => {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-background text-foreground p-6">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">You are not logged in.</p>
+          <Button onClick={() => navigate("/auth")}>Go to Login</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
