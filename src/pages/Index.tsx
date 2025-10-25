@@ -53,7 +53,7 @@ const Index = () => {
     return <div className="min-h-screen w-full flex flex-col items-center justify-between bg-background text-foreground py-12 px-4">
       <div className="flex-1 flex flex-col items-center justify-center max-w-3xl w-full px-4">
           <div className="text-center space-y-4">
-            <img src={logo} alt="Infernus Logo" className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-2 sm:mb-4" />
+            
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white" style={{
             fontFamily: 'Inter, sans-serif'
