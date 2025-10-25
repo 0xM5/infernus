@@ -470,47 +470,45 @@ const Index = () => {
           )}
         </div>
         
-        {/* Logout button at bottom */}
+        {/* Beta Footer and Logout - inside main container, only when expanded */}
         {isExpanded && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{userProfile?.nickname || 'User'}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="border-border hover:bg-destructive hover:text-destructive-foreground"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-[1370px] px-8">
+            <div className="flex flex-col items-center gap-3">
+              <div className="bg-secondary border border-border rounded-xl px-4 py-3 text-center text-sm text-muted-foreground w-full">
+                <span>Infernus is currently in private beta. If you find any bugs, have questions or suggestions, contact my discord here:</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText('mfve');
+                    toast.success('Discord username copied to clipboard!');
+                  }}
+                  className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors cursor-pointer ml-2"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 127.14 96.36"
+                    className="w-5 h-5"
+                    fill="currentColor"
+                  >
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+                  </svg>
+                  <span className="font-medium">mfve</span>
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{userProfile?.nickname || 'User'}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="border-border hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
-
-      {/* Beta Footer - outside main calendar container */}
-      <div className="mt-4 w-full">
-        <div className="mx-auto max-w-[1370px]">
-          <div className="bg-secondary border border-border rounded-xl px-4 py-3 text-center text-sm text-muted-foreground">
-            <span>Infernus is currently in private beta. If you find any bugs, have questions or suggestions, contact my discord here:</span>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText('mfve');
-                toast.success('Discord username copied to clipboard!');
-              }}
-              className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors cursor-pointer ml-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 127.14 96.36"
-                className="w-5 h-5"
-                fill="currentColor"
-              >
-                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
-              </svg>
-              <span className="font-medium">mfve</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       

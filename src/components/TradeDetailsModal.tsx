@@ -152,11 +152,16 @@ export const TradeDetailsModal = ({
     if (currentTrade?.id && selectedProfile && user?.id) {
       const timeoutId = setTimeout(() => {
         saveTrade({
-          ...currentTrade,
           id: currentTrade.id,
           profile_id: selectedProfile,
           user_id: user.id,
+          symbol: currentTrade.symbol,
+          profit: currentTrade.profit,
           date: currentTrade.date.toISOString().split('T')[0],
+          side: currentTrade.side,
+          quantity: currentTrade.quantity,
+          entry_price: currentTrade.entryPrice,
+          exit_price: currentTrade.exitPrice,
           rating: rating || undefined,
           target: target ? parseFloat(target) : undefined,
           stop_loss: stopLoss ? parseFloat(stopLoss) : undefined,
