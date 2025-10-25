@@ -102,7 +102,15 @@ export const useTradingProfiles = (userId: string | undefined) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // If duplicate, silently fetch existing profiles instead of showing error
+        if (error.code === '23505') {
+          console.log('Profile already exists, fetching profiles...');
+          await fetchProfiles();
+          return;
+        }
+        throw error;
+      }
 
       setProfiles([...profiles, data]);
       

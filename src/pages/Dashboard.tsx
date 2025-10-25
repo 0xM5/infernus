@@ -104,19 +104,20 @@ const Index = () => {
     }
   }, []);
 
-  // Create default profile if none exist - with safety check
+  // Create default profile if none exist - with better safety checks
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     let isMounted = true;
+    let hasAttempted = false;
     
-    if (!profilesLoading && profiles.length === 0 && user && !loading) {
-      // Wait a bit to ensure fetch is complete
+    if (!profilesLoading && profiles.length === 0 && user && !loading && !hasAttempted) {
+      hasAttempted = true;
+      // Wait to ensure fetch is complete
       timeoutId = setTimeout(async () => {
-        // Double-check profiles are still empty and component is mounted
         if (isMounted && profiles.length === 0) {
           await createProfile("Profile 1");
         }
-      }, 500);
+      }, 800);
     }
     
     return () => {
