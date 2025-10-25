@@ -155,7 +155,7 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                 className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                   dayStats
                     ? dayStats.onlyScratchpad
-                      ? "bg-warning border-warning cursor-pointer"
+                      ? "bg-warning/20 border-warning cursor-pointer"
                       : dayStats.profit >= 0
                         ? "bg-success border-success-light cursor-pointer"
                         : "bg-destructive border-destructive-light cursor-pointer"
@@ -219,7 +219,7 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                   className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                     dayStats
                       ? dayStats.onlyScratchpad
-                        ? "bg-warning border-warning cursor-pointer"
+                        ? "bg-warning/20 border-warning cursor-pointer"
                         : dayStats.profit >= 0
                           ? "bg-success border-success-light cursor-pointer"
                           : "bg-destructive border-destructive-light cursor-pointer"
