@@ -72,8 +72,13 @@ const Index = () => {
         
         {/* Show countdown message if authenticated */}
         {user && (
-          <div className="text-muted-foreground text-lg" style={{ fontFamily: 'Inter' }}>
-            Redirecting to journal in {countdown}...
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-foreground text-2xl" style={{ fontFamily: 'Inter', fontWeight: 500 }}>
+              Welcome Back, {user.user_metadata?.nickname || 'Trader'}
+            </div>
+            <div className="text-muted-foreground text-lg" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
+              Redirecting to Journal in {countdown}
+            </div>
           </div>
         )}
         
