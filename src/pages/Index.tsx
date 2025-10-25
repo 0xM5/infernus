@@ -143,7 +143,7 @@ const Index = () => {
       const tradeData = [{
         profile_id: activeProfile.id,
         user_id: user.id,
-        date: format(new Date(), 'yyyy-MM-dd'),
+        date: format(calendarDate, 'yyyy-MM-dd'),
         profit: 0,
         symbol: "SCRATCHPAD",
         side: undefined,
@@ -160,7 +160,7 @@ const Index = () => {
         .select('id')
         .eq('profile_id', activeProfile.id)
         .eq('user_id', user.id)
-        .eq('date', format(new Date(), 'yyyy-MM-dd'))
+        .eq('date', format(calendarDate, 'yyyy-MM-dd'))
         .eq('symbol', 'SCRATCHPAD')
         .maybeSingle();
 

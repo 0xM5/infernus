@@ -157,7 +157,7 @@ export const TradeDetailsModal = ({
     setVolume("");
     setFixTomorrow("");
     setAdditionalComments("");
-    setIsScratchpadEditing(false);
+    setIsScratchpadEditing(currentTrade.symbol === 'SCRATCHPAD');
 
     // Check if Edge Finder wizard was completed for this trade
     const edgeFinderComplete = localStorage.getItem(`edge_finder_complete_${currentTrade.id}`);
@@ -663,17 +663,19 @@ export const TradeDetailsModal = ({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-white">Scratchpad Notes</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setIsScratchpadEditing(true);
-                        toast.success("Editing enabled");
-                      }}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                    </Button>
+                    {!isScratchpadEditing && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setIsScratchpadEditing(true);
+                          toast.success("Editing enabled");
+                        }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                      </Button>
+                    )}
                   </div>
                   <div className={isScratchpadEditing ? "[&_.ql-editor]:text-white" : "[&_.ql-editor]:text-white [&_.ql-toolbar]:hidden"}>
                     <RichJournalEditor
