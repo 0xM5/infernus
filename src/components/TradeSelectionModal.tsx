@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Trade } from "@/types/trade";
+import type { Trade } from "@/pages/Index";
 
 interface TradeSelectionModalProps {
   isOpen: boolean;

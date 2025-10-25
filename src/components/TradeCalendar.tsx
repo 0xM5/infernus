@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { TradeDetailsModal } from "./TradeDetailsModal";
 import { TradeSelectionModal } from "./TradeSelectionModal";
-import type { Trade } from "@/types/trade";
+import type { Trade } from "@/pages/Index";
 
 
 interface TradeCalendarProps {
