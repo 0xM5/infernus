@@ -234,6 +234,9 @@ const Index = () => {
     const currentYear = calendarDate.getFullYear();
     
     const monthlyTrades = trades.filter(trade => {
+      // Exclude scratchpads from statistics
+      if (trade.symbol === 'SCRATCHPAD') return false;
+      
       const tradeDate = new Date(trade.date);
       if (isYearlyView) {
         return tradeDate.getFullYear() === currentYear;
