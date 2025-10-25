@@ -73,7 +73,7 @@ const Index = () => {
               need.
             </p>
             
-            <div className="border border-border rounded-lg p-6 max-w-md mx-auto mt-10" style={{
+            <div className="border border-border rounded-lg p-6 max-w-md mx-auto mt-16" style={{
             backgroundColor: 'hsl(0 0% 7%)'
           }}>
               <p className="text-sm text-muted-foreground text-gray-300 leading-relaxed" style={{
