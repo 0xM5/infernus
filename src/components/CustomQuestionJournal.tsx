@@ -51,7 +51,8 @@ export const CustomQuestionJournal = ({
   const getModules = (index: number) => ({
     toolbar: {
       container: [
-        [{ font: [] }, { size: [] }],
+        [{ font: [] }, { size: ["small", false, "large", "huge"] }],
+        [{ header: [1, 2, 3, false] }],
         ["bold", "italic", "underline"],
         [{ color: [] }, { background: [] }],
         ["image"],
@@ -99,6 +100,50 @@ export const CustomQuestionJournal = ({
     }
   });
 
+  // Attach clipboard image paste handler to all editors (handles raw image blobs)
+  useEffect(() => {
+    const disposers: Array<() => void> = [];
+    Object.values(quillRefs.current).forEach((ref) => {
+      const quill = (ref as any)?.getEditor?.();
+      const root = quill?.root as HTMLElement | undefined;
+      if (!quill || !root) return;
+      const handlePaste = async (e: ClipboardEvent) => {
+        const items = e.clipboardData?.items;
+        if (!items || !onImageUpload) return;
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.kind === 'file' && item.type.startsWith('image/')) {
+            const blob = item.getAsFile();
+            if (!blob) continue;
+            e.preventDefault();
+            const file = new File([blob], 'pasted-image.png', { type: blob.type });
+            const url = await onImageUpload(file);
+            if (url) {
+              const range = quill.getSelection(true);
+              quill.insertEmbed(range?.index ?? 0, 'image', url);
+            }
+          }
+        }
+      };
+      root.addEventListener('paste', handlePaste as any);
+      disposers.push(() => root.removeEventListener('paste', handlePaste as any));
+    });
+    return () => disposers.forEach((d) => d());
+  }, [questions, answers, onImageUpload]);
+
+  const formats = [
+    'header',
+    'font',
+    'size',
+    'bold',
+    'italic',
+    'underline',
+    'color',
+    'background',
+    'image',
+    'clean',
+  ];
+
   return (
     <div className="space-y-6">
       {questions.map((question, index) => (
@@ -113,6 +158,7 @@ export const CustomQuestionJournal = ({
               value={answers[index] || ""}
               onChange={(value) => onAnswerChange(index, value)}
               modules={getModules(index)}
+              formats={formats}
               className="h-[150px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[100px]"
             />
           </div>
@@ -131,6 +177,7 @@ export const CustomQuestionJournal = ({
             value={answers[-1] || ""}
             onChange={(value) => onAnswerChange(-1, value)}
             modules={getModules(-1)}
+            formats={formats}
             className="h-[200px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[150px]"
           />
         </div>

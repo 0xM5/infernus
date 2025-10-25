@@ -23,6 +23,12 @@ import BlotFormatter from "quill-blot-formatter";
 try {
   // @ts-ignore
   Quill.register("modules/blotFormatter", BlotFormatter);
+  // Register custom font whitelist
+  // @ts-ignore
+  const Font = Quill.import('formats/font');
+  // Allow standard plus our custom font keys used in CSS
+  Font.whitelist = ['sans-serif','serif','monospace','playfair','lora','robotomono'];
+  Quill.register(Font, true);
 } catch {}
 
 interface Trade {
@@ -357,7 +363,8 @@ useEffect(() => {
   const modules = {
     toolbar: {
       container: [
-        [{ font: [] }, { size: [] }],
+        [{ font: [] }, { size: ["small", false, "large", "huge"] }],
+        [{ header: [1, 2, 3, false] }],
         ["bold", "italic", "underline"],
         [{ color: [] }, { background: [] }],
         ["image"],
@@ -371,39 +378,74 @@ useEffect(() => {
     clipboard: {
       matchVisual: false,
       matchers: [
-        // Intercept pasted images and upload them instead of embedding base64
-        ['img', (node: any, delta: any) => {
+        ["img", (node: any, delta: any) => {
           const image = node;
-          const imageUrl = image.getAttribute('src');
-          
-          // If it's a data URL (pasted image), we need to upload it
-          if (imageUrl && imageUrl.startsWith('data:image')) {
-            // Convert data URL to blob and upload
+          const imageUrl = image.getAttribute("src");
+          if (imageUrl && imageUrl.startsWith("data:image")) {
             fetch(imageUrl)
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'pasted-image.png', { type: blob.type });
+              .then((res) => res.blob())
+              .then((blob) => {
+                const file = new File([blob], "pasted-image.png", { type: blob.type });
                 if (uploadImage) {
-                  uploadImage(file).then(url => {
+                  uploadImage(file).then((url) => {
                     if (url && mainJournalRef.current) {
                       const quill = mainJournalRef.current.getEditor();
                       const range = quill.getSelection(true);
-                      // Remove the temporary base64 image
                       quill.deleteText(range.index - 1, 1);
-                      // Insert the uploaded image URL
-                      quill.insertEmbed(range.index - 1, 'image', url);
+                      quill.insertEmbed(range.index - 1, "image", url);
                     }
                   });
                 }
               });
-            // Return empty delta to prevent base64 insertion initially
             return { ops: [] };
           }
           return delta;
-        }]
-      ]
-    }
-  };
+        }],
+      ],
+    },
+  } as const;
+
+  const formats = [
+    "header",
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "color",
+    "background",
+    "image",
+    "clean",
+  ];
+
+  // Handle clipboard image paste (image blobs)
+  useEffect(() => {
+    const quill = (mainJournalRef.current as any)?.getEditor?.();
+    const root = quill?.root as HTMLElement | undefined;
+    if (!quill || !root) return;
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (!blob) continue;
+          if (uploadImage) {
+            e.preventDefault();
+            const file = new File([blob], 'pasted-image.png', { type: blob.type });
+            const url = await uploadImage(file);
+            if (url) {
+              const range = quill.getSelection(true);
+              quill.insertEmbed(range?.index ?? 0, 'image', url);
+            }
+          }
+        }
+      }
+    };
+    root.addEventListener('paste', handlePaste as any);
+    return () => root.removeEventListener('paste', handlePaste as any);
+  }, [isOpen, uploadImage]);
 
   const getPnLColor = () => {
     if (totalPnL > 0) return "text-green-400";
@@ -652,7 +694,7 @@ useEffect(() => {
                         readOnly={false}
                         placeholder="Type your journal entry here..."
                         className="rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[220px] [&_.ql-toolbar]:z-[70] [&_.ql-toolbar]:pointer-events-auto [&_.ql-container]:pointer-events-auto"
-                        style={{ height: '320px' }}
+                        formats={formats}
                       />
                     )}
                   </div>

@@ -129,3 +129,41 @@ All colors MUST be HSL.
     scrollbar-color: hsl(0 0% 40%) hsl(0 0% 20%);
   }
 }
+
+/* Quill dark theme adjustments using design tokens */
+.ql-toolbar.ql-snow {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+.ql-snow .ql-stroke {
+  stroke: hsl(var(--foreground));
+}
+.ql-snow .ql-fill,
+.ql-snow .ql-picker,
+.ql-snow .ql-picker-label,
+.ql-snow .ql-picker-item {
+  color: hsl(var(--foreground));
+}
+.ql-container.ql-snow {
+  background: hsl(var(--background));
+  border-color: hsl(var(--border));
+}
+
+/* Quill font options */
+.ql-font-playfair { font-family: 'Playfair Display', serif; }
+.ql-font-lora { font-family: 'Lora', serif; }
+.ql-font-robotomono { font-family: 'Roboto Mono', monospace; }
+
+/* Show font names in the picker */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="playfair"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="playfair"]::before { content: 'Playfair'; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="lora"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lora"]::before { content: 'Lora'; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="robotomono"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="robotomono"]::before { content: 'Mono'; }
+
+/* Default label text color */
+.ql-snow .ql-picker.ql-font .ql-picker-label::before {
+  color: hsl(var(--foreground));
+}
