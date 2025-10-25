@@ -163,13 +163,13 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                 }`}
                 onClick={() => handleDayClick(day, dayStats)}
               >
-                <div className={`text-sm ${dayStats ? dayStats.onlyScratchpad ? "text-black" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
+                <div className={`text-sm ${dayStats ? dayStats.onlyScratchpad ? "text-warning-foreground" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                   {day}
                 </div>
                 {dayStats && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     {dayStats.onlyScratchpad ? (
-                      <div className="text-xs text-black" style={{ fontWeight: 700 }}>
+                      <div className="text-xs text-warning-foreground" style={{ fontWeight: 700 }}>
                         Scratchpad
                       </div>
                     ) : (
@@ -227,13 +227,13 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                   }`}
                   onClick={() => handleDayClick(day, dayStats)}
                 >
-                  <div className={`text-sm ${dayStats ? dayStats.onlyScratchpad ? "text-black" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
+                  <div className={`text-sm ${dayStats ? dayStats.onlyScratchpad ? "text-warning-foreground" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                     {day}
                   </div>
                   {dayStats && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       {dayStats.onlyScratchpad ? (
-                        <div className="text-xs text-black" style={{ fontWeight: 700 }}>
+                        <div className="text-xs text-warning-foreground" style={{ fontWeight: 700 }}>
                           Scratchpad
                         </div>
                       ) : (

@@ -162,7 +162,7 @@ const Index = () => {
         .eq('user_id', user.id)
         .eq('date', format(calendarDate, 'yyyy-MM-dd'))
         .eq('symbol', 'SCRATCHPAD')
-        .single();
+        .maybeSingle();
 
       if (tradeEntry) {
         await supabase

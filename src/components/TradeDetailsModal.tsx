@@ -169,30 +169,34 @@ export const TradeDetailsModal = ({
     // Then load from entry if it exists for this specific trade
     if (entry?.content && entry.trade_id === currentTrade.id) {
       const content = entry.content as any;
-      
-      const rawCA = content.customAnswers || {};
-      const normalizedCA: Record<number, string> = {};
-      Object.entries(rawCA).forEach(([k, v]: [string, any]) => {
-        const m = /^question_(-?\d+)$/.exec(k);
-        const key = m ? Number(m[1]) : Number(k);
-        if (!Number.isNaN(key)) normalizedCA[key] = typeof v === 'string' ? v : String(v ?? '');
-      });
-      
-      setSelectedEdges(content.edges || []);
-      setCustomAnswers(normalizedCA);
-      setEnergy(content.energy ?? 3);
-      setEnergyWhy(content.energyWhy || "");
-      setStress(content.stress ?? 3);
-      setStressWhy(content.stressWhy || "");
-      setConfidence(content.confidence ?? 3);
-      setConfidenceWhy(content.confidenceWhy || "");
-      setBias(content.bias || "");
-      setRegime(content.regime || "");
-      setVwap(content.vwap || "");
-      setKeyLevels(content.keyLevels || "");
-      setVolume(content.volume || "");
-      setFixTomorrow(content.fixTomorrow || "");
-      setAdditionalComments(content.additionalComments || "");
+
+      if ((entry as any).entry_type === 'scratchpad') {
+        setAdditionalComments(content?.html || "");
+      } else {
+        const rawCA = content.customAnswers || {};
+        const normalizedCA: Record<number, string> = {};
+        Object.entries(rawCA).forEach(([k, v]: [string, any]) => {
+          const m = /^question_(-?\d+)$/.exec(k);
+          const key = m ? Number(m[1]) : Number(k);
+          if (!Number.isNaN(key)) normalizedCA[key] = typeof v === 'string' ? v : String(v ?? '');
+        });
+
+        setSelectedEdges(content.edges || []);
+        setCustomAnswers(normalizedCA);
+        setEnergy(content.energy ?? 3);
+        setEnergyWhy(content.energyWhy || "");
+        setStress(content.stress ?? 3);
+        setStressWhy(content.stressWhy || "");
+        setConfidence(content.confidence ?? 3);
+        setConfidenceWhy(content.confidenceWhy || "");
+        setBias(content.bias || "");
+        setRegime(content.regime || "");
+        setVwap(content.vwap || "");
+        setKeyLevels(content.keyLevels || "");
+        setVolume(content.volume || "");
+        setFixTomorrow(content.fixTomorrow || "");
+        setAdditionalComments(content.additionalComments || "");
+      }
     }
 }, [selectedTrade?.date?.toISOString(), selectedTrade?.symbol, currentTrade?.id, entry?.trade_id, activeProfile?.id]);
 
@@ -223,6 +227,15 @@ export const TradeDetailsModal = ({
   // Auto-save journal data
   useEffect(() => {
     if (currentTrade?.id && selectedProfile && user?.id) {
+      if (currentTrade.symbol === 'SCRATCHPAD') {
+        const scratchContent = { html: additionalComments };
+        if (entry?.content && JSON.stringify(entry.content) === JSON.stringify(scratchContent)) {
+          return;
+        }
+        updateEntry(scratchContent, 'free_form');
+        return;
+      }
+
       const journalContent = {
         edges: selectedEdges,
         customAnswers,
@@ -249,7 +262,7 @@ export const TradeDetailsModal = ({
       updateEntry(journalContent, selectedProfile === "default" ? "standard_questions" : "custom_questions");
     }
   }, [selectedEdges, customAnswers, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
-      bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments]);
+      bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments, currentTrade?.symbol]);
 
   // Get current profile's questions
   const [profileQuestions, setProfileQuestions] = useState<string[]>([]);
