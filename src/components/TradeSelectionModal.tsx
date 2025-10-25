@@ -44,7 +44,10 @@ export const TradeSelectionModal = ({
                   <span className={`font-semibold ${
                     trade.symbol === "SCRATCHPAD" ? "text-warning" : "text-white"
                   }`}>
-                    {trade.symbol === "SCRATCHPAD" ? "Scratchpad Notes" : `Trade #${index + 1} - ${trade.symbol}`}
+                    {trade.symbol === "SCRATCHPAD"
+                      ? "Scratchpad Notes"
+                      : `Trade #${trades.slice(0, index).filter(t => t.symbol !== 'SCRATCHPAD').length + 1} - ${trade.symbol}`}
+
                   </span>
                   {trade.entryTime && trade.symbol !== "SCRATCHPAD" && (
                     <span className="text-xs text-muted-foreground">
