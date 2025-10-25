@@ -25,42 +25,6 @@ export const CustomQuestionJournal = ({
 }: CustomQuestionJournalProps) => {
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
 
-  // Handle paste events for images
-  useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-          const file = items[i].getAsFile();
-          if (file && onImageUpload) {
-            e.preventDefault();
-            
-            // Find the active quill editor
-            const activeElement = document.activeElement;
-            const activeQuill = Object.values(quillRefs.current).find(
-              ref => ref?.getEditor().root === activeElement || ref?.getEditor().root.contains(activeElement)
-            );
-            
-            if (activeQuill) {
-              onImageUpload(file).then(url => {
-                if (url) {
-                  const quill = activeQuill.getEditor();
-                  const range = quill.getSelection(true);
-                  quill.insertEmbed(range.index, 'image', url);
-                }
-              });
-            }
-          }
-        }
-      }
-    };
-
-    document.addEventListener('paste', handlePaste);
-    return () => document.removeEventListener('paste', handlePaste);
-  }, [onImageUpload]);
-
   const imageHandler = (index: number) => {
     return function(this: any) {
       const input = document.createElement('input');
@@ -101,7 +65,34 @@ export const CustomQuestionJournal = ({
     clipboard: {
       matchVisual: false,
       matchers: [
+        // Intercept pasted images and upload them instead of embedding base64
         ['img', (node: any, delta: any) => {
+          const image = node;
+          const imageUrl = image.getAttribute('src');
+          
+          // If it's a data URL (pasted image), we need to upload it
+          if (imageUrl && imageUrl.startsWith('data:image')) {
+            // Convert data URL to blob and upload
+            fetch(imageUrl)
+              .then(res => res.blob())
+              .then(blob => {
+                const file = new File([blob], 'pasted-image.png', { type: blob.type });
+                if (onImageUpload) {
+                  onImageUpload(file).then(url => {
+                    if (url && quillRefs.current[index]) {
+                      const quill = quillRefs.current[index]!.getEditor();
+                      const range = quill.getSelection(true);
+                      // Remove the temporary base64 image
+                      quill.deleteText(range.index - 1, 1);
+                      // Insert the uploaded image URL
+                      quill.insertEmbed(range.index - 1, 'image', url);
+                    }
+                  });
+                }
+              });
+            // Return empty delta to prevent base64 insertion initially
+            return { ops: [] };
+          }
           return delta;
         }]
       ]
@@ -115,7 +106,7 @@ export const CustomQuestionJournal = ({
           <h3 className="text-lg font-semibold text-white">
             {question}
           </h3>
-          <div className="h-[200px]">
+          <div className={`h-[200px] custom-question-editor-${index}`}>
             <ReactQuill
               ref={(el) => (quillRefs.current[index] = el)}
               theme="snow"
@@ -133,7 +124,7 @@ export const CustomQuestionJournal = ({
         <h3 className="text-lg font-semibold text-white">
           Do you want to add anything else?
         </h3>
-        <div className="h-[250px]">
+        <div className="h-[250px] custom-question-editor--1">
           <ReactQuill
             ref={(el) => (quillRefs.current[-1] = el)}
             theme="snow"

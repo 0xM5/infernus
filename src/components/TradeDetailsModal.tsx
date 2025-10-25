@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -79,8 +79,8 @@ export const TradeDetailsModal = ({
   const [edgeFinderResponses, setEdgeFinderResponses] = useState<any>(null);
   const [edgeFinderCompleted, setEdgeFinderCompleted] = useState(false);
   
-  // Ref for main journal quill editor - fix: use regular variable instead
-  let mainJournalRef: ReactQuill | null = null;
+  // Ref for main journal quill editor
+  const mainJournalRef = useRef<ReactQuill | null>(null);
   
   // Journal questions state
   const [energy, setEnergy] = useState(3);
@@ -97,39 +97,26 @@ export const TradeDetailsModal = ({
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
-  // Handle paste events for images in main journal
-  useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
+  const imageHandler = () => {
+    return function(this: any) {
+      const input = document.createElement('input');
+      input.setAttribute('type', 'file');
+      input.setAttribute('accept', 'image/*');
+      input.click();
 
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-          const file = items[i].getAsFile();
-          if (file && uploadImage) {
-            e.preventDefault();
-            
-            // Check if we're focused on the main journal
-            const activeElement = document.activeElement;
-            const isMainJournal = activeElement?.closest('.ql-editor') !== null;
-            
-            if (isMainJournal && mainJournalRef) {
-              uploadImage(file).then(url => {
-                if (url && mainJournalRef) {
-                  const quill = mainJournalRef.getEditor();
-                  const range = quill.getSelection(true);
-                  quill.insertEmbed(range.index, 'image', url);
-                }
-              });
-            }
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (file && uploadImage) {
+          const url = await uploadImage(file);
+          if (url && mainJournalRef.current) {
+            const quill = mainJournalRef.current.getEditor();
+            const range = quill.getSelection(true);
+            quill.insertEmbed(range.index, 'image', url);
           }
         }
-      }
+      };
     };
-
-    document.addEventListener('paste', handlePaste);
-    return () => document.removeEventListener('paste', handlePaste);
-  }, [uploadImage, mainJournalRef]);
+  };
 
   // Load trade data from database - reset state when trade changes, then load from entry
   useEffect(() => {
@@ -349,14 +336,54 @@ export const TradeDetailsModal = ({
   };
 
   const modules = {
-    toolbar: [
-      [{ font: [] }, { size: [] }],
-      ["bold", "italic", "underline"],
-      [{ color: [] }, { background: [] }],
-      ["image"],
-      ["clean"],
-    ],
+    toolbar: {
+      container: [
+        [{ font: [] }, { size: [] }],
+        ["bold", "italic", "underline"],
+        [{ color: [] }, { background: [] }],
+        ["image"],
+        ["clean"],
+      ],
+      handlers: {
+        image: imageHandler(),
+      },
+    },
     blotFormatter: {},
+    clipboard: {
+      matchVisual: false,
+      matchers: [
+        // Intercept pasted images and upload them instead of embedding base64
+        ['img', (node: any, delta: any) => {
+          const image = node;
+          const imageUrl = image.getAttribute('src');
+          
+          // If it's a data URL (pasted image), we need to upload it
+          if (imageUrl && imageUrl.startsWith('data:image')) {
+            // Convert data URL to blob and upload
+            fetch(imageUrl)
+              .then(res => res.blob())
+              .then(blob => {
+                const file = new File([blob], 'pasted-image.png', { type: blob.type });
+                if (uploadImage) {
+                  uploadImage(file).then(url => {
+                    if (url && mainJournalRef.current) {
+                      const quill = mainJournalRef.current.getEditor();
+                      const range = quill.getSelection(true);
+                      // Remove the temporary base64 image
+                      quill.deleteText(range.index - 1, 1);
+                      // Insert the uploaded image URL
+                      quill.insertEmbed(range.index - 1, 'image', url);
+                    }
+                  });
+                }
+              });
+            // Return empty delta to prevent base64 insertion initially
+            return { ops: [] };
+          }
+          return delta;
+        }]
+      ]
+    }
   };
 
   const getPnLColor = () => {
@@ -588,17 +615,17 @@ export const TradeDetailsModal = ({
               ) : (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">Journal Entry</label>
-                  <ReactQuill
-                    ref={(el) => {
-                      if (el) mainJournalRef = el;
-                    }}
-                    theme="snow"
-                    value={additionalComments}
-                    onChange={setAdditionalComments}
-                    modules={modules}
-                    className="rounded-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground"
-                    style={{ height: '400px' }}
-                  />
+                  <div className="main-journal-editor">
+                    <ReactQuill
+                      ref={mainJournalRef}
+                      theme="snow"
+                      value={additionalComments}
+                      onChange={setAdditionalComments}
+                      modules={modules}
+                      className="rounded-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground"
+                      style={{ height: '400px' }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
