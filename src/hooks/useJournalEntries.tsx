@@ -8,11 +8,16 @@ export interface JournalEntry {
   trade_id: string;
   profile_id: string;
   user_id: string;
-  entry_type: 'custom_questions' | 'standard_questions' | 'free_form';
+  entry_type: 'custom_questions' | 'standard_questions' | 'free_form' | 'scratchpad';
   content: any;
 }
 
-export const useJournalEntries = (tradeId: string | undefined, profileId: string | undefined, userId: string | undefined) => {
+export const useJournalEntries = (
+  tradeId: string | undefined,
+  profileId: string | undefined,
+  userId: string | undefined,
+  preferredType?: JournalEntry['entry_type']
+) => {
   const [entry, setEntry] = useState<JournalEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -22,22 +27,76 @@ export const useJournalEntries = (tradeId: string | undefined, profileId: string
     if (tradeId && profileId && userId) {
       fetchEntry();
     }
-  }, [tradeId, profileId, userId]);
+  }, [tradeId, profileId, userId, preferredType]);
 
   const fetchEntry = async () => {
     if (!tradeId || !profileId) return;
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
+        .from('journal_entries')
+        .select('*')
+        .eq('trade_id', tradeId)
+        .eq('profile_id', profileId);
+
+      // If a preferred type is provided, try to load that first
+      if (preferredType) {
+        const { data: preferred, error: preferredErr } = await query
+          .eq('entry_type', preferredType)
+          .order('updated_at', { ascending: false })
+          .limit(10)
+          .returns<JournalEntry[] | null>();
+
+        if (preferredErr && preferredErr.code !== 'PGRST116') throw preferredErr;
+
+        const chosen = (preferred || []).find((e) => {
+          // Prefer non-empty HTML for free_form/scratchpad
+          if (e.entry_type === 'free_form' || e.entry_type === 'scratchpad') {
+            const html = e.content?.html ?? '';
+            return typeof html === 'string' && html.replace(/<[^>]*>/g, '').trim().length > 0;
+          }
+          return true;
+        }) || (preferred && preferred[0]) || null;
+
+        if (chosen) {
+          setEntry(chosen);
+          return;
+        }
+
+        // Backward compatibility: if preferred is free_form, try legacy 'scratchpad'
+        if (preferredType === 'free_form') {
+          const { data: legacy, error: legacyErr } = await supabase
+            .from('journal_entries')
+            .select('*')
+            .eq('trade_id', tradeId)
+            .eq('profile_id', profileId)
+            .eq('entry_type', 'scratchpad')
+            .order('updated_at', { ascending: false })
+            .limit(10)
+            .returns<JournalEntry[] | null>();
+
+          if (legacyErr && legacyErr.code !== 'PGRST116') throw legacyErr;
+
+          const legacyChosen = (legacy || [])[0] || null;
+          if (legacyChosen) {
+            setEntry(legacyChosen);
+            return;
+          }
+        }
+      }
+
+      // Fallback: latest by updated_at
+      const { data: latest, error: latestErr } = await supabase
         .from('journal_entries')
         .select('*')
         .eq('trade_id', tradeId)
         .eq('profile_id', profileId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
-
-      setEntry(data as JournalEntry | null);
+      if (latestErr && latestErr.code !== 'PGRST116') throw latestErr;
+      setEntry(latest as JournalEntry | null);
     } catch (error: any) {
       console.error('Error loading journal entry:', error);
     } finally {

@@ -74,7 +74,12 @@ export const TradeDetailsModal = ({
     t.symbol === selectedTrade.symbol
   );
   
-  const { entry, updateEntry } = useJournalEntries(currentTrade?.id, activeProfile?.id, user?.id);
+  const { entry, updateEntry, refetch } = useJournalEntries(
+    currentTrade?.id,
+    activeProfile?.id,
+    user?.id,
+    currentTrade?.symbol === 'SCRATCHPAD' ? 'free_form' : 'standard_questions'
+  );
   
   const [rating, setRating] = useState(0);
   const [target, setTarget] = useState("");
@@ -229,6 +234,9 @@ export const TradeDetailsModal = ({
     if (currentTrade?.id && selectedProfile && user?.id) {
       if (currentTrade.symbol === 'SCRATCHPAD') {
         const scratchContent = { html: additionalComments };
+        // Avoid saving empty notes
+        const plain = (additionalComments || '').replace(/<[^>]*>/g, '').trim();
+        if (plain.length === 0) return;
         if (entry?.content && JSON.stringify(entry.content) === JSON.stringify(scratchContent)) {
           return;
         }

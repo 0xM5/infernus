@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { RichJournalEditor } from "./RichJournalEditor";
 import { useImageUpload } from "@/hooks/useImageUpload";
@@ -33,8 +33,9 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card" aria-describedby="scratchpad-desc">
         <DialogTitle className="sr-only">Scratchpad</DialogTitle>
+        <DialogDescription id="scratchpad-desc" className="sr-only">Scratchpad notes for the selected day</DialogDescription>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-warning">Scratchpad</h2>
