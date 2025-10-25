@@ -473,7 +473,7 @@ const Index = () => {
                   </Button>
                   <Button
                     onClick={() => setShowScratchpad(true)}
-                    className="bg-warning hover:bg-warning/90 text-black font-semibold shadow-md flex items-center gap-2"
+                    className="bg-warning hover:bg-warning/80 text-warning-foreground font-semibold shadow-lg flex items-center gap-2"
                   >
                     <StickyNote className="w-4 h-4" />
                     Scratchpad

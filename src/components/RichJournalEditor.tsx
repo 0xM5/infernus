@@ -15,6 +15,7 @@ interface RichJournalEditorProps {
   onImageUpload?: (file: File) => Promise<string | null>;
   placeholder?: string;
   height?: number;
+  readOnly?: boolean;
 }
 
 export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
@@ -23,6 +24,7 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
   onImageUpload,
   placeholder = "Write your journal entry...",
   height = 420,
+  readOnly = false,
 }) => {
   const quillRef = useRef<ReactQuill | null>(null);
 
@@ -132,6 +134,7 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
         onChange={onChange}
         modules={modules}
         placeholder={placeholder}
+        readOnly={readOnly}
         className="h-full rounded-xl [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-10 [&_.ql-container]:h-[calc(100%-42px)] [&_.ql-container]:bg-card [&_.ql-toolbar]:bg-muted [&_.ql-container]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-border [&_.ql-editor]:text-white [&_.ql-editor]:min-h-[260px] [&_.ql-editor]:p-4 [&_.ql-editor.ql-blank::before]:text-muted-foreground"
       />
     </div>

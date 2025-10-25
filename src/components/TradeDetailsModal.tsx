@@ -86,6 +86,7 @@ export const TradeDetailsModal = ({
   const [edgeFinderResponses, setEdgeFinderResponses] = useState<any>(null);
   const [edgeFinderCompleted, setEdgeFinderCompleted] = useState(false);
   const [edgeEditOpen, setEdgeEditOpen] = useState(false);
+  const [isScratchpadEditing, setIsScratchpadEditing] = useState(false);
   
   // Ref for main journal quill editor
   const mainJournalRef = useRef<ReactQuill | null>(null);
@@ -151,6 +152,7 @@ export const TradeDetailsModal = ({
     setVolume("");
     setFixTomorrow("");
     setAdditionalComments("");
+    setIsScratchpadEditing(false);
 
     // Check if Edge Finder wizard was completed for this trade
     const edgeFinderComplete = localStorage.getItem(`edge_finder_complete_${currentTrade.id}`);
@@ -644,23 +646,21 @@ export const TradeDetailsModal = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        const editor = mainJournalRef.current?.getEditor();
-                        if (editor) {
-                          editor.enable();
-                          toast.success("Editing enabled");
-                        }
+                        setIsScratchpadEditing(true);
+                        toast.success("Editing enabled");
                       }}
                       className="text-muted-foreground hover:text-foreground"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                     </Button>
                   </div>
-                  <div className="[&_.ql-editor]:text-white [&_.ql-toolbar]:hidden">
+                  <div className={isScratchpadEditing ? "[&_.ql-editor]:text-white" : "[&_.ql-editor]:text-white [&_.ql-toolbar]:hidden"}>
                     <RichJournalEditor
                       value={additionalComments}
                       onChange={setAdditionalComments}
                       onImageUpload={uploadImage}
                       height={600}
+                      readOnly={!isScratchpadEditing}
                     />
                   </div>
                 </div>
