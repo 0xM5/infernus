@@ -582,7 +582,7 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="w-full max-w-[1370px] mx-auto overflow-x-auto">
+              <div className="w-full max-w-[1370px] mx-auto">
                 <TradeCalendar
                   trades={useCommission
                     ? trades.map(trade => {
