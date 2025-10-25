@@ -83,9 +83,6 @@ export const TradeDetailsModal = ({
   // Fallback to simple textarea if Quill fails to mount for any reason
   const [useFallbackEditor, setUseFallbackEditor] = useState(false);
   
-// Fallback to simple textarea if Quill fails to mount for any reason
-const [useFallbackEditor, setUseFallbackEditor] = useState(false);
-
 // Ref for main journal quill editor
 const mainJournalRef = useRef<ReactQuill | null>(null);
   
