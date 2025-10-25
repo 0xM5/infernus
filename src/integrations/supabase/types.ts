@@ -24,6 +24,7 @@ export type Database = {
           type: Database["public"]["Enums"]["access_key_type"]
           used_at: string | null
           used_by: string | null
+          used_by_nickname: string | null
         }
         Insert: {
           created_at?: string
@@ -34,6 +35,7 @@ export type Database = {
           type: Database["public"]["Enums"]["access_key_type"]
           used_at?: string | null
           used_by?: string | null
+          used_by_nickname?: string | null
         }
         Update: {
           created_at?: string
@@ -44,6 +46,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["access_key_type"]
           used_at?: string | null
           used_by?: string | null
+          used_by_nickname?: string | null
         }
         Relationships: []
       }

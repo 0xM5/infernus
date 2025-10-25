@@ -18,8 +18,8 @@ const nicknameSchema = z.string()
   .regex(/^[a-zA-Z0-9_-]+$/, "Nickname can only contain letters, numbers, dash and underscore");
 const accessKeySchema = z.string()
   .trim()
-  .length(16, "Access key must be exactly 16 characters")
-  .regex(/^[A-Z0-9]+$/, "Invalid access key format");
+  .length(26, "Access key must be exactly 26 characters")
+  .regex(/^[a-z0-9]+$/, "Invalid access key format");
 
 const Auth = () => {
   const [email, setEmail] = useState("");

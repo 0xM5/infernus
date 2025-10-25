@@ -61,8 +61,14 @@ serve(async (req) => {
       );
     }
 
-    // Generate a random access key
-    const key = crypto.randomUUID().replace(/-/g, '').toUpperCase().substring(0, 16);
+    // Generate a random 26-character lowercase alphanumeric access key
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let key = '';
+    const randomBytes = new Uint8Array(26);
+    crypto.getRandomValues(randomBytes);
+    for (let i = 0; i < 26; i++) {
+      key += chars[randomBytes[i] % chars.length];
+    }
 
     // Insert the access key
     const { data, error } = await supabase
