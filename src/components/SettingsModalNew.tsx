@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Plus, X, Pencil, Check, LogOut } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Plus, X, Pencil, Check, LogOut, Info } from "lucide-react";
 import { DeleteProfileModal } from "./DeleteProfileModal";
 import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
@@ -233,7 +234,19 @@ export const SettingsModalNew = ({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground">Commission</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-semibold text-foreground">Commission</label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Your round-trip fees per buy/sell</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <Input

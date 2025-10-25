@@ -511,34 +511,17 @@ export const TradeDetailsModal = ({
                   onImageUpload={uploadImage}
                 />
               ) : (
-                <JournalQuestions
-                  energy={energy}
-                  energyWhy={energyWhy}
-                  stress={stress}
-                  stressWhy={stressWhy}
-                  confidence={confidence}
-                  confidenceWhy={confidenceWhy}
-                  bias={bias}
-                  regime={regime}
-                  vwap={vwap}
-                  keyLevels={keyLevels}
-                  volume={volume}
-                  fixTomorrow={fixTomorrow}
-                  additionalComments={additionalComments}
-                  onEnergyChange={setEnergy}
-                  onEnergyWhyChange={setEnergyWhy}
-                  onStressChange={setStress}
-                  onStressWhyChange={setStressWhy}
-                  onConfidenceChange={setConfidence}
-                  onConfidenceWhyChange={setConfidenceWhy}
-                  onBiasChange={setBias}
-                  onRegimeChange={setRegime}
-                  onVwapChange={setVwap}
-                  onKeyLevelsChange={setKeyLevels}
-                  onVolumeChange={setVolume}
-                  onFixTomorrowChange={setFixTomorrow}
-                  onAdditionalCommentsChange={setAdditionalComments}
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Journal Entry</label>
+                  <ReactQuill
+                    theme="snow"
+                    value={additionalComments}
+                    onChange={setAdditionalComments}
+                    modules={modules}
+                    className="bg-background rounded-lg"
+                    style={{ height: '400px' }}
+                  />
+                </div>
               )}
             </div>
           </div>

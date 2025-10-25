@@ -266,7 +266,7 @@ const Index = () => {
                 <div className="space-y-4">
                   <div>
                     <h1 className="text-2xl font-bold text-foreground" style={{ fontWeight: 700 }}>
-                      Welcome to Infernus Beta <span className="text-red-400">v0.01b</span>, <span className="font-bold">{userProfile?.nickname || 'User'}</span>
+                      Infernus Beta <span style={{ color: 'rgb(138, 99, 153)' }}>v0.01b</span>
                     </h1>
                     <div className="text-sm text-muted-foreground mt-1">
                       Expires On: {formatExpirationDate()}
