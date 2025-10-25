@@ -40,7 +40,7 @@ const Index = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const { profiles, activeProfile, setActiveProfile, createProfile, updateProfile, deleteProfile, loading: profilesLoading } = useTradingProfiles(user?.id);
-  const { trades: dbTrades, bulkImportTrades, loading: tradesLoading } = useTrades(activeProfile?.id, user?.id);
+  const { trades: dbTrades, bulkImportTrades, loading: tradesLoading, refetch: refetchTrades } = useTrades(activeProfile?.id, user?.id);
   
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -138,45 +138,79 @@ const Index = () => {
       return;
     }
 
+    const dayStr = format(calendarDate, 'yyyy-MM-dd');
+
     try {
-      // First create the trade entry
-      const tradeData = [{
-        profile_id: activeProfile.id,
-        user_id: user.id,
-        date: format(calendarDate, 'yyyy-MM-dd'),
-        profit: 0,
-        symbol: "SCRATCHPAD",
-        side: undefined,
-        quantity: undefined,
-        entry_price: undefined,
-        exit_price: undefined,
-      }];
-
-      await bulkImportTrades(tradeData);
-
-      // Then save the scratchpad content to journal_entries
-      const { data: tradeEntry } = await supabase
+      // Ensure a single SCRATCHPAD trade exists for this day
+      let tradeId: string | null = null;
+      const { data: existingTrade, error: findErr } = await supabase
         .from('trades')
         .select('id')
         .eq('profile_id', activeProfile.id)
         .eq('user_id', user.id)
-        .eq('date', format(calendarDate, 'yyyy-MM-dd'))
+        .eq('date', dayStr)
         .eq('symbol', 'SCRATCHPAD')
         .maybeSingle();
 
-      if (tradeEntry) {
-        await supabase
+      if (findErr && (findErr as any).code !== 'PGRST116') throw findErr;
+
+      if (existingTrade?.id) {
+        tradeId = existingTrade.id;
+      } else {
+        const { data: inserted, error: insertErr } = await supabase
+          .from('trades')
+          .insert({
+            profile_id: activeProfile.id,
+            user_id: user.id,
+            date: dayStr,
+            profit: 0,
+            symbol: 'SCRATCHPAD'
+          })
+          .select('id')
+          .single();
+        if (insertErr) throw insertErr;
+        tradeId = inserted.id as string;
+      }
+
+      if (!tradeId) throw new Error('Could not ensure scratchpad trade');
+
+      // Upsert a single free_form journal entry for that trade
+      const { data: existingEntry, error: entryFindErr } = await supabase
+        .from('journal_entries')
+        .select('id')
+        .eq('trade_id', tradeId)
+        .eq('profile_id', activeProfile.id)
+        .eq('user_id', user.id)
+        .eq('entry_type', 'free_form')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (entryFindErr && (entryFindErr as any).code !== 'PGRST116') throw entryFindErr;
+
+      if (existingEntry?.id) {
+        const { error: updErr } = await supabase
           .from('journal_entries')
-          .upsert({
-            trade_id: tradeEntry.id,
+          .update({ content: { html: content } })
+          .eq('id', existingEntry.id);
+        if (updErr) throw updErr;
+      } else {
+        const { error: insErr } = await supabase
+          .from('journal_entries')
+          .insert({
+            trade_id: tradeId,
             profile_id: activeProfile.id,
             user_id: user.id,
             entry_type: 'free_form',
             content: { html: content }
           });
+        if (insErr) throw insErr;
       }
 
-      toast.success("Scratchpad notes attached to today's session");
+      toast.success("Scratchpad saved to the selected day");
+      // Refresh trades so calendar updates immediately
+      try { (refetchTrades as any)?.(); } catch {}
+      setShowScratchpad(false);
     } catch (error) {
       console.error("Error saving scratchpad:", error);
       toast.error("Failed to save scratchpad notes");
