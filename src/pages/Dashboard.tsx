@@ -604,9 +604,9 @@ const Index = () => {
           )}
         </div>
         
-        {/* Logout button - inside main container */}
+        {/* Logout button - placed below calendar */}
         {isExpanded && (
-          <div className="absolute bottom-8 sm:bottom-12 left-1/2 transform -translate-x-1/2 flex flex-row items-center gap-2">
+          <div className="w-full max-w-[1370px] mx-auto mt-6 sm:mt-8 flex flex-row items-center justify-center gap-2">
             <span className="text-xs sm:text-sm text-muted-foreground">{userProfile?.nickname || 'User'}</span>
             <Button
               variant="outline"
