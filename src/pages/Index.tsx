@@ -3,15 +3,25 @@ import { Button } from "@/components/ui/button";
 const Index = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative" style={{ background: "linear-gradient(to bottom, #000000, #0a0a0a)" }}>
-      <div className="flex flex-col items-center gap-8 text-center px-4">
+      <div className="flex flex-col items-center gap-3 text-center px-4">
         {/* Main Title */}
         <h1 className="text-6xl font-bold text-foreground" style={{ fontFamily: 'Inter', fontWeight: 700 }}>
           Infernus.app
         </h1>
         
         {/* Tagline */}
-        <p className="text-2xl text-foreground" style={{ fontFamily: 'Inter', fontWeight: 500 }}>
-          Your edge or your ego. Pick one.
+        <p className="text-2xl text-muted-foreground" style={{ fontFamily: 'Inter', fontWeight: 500 }}>
+          Built for what traders{' '}
+          <span className="relative inline-block">
+            actually
+            <span 
+              className="absolute bottom-0 left-0 right-0 h-[2px]"
+              style={{ 
+                background: 'linear-gradient(to right, hsl(250, 70%, 60%), hsl(0, 70%, 60%))'
+              }}
+            />
+          </span>
+          {' '}need.
         </p>
         
         {/* Beta Message Box */}
@@ -23,9 +33,9 @@ const Index = () => {
         
         {/* Login Button */}
         <Button 
-          className="text-white font-semibold px-8 py-6 text-lg"
+          className="text-white font-semibold px-8 py-3 text-lg rounded-xl"
           style={{ 
-            backgroundColor: 'hsla(263, 70%, 50%, 0.9)',
+            backgroundColor: 'rgb(57, 57, 57)',
             fontFamily: 'Inter'
           }}
         >
@@ -34,6 +44,7 @@ const Index = () => {
         
         {/* Discord Contact */}
         <div className="flex items-center gap-2 text-muted-foreground mt-4">
+          <span style={{ fontFamily: 'Inter' }}>Development by</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 127.14 96.36"
