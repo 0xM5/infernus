@@ -24,11 +24,17 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setSelectedDate(clickedDate);
     
-    const dayTrades = getTradesForDay(day);
-    if (dayTrades.length > 1) {
+    const allDayTrades = getTradesForDay(day);
+    const nonScratchTrades = allDayTrades.filter(t => t.symbol !== 'SCRATCHPAD');
+    const scratchpadTrade = allDayTrades.find(t => t.symbol === 'SCRATCHPAD') || null;
+
+    if (nonScratchTrades.length > 1) {
       setIsSelectionModalOpen(true);
-    } else if (dayTrades.length === 1) {
-      setSelectedTrade(dayTrades[0]);
+    } else if (nonScratchTrades.length === 1) {
+      setSelectedTrade(nonScratchTrades[0]);
+      setIsModalOpen(true);
+    } else if (scratchpadTrade) {
+      setSelectedTrade(scratchpadTrade);
       setIsModalOpen(true);
     }
   };
@@ -72,11 +78,12 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
     if (dayTrades.length === 0) return null;
     
     const hasScratchpad = dayTrades.some(t => t.symbol === "SCRATCHPAD");
-    const onlyScratchpad = dayTrades.length === 1 && hasScratchpad;
-    const totalProfit = dayTrades.reduce((sum, trade) => sum + trade.profit, 0);
+    const nonScratchTrades = dayTrades.filter(t => t.symbol !== 'SCRATCHPAD');
+    const onlyScratchpad = nonScratchTrades.length === 0 && hasScratchpad;
+    const totalProfit = nonScratchTrades.reduce((sum, trade) => sum + trade.profit, 0);
     return {
       profit: totalProfit,
-      count: dayTrades.length,
+      count: nonScratchTrades.length,
       isScratchpad: hasScratchpad,
       onlyScratchpad
     };
