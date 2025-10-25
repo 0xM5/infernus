@@ -95,17 +95,12 @@ const Index = () => {
     fetchUserProfile();
   }, [user]);
 
-  // Apply saved gradient on mount
   useEffect(() => {
     const savedGradient = localStorage.getItem("customGradient");
     if (savedGradient) {
       const g = JSON.parse(savedGradient);
       document.documentElement.style.setProperty('--background-gradient-start', `${g.bgHue} ${g.bgSaturation}% ${g.bgLightness}%`);
       document.documentElement.style.setProperty('--background-gradient-end', `${g.secondaryHue} ${g.secondarySaturation}% ${g.secondaryLightness}%`);
-    } else {
-      // Defaults
-      document.documentElement.style.setProperty('--background-gradient-start', '263 70% 50%');
-      document.documentElement.style.setProperty('--background-gradient-end', '0 84% 60%');
     }
   }, []);
 
