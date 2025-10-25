@@ -445,13 +445,18 @@ export const TradeDetailsModal = ({
           {/* Left side - Trade Details */}
           <div className="w-[250px] bg-muted rounded-xl p-6 space-y-4 overflow-y-auto">
             <h2
-              className="text-xl text-white mb-6"
+              className={`text-xl mb-6 ${dayTrades[0]?.symbol === 'SCRATCHPAD' ? 'text-warning' : 'text-white'}`}
               style={{ fontWeight: 700, fontFamily: "Inter" }}
             >
-              Trade Details
+              {dayTrades[0]?.symbol === 'SCRATCHPAD' ? 'Scratchpad' : 'Trade Details'}
             </h2>
 
-            <div className="space-y-3">
+            {dayTrades[0]?.symbol === 'SCRATCHPAD' ? (
+              <div className="text-sm text-muted-foreground">
+                View your trading notes and ideas for this day.
+              </div>
+            ) : (
+              <div className="space-y-3">
               <div>
                 <div className="text-sm text-muted-foreground mb-1">PnL</div>
                 <div className={`text-2xl font-bold ${getPnLColor()}`}>
@@ -602,9 +607,10 @@ export const TradeDetailsModal = ({
                 className="w-full mt-4"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete Trade
+                Delete {dayTrades[0]?.symbol === 'SCRATCHPAD' ? 'Scratchpad' : 'Trade'}
               </Button>
             </div>
+            )}
           </div>
 
           {/* Right side - Edge Tags and Journal */}

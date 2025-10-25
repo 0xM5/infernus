@@ -13,9 +13,10 @@ import { QuestionEditorModal } from "@/components/QuestionEditorModal";
 import { PnLChartModal } from "@/components/PnLChartModal";
 import { EdgeShowerBox } from "@/components/EdgeShowerBox";
 import { StudyTradesModal } from "@/components/StudyTradesModal";
+import { ScratchpadModal } from "@/components/ScratchpadModal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Info, Settings, TrendingUp, LogOut } from "lucide-react";
+import { Upload, Info, Settings, TrendingUp, LogOut, StickyNote } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseTradeFile } from "@/utils/tradeParser";
 import { toast } from "sonner";
@@ -70,6 +71,7 @@ const Index = () => {
   const [edgesVersion, setEdgesVersion] = useState(0);
   const [useCommission, setUseCommission] = useState(false);
   const [userProfile, setUserProfile] = useState<{ nickname: string | null; account_expires_at: string | null } | null>(null);
+  const [showScratchpad, setShowScratchpad] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -128,6 +130,57 @@ const Index = () => {
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const handleSaveScratchpad = async (content: string) => {
+    if (!activeProfile || !user) {
+      toast.error("Please wait for profile to load...");
+      return;
+    }
+
+    try {
+      // First create the trade entry
+      const tradeData = [{
+        profile_id: activeProfile.id,
+        user_id: user.id,
+        date: format(calendarDate, 'yyyy-MM-dd'),
+        profit: 0,
+        symbol: "SCRATCHPAD",
+        side: undefined,
+        quantity: undefined,
+        entry_price: undefined,
+        exit_price: undefined,
+      }];
+
+      await bulkImportTrades(tradeData);
+
+      // Then save the scratchpad content to journal_entries
+      const { data: tradeEntry } = await supabase
+        .from('trades')
+        .select('id')
+        .eq('profile_id', activeProfile.id)
+        .eq('user_id', user.id)
+        .eq('date', format(calendarDate, 'yyyy-MM-dd'))
+        .eq('symbol', 'SCRATCHPAD')
+        .single();
+
+      if (tradeEntry) {
+        await supabase
+          .from('journal_entries')
+          .upsert({
+            trade_id: tradeEntry.id,
+            profile_id: activeProfile.id,
+            user_id: user.id,
+            entry_type: 'scratchpad',
+            content: { html: content }
+          });
+      }
+
+      toast.success("Scratchpad notes attached to today's session");
+    } catch (error) {
+      console.error("Error saving scratchpad:", error);
+      toast.error("Failed to save scratchpad notes");
+    }
   };
 
   useEffect(() => {
@@ -479,6 +532,16 @@ const Index = () => {
                 </div>
               )}
 
+              <div className="flex justify-center mb-4">
+                <Button
+                  onClick={() => setShowScratchpad(true)}
+                  className="bg-warning hover:bg-warning-light text-warning-foreground font-semibold px-6 py-2"
+                >
+                  <StickyNote className="w-4 h-4 mr-2" />
+                  Scratchpad
+                </Button>
+              </div>
+
               <div className="w-full max-w-[1370px] mx-auto" style={{ maxHeight: '758px' }}>
                 <TradeCalendar
                   trades={useCommission
@@ -589,6 +652,14 @@ const Index = () => {
         }
         isYearlyView={isYearlyView}
         currentDate={calendarDate}
+      />
+
+      <ScratchpadModal
+        open={showScratchpad}
+        onOpenChange={setShowScratchpad}
+        onSave={handleSaveScratchpad}
+        currentDate={calendarDate}
+        userId={user?.id}
       />
     </div>
   );

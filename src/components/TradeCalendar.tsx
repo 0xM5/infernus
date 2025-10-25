@@ -71,10 +71,12 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
     const dayTrades = getTradesForDay(day);
     if (dayTrades.length === 0) return null;
     
+    const hasScratchpad = dayTrades.some(t => t.symbol === "SCRATCHPAD");
     const totalProfit = dayTrades.reduce((sum, trade) => sum + trade.profit, 0);
     return {
       profit: totalProfit,
-      count: dayTrades.length
+      count: dayTrades.length,
+      isScratchpad: hasScratchpad
     };
   };
 
@@ -150,24 +152,34 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                 key={day}
                 className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                   dayStats
-                    ? dayStats.profit >= 0
-                      ? "bg-success border-success-light cursor-pointer"
-                      : "bg-destructive border-destructive-light cursor-pointer"
+                    ? dayStats.isScratchpad
+                      ? "bg-warning/20 border-warning cursor-pointer"
+                      : dayStats.profit >= 0
+                        ? "bg-success border-success-light cursor-pointer"
+                        : "bg-destructive border-destructive-light cursor-pointer"
                     : "border-border bg-card hover:bg-card/80"
                 }`}
                 onClick={() => handleDayClick(day, dayStats)}
               >
-                <div className={`text-sm ${dayStats ? "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
+                <div className={`text-sm ${dayStats ? dayStats.isScratchpad ? "text-warning" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                   {day}
                 </div>
                 {dayStats && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-xs text-white" style={{ fontWeight: 700 }}>
-                      {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
-                    </div>
-                    <div className="text-[10px] text-white/80 mt-0.5" style={{ fontWeight: 600 }}>
-                      {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
-                    </div>
+                    {dayStats.isScratchpad ? (
+                      <div className="text-xs text-warning" style={{ fontWeight: 700 }}>
+                        Scratchpad
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-xs text-white" style={{ fontWeight: 700 }}>
+                          {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
+                        </div>
+                        <div className="text-[10px] text-white/80 mt-0.5" style={{ fontWeight: 600 }}>
+                          {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -204,24 +216,34 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
                   key={day}
                   className={`relative p-2 rounded-lg border-2 transition-all duration-200 ${
                     dayStats
-                      ? dayStats.profit >= 0
-                        ? "bg-success border-success-light cursor-pointer"
-                        : "bg-destructive border-destructive-light cursor-pointer"
+                      ? dayStats.isScratchpad
+                        ? "bg-warning/20 border-warning cursor-pointer"
+                        : dayStats.profit >= 0
+                          ? "bg-success border-success-light cursor-pointer"
+                          : "bg-destructive border-destructive-light cursor-pointer"
                       : "border-border bg-card hover:bg-card/80"
                   }`}
                   onClick={() => handleDayClick(day, dayStats)}
                 >
-                  <div className={`text-sm ${dayStats ? "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
+                  <div className={`text-sm ${dayStats ? dayStats.isScratchpad ? "text-warning" : "text-white" : "text-foreground"}`} style={{ fontWeight: 600 }}>
                     {day}
                   </div>
                   {dayStats && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-xs text-white" style={{ fontWeight: 700 }}>
-                        {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
-                      </div>
-                      <div className="text-[10px] text-white/80 mt-0.5" style={{ fontWeight: 600 }}>
-                        {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
-                      </div>
+                      {dayStats.isScratchpad ? (
+                        <div className="text-xs text-warning" style={{ fontWeight: 700 }}>
+                          Scratchpad
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-xs text-white" style={{ fontWeight: 700 }}>
+                            {dayStats.profit >= 0 ? "+" : ""}${Math.abs(dayStats.profit).toFixed(2)}
+                          </div>
+                          <div className="text-[10px] text-white/80 mt-0.5" style={{ fontWeight: 600 }}>
+                            {dayStats.count} {dayStats.count === 1 ? "trade" : "trades"}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
