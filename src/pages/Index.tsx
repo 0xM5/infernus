@@ -171,7 +171,7 @@ const Index = () => {
             trade_id: tradeEntry.id,
             profile_id: activeProfile.id,
             user_id: user.id,
-            entry_type: 'scratchpad',
+            entry_type: 'free_form',
             content: { html: content }
           });
       }
@@ -472,8 +472,9 @@ const Index = () => {
                     <Settings className="w-4 h-4" />
                   </Button>
                   <Button
+                    variant="default"
                     onClick={() => setShowScratchpad(true)}
-                    className="bg-warning hover:bg-warning/80 text-warning-foreground font-semibold shadow-lg flex items-center gap-2"
+                    className="cursor-pointer bg-warning hover:bg-warning/90 text-warning-foreground flex items-center gap-2"
                   >
                     <StickyNote className="w-4 h-4" />
                     Scratchpad
