@@ -1,14 +1,24 @@
 import React, { useMemo, useRef, useEffect, useState } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import BlotFormatter from "quill-blot-formatter";
 import { ImageZoomModal } from "./ImageZoomModal";
 
-// Register once (safe in try/catch)
-try {
-  // @ts-ignore
-  Quill.register("modules/blotFormatter", BlotFormatter);
-} catch {}
+// Lazy-load BlotFormatter to avoid "Super expression" errors
+let blotFormatterRegistered = false;
+async function ensureBlotFormatterRegistered() {
+  if (blotFormatterRegistered) return;
+  try {
+    if (typeof window === "undefined") return;
+    const mod = await import("quill-blot-formatter");
+    const BlotFormatter = (mod as any).default || mod;
+    if (Quill && typeof Quill.register === "function") {
+      Quill.register("modules/blotFormatter", BlotFormatter);
+      blotFormatterRegistered = true;
+    }
+  } catch (e) {
+    console.warn("BlotFormatter lazy-load failed:", e);
+  }
+}
 
 interface RichJournalEditorProps {
   value: string;
@@ -29,6 +39,11 @@ export const RichJournalEditor: React.FC<RichJournalEditorProps> = ({
 }) => {
   const quillRef = useRef<ReactQuill | null>(null);
   const [zoomImageSrc, setZoomImageSrc] = useState<string | null>(null);
+
+  // Ensure BlotFormatter is registered before use
+  useEffect(() => {
+    void ensureBlotFormatterRegistered();
+  }, []);
 
   const imageHandler = () => {
     return function (this: any) {

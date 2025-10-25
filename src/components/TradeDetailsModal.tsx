@@ -17,22 +17,31 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useTradingProfiles } from "@/hooks/useTradingProfiles";
-import BlotFormatter from "quill-blot-formatter";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { debounce } from "lodash-es";
 
-// Register image resize/move module once
-try {
-  // @ts-ignore
-  Quill.register("modules/blotFormatter", BlotFormatter);
-  // Register custom font whitelist
-  // @ts-ignore
-  const Font = Quill.import('formats/font');
-  // Allow standard plus our custom font keys used in CSS
-  Font.whitelist = ['sans-serif','serif','monospace','playfair','lora','robotomono'];
-  Quill.register(Font, true);
-} catch {}
+// Lazy-load BlotFormatter to avoid "Super expression" errors
+let blotFormatterRegistered = false;
+async function ensureBlotFormatterRegistered() {
+  if (blotFormatterRegistered) return;
+  try {
+    if (typeof window === "undefined") return;
+    const mod = await import("quill-blot-formatter");
+    const BlotFormatter = (mod as any).default || mod;
+    if (Quill && typeof Quill.register === "function") {
+      Quill.register("modules/blotFormatter", BlotFormatter);
+      // Register custom font whitelist
+      // @ts-ignore
+      const Font = Quill.import('formats/font');
+      Font.whitelist = ['sans-serif','serif','monospace','playfair','lora','robotomono'];
+      Quill.register(Font, true);
+      blotFormatterRegistered = true;
+    }
+  } catch (e) {
+    console.warn("BlotFormatter lazy-load failed:", e);
+  }
+}
 
 interface Trade {
   id?: string;
@@ -114,6 +123,11 @@ export const TradeDetailsModal = ({
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
   const scratchpadEntryIdRef = useRef<string | null>(null);
+
+  // Ensure BlotFormatter is registered before use
+  useEffect(() => {
+    void ensureBlotFormatterRegistered();
+  }, []);
 
   const imageHandler = () => {
     return function(this: any) {

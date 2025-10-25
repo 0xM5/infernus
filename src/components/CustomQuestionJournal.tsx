@@ -1,13 +1,23 @@
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useRef, useEffect } from "react";
-import BlotFormatter from "quill-blot-formatter";
 
-
-try {
-  // @ts-ignore
-  Quill.register("modules/blotFormatter", BlotFormatter);
-} catch {}
+// Lazy-load BlotFormatter to avoid "Super expression" errors
+let blotFormatterRegistered = false;
+async function ensureBlotFormatterRegistered() {
+  if (blotFormatterRegistered) return;
+  try {
+    if (typeof window === "undefined") return;
+    const mod = await import("quill-blot-formatter");
+    const BlotFormatter = (mod as any).default || mod;
+    if (Quill && typeof Quill.register === "function") {
+      Quill.register("modules/blotFormatter", BlotFormatter);
+      blotFormatterRegistered = true;
+    }
+  } catch (e) {
+    console.warn("BlotFormatter lazy-load failed:", e);
+  }
+}
 
 
 interface CustomQuestionJournalProps {
@@ -24,6 +34,11 @@ export const CustomQuestionJournal = ({
   onImageUpload,
 }: CustomQuestionJournalProps) => {
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
+
+  // Ensure BlotFormatter is registered before use
+  useEffect(() => {
+    void ensureBlotFormatterRegistered();
+  }, []);
 
   const imageHandler = (index: number) => {
     return function(this: any) {
