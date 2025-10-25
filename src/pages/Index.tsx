@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative" style={{ background: "linear-gradient(to bottom, #000000, #0a0a0a)" }}>
       <div className="flex flex-col items-center gap-3 text-center px-4">
@@ -21,11 +24,11 @@ const Index = () => {
               }}
             />
           </span>
-          {' '}need.
+        {' '}need.
         </p>
         
         {/* Beta Message Box */}
-        <div className="border border-muted-foreground/30 rounded-md px-8 py-4 max-w-md">
+        <div className="border border-muted-foreground/30 rounded-md px-8 py-4 max-w-md mt-6">
           <p className="text-muted-foreground" style={{ fontFamily: 'Inter', fontWeight: 400 }}>
             Infernus is currently in a private beta phase. Please check back soon for public access.
           </p>
@@ -33,6 +36,7 @@ const Index = () => {
         
         {/* Login Button */}
         <Button 
+          onClick={() => navigate('/auth')}
           className="text-white font-semibold px-8 py-3 text-lg rounded-xl"
           style={{ 
             backgroundColor: 'rgb(57, 57, 57)',
