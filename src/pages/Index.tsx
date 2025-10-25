@@ -98,18 +98,22 @@ const Index = () => {
   // Create default profile if none exist - with safety check
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
+    let isMounted = true;
     
     if (!profilesLoading && profiles.length === 0 && user && !loading) {
       // Wait a bit to ensure fetch is complete
-      timeoutId = setTimeout(() => {
-        // Double-check profiles are still empty
-        if (profiles.length === 0) {
-          createProfile("Profile 1");
+      timeoutId = setTimeout(async () => {
+        // Double-check profiles are still empty and component is mounted
+        if (isMounted && profiles.length === 0) {
+          await createProfile("Profile 1");
         }
       }, 500);
     }
     
-    return () => clearTimeout(timeoutId);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [profilesLoading, profiles.length, user, loading]);
 
   const formatExpirationDate = () => {
