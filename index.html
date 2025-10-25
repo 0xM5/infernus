@@ -39,7 +39,29 @@
         </div>
       </div>
     </noscript>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Minimal boot fallback to avoid blank/black screen before React mounts -->
+      <div id="boot-fallback" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0a;color:#fff;font-family:Inter,system-ui,sans-serif;text-align:center;">
+        <div>
+          <div style="font-size:24px;font-weight:700;margin-bottom:8px;">Infernus.app</div>
+          <div style="opacity:.7">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- If React fails to mount quickly, show a friendly hint instead of a blank screen -->
+    <script>
+      (function(){
+        var fallback = document.getElementById('boot-fallback');
+        if (!fallback) return;
+        setTimeout(function(){
+          if (fallback && fallback.parentElement && fallback.parentElement.firstElementChild === fallback) {
+            fallback.innerHTML = '<div><div style="font-size:24px;font-weight:700;margin-bottom:8px;">Infernus.app</div><div style="opacity:.8;margin-bottom:12px;">Still loading… If this persists, hard refresh.</div><a href="/auth" style="display:inline-block;margin-top:4px;padding:8px 14px;border-radius:9999px;background:#6d28d9;color:#fff;text-decoration:none;">Login</a></div>';
+          }
+        }, 3000);
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
