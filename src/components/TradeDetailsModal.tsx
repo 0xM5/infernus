@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Star, Trash2, Info } from "lucide-react";
@@ -548,10 +548,9 @@ export const TradeDetailsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] h-[85vh] p-0 bg-transparent border-none shadow-none">
-        <div className="sr-only">
-          <h2>Trade Details</h2>
-        </div>
+      <DialogContent className="max-w-[90vw] h-[85vh] p-0 bg-transparent border-none shadow-none" aria-describedby="trade-details-desc">
+        <DialogTitle className="sr-only">Trade Details</DialogTitle>
+        <DialogDescription id="trade-details-desc" className="sr-only">Journal and analytics for the selected day</DialogDescription>
         <div className="flex gap-6 h-full min-h-0">
           {/* Left side - Trade Details */}
           <div className="w-[250px] bg-muted rounded-xl p-6 flex flex-col">

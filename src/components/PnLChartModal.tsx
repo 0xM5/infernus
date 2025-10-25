@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceLine } from "recharts";
 import { format } from "date-fns";
 
@@ -142,7 +142,11 @@ export const PnLChartModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] max-h-[85vh] bg-[#1a1a1a] border-none">
+      <DialogContent className="max-w-[90vw] max-h-[85vh] bg-[#1a1a1a] border-none" aria-describedby="pnl-chart-desc">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{isYearlyView ? "Yearly" : "Monthly"} P&L Chart</DialogTitle>
+          <DialogDescription id="pnl-chart-desc">Cumulative profit and loss area chart</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4">
           <h2 className="text-2xl font-bold text-white">
             {isYearlyView ? "Yearly" : "Monthly"} P&L Chart
