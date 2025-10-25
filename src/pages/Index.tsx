@@ -138,7 +138,7 @@ const Index = () => {
       return;
     }
 
-    const dayStr = format(calendarDate, 'yyyy-MM-dd');
+    const dayStr = format(new Date(), 'yyyy-MM-dd');
 
     try {
       // Find all SCRATCHPAD trades for this day and ensure only one remains
