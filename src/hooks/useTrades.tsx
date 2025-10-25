@@ -33,6 +33,14 @@ export const useTrades = (profileId: string | undefined, userId: string | undefi
 
   const fetchTrades = async () => {
     if (!profileId) return;
+    
+    // Validate that profileId is a valid UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(profileId)) {
+      console.error('Invalid profile ID format:', profileId);
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
