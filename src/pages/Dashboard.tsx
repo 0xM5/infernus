@@ -408,9 +408,9 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center w-full overflow-x-auto">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center w-full flex-wrap">
                     {/* Monthly/Total PnL Box */}
-                    <div className="bg-card border border-border rounded-lg px-4 sm:px-6 py-2 sm:py-3 flex-shrink-0">
+                    <div className="bg-card border border-border rounded-lg px-4 sm:px-6 py-2 sm:py-3 flex-shrink-0 min-w-[140px]">
                       <div className="text-xs sm:text-sm text-muted-foreground mb-1" style={{ fontWeight: 600 }}>
                         {isYearlyView ? 'Total PnL' : 'Monthly PnL'}
                       </div>
