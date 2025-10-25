@@ -83,77 +83,61 @@ export const TradeDetailsModal = ({
   const [fixTomorrow, setFixTomorrow] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
-  // Load trade data from database with hydration guard to avoid loops
+  // Load trade data from database - reset state when trade changes, then load from entry
   useEffect(() => {
     if (!currentTrade) return;
 
+    // Always update basic trade fields
     setRating(currentTrade.rating || 0);
     setTarget(currentTrade.target?.toString() || "");
     setStopLoss(currentTrade.stop_loss?.toString() || "");
 
-    if (entry?.content) {
+    // Reset journal state to defaults first (ensures clean slate for each trade)
+    setSelectedEdges([]);
+    setCustomAnswers({});
+    setEnergy(3);
+    setEnergyWhy("");
+    setStress(3);
+    setStressWhy("");
+    setConfidence(3);
+    setConfidenceWhy("");
+    setBias("");
+    setRegime("");
+    setVwap("");
+    setKeyLevels("");
+    setVolume("");
+    setFixTomorrow("");
+    setAdditionalComments("");
+
+    // Then load from entry if it exists for this specific trade
+    if (entry?.content && entry.trade_id === currentTrade.id) {
       const content = entry.content as any;
-
-      const isSame =
-        JSON.stringify(content.edges || []) === JSON.stringify(selectedEdges) &&
-        JSON.stringify(content.customAnswers || {}) === JSON.stringify(customAnswers) &&
-        (content.energy ?? 3) === energy &&
-        (content.energyWhy ?? "") === energyWhy &&
-        (content.stress ?? 3) === stress &&
-        (content.stressWhy ?? "") === stressWhy &&
-        (content.confidence ?? 3) === confidence &&
-        (content.confidenceWhy ?? "") === confidenceWhy &&
-        (content.bias ?? "") === bias &&
-        (content.regime ?? "") === regime &&
-        (content.vwap ?? "") === vwap &&
-        (content.keyLevels ?? "") === keyLevels &&
-        (content.volume ?? "") === volume &&
-        (content.fixTomorrow ?? "") === fixTomorrow &&
-        (content.additionalComments ?? "") === additionalComments;
-
-      if (!isSame) {
-        const rawCA = content.customAnswers || {};
-        const normalizedCA: Record<number, string> = {};
-        Object.entries(rawCA).forEach(([k, v]: [string, any]) => {
-          const m = /^question_(-?\d+)$/.exec(k);
-          const key = m ? Number(m[1]) : Number(k);
-          if (!Number.isNaN(key)) normalizedCA[key] = typeof v === 'string' ? v : String(v ?? '');
-        });
-        setSelectedEdges(content.edges || []);
-        setCustomAnswers(normalizedCA);
-        setEnergy(content.energy || 3);
-        setEnergyWhy(content.energyWhy || "");
-        setStress(content.stress || 3);
-        setStressWhy(content.stressWhy || "");
-        setConfidence(content.confidence || 3);
-        setConfidenceWhy(content.confidenceWhy || "");
-        setBias(content.bias || "");
-        setRegime(content.regime || "");
-        setVwap(content.vwap || "");
-        setKeyLevels(content.keyLevels || "");
-        setVolume(content.volume || "");
-        setFixTomorrow(content.fixTomorrow || "");
-        setAdditionalComments(content.additionalComments || "");
-      }
-    } else {
-      // Reset to defaults when no entry exists for this trade
-      setSelectedEdges([]);
-      setCustomAnswers({});
-      setEnergy(3);
-      setEnergyWhy("");
-      setStress(3);
-      setStressWhy("");
-      setConfidence(3);
-      setConfidenceWhy("");
-      setBias("");
-      setRegime("");
-      setVwap("");
-      setKeyLevels("");
-      setVolume("");
-      setFixTomorrow("");
-      setAdditionalComments("");
+      
+      const rawCA = content.customAnswers || {};
+      const normalizedCA: Record<number, string> = {};
+      Object.entries(rawCA).forEach(([k, v]: [string, any]) => {
+        const m = /^question_(-?\d+)$/.exec(k);
+        const key = m ? Number(m[1]) : Number(k);
+        if (!Number.isNaN(key)) normalizedCA[key] = typeof v === 'string' ? v : String(v ?? '');
+      });
+      
+      setSelectedEdges(content.edges || []);
+      setCustomAnswers(normalizedCA);
+      setEnergy(content.energy ?? 3);
+      setEnergyWhy(content.energyWhy || "");
+      setStress(content.stress ?? 3);
+      setStressWhy(content.stressWhy || "");
+      setConfidence(content.confidence ?? 3);
+      setConfidenceWhy(content.confidenceWhy || "");
+      setBias(content.bias || "");
+      setRegime(content.regime || "");
+      setVwap(content.vwap || "");
+      setKeyLevels(content.keyLevels || "");
+      setVolume(content.volume || "");
+      setFixTomorrow(content.fixTomorrow || "");
+      setAdditionalComments(content.additionalComments || "");
     }
-  }, [currentTrade?.id, entry?.id]);
+  }, [currentTrade?.id, entry?.trade_id]);
 
   // Auto-save trade basic fields
   useEffect(() => {
