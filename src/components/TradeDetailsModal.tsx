@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Star, Trash2 } from "lucide-react";
 import { EdgeSelector } from "./EdgeSelector";
 import { JournalQuestions } from "./JournalQuestions";
@@ -79,8 +80,14 @@ export const TradeDetailsModal = ({
   const [edgeFinderResponses, setEdgeFinderResponses] = useState<any>(null);
   const [edgeFinderCompleted, setEdgeFinderCompleted] = useState(false);
   
-  // Ref for main journal quill editor
-  const mainJournalRef = useRef<ReactQuill | null>(null);
+  // Fallback to simple textarea if Quill fails to mount for any reason
+  const [useFallbackEditor, setUseFallbackEditor] = useState(false);
+  
+// Fallback to simple textarea if Quill fails to mount for any reason
+const [useFallbackEditor, setUseFallbackEditor] = useState(false);
+
+// Ref for main journal quill editor
+const mainJournalRef = useRef<ReactQuill | null>(null);
   
   // Journal questions state
   const [energy, setEnergy] = useState(3);
@@ -143,6 +150,7 @@ export const TradeDetailsModal = ({
     setVolume("");
     setFixTomorrow("");
     setAdditionalComments("");
+    setUseFallbackEditor(false);
 
     // Check if Edge Finder wizard was completed for this trade
     const edgeFinderComplete = localStorage.getItem(`edge_finder_complete_${currentTrade.id}`);
@@ -184,7 +192,21 @@ export const TradeDetailsModal = ({
       setFixTomorrow(content.fixTomorrow || "");
       setAdditionalComments(content.additionalComments || "");
     }
-  }, [selectedTrade?.date?.toISOString(), selectedTrade?.symbol, currentTrade?.id, entry?.trade_id, activeProfile?.id]);
+}, [selectedTrade?.date?.toISOString(), selectedTrade?.symbol, currentTrade?.id, entry?.trade_id, activeProfile?.id]);
+
+// Detect if Quill failed to mount; fall back to textarea so user can always type
+useEffect(() => {
+  const t = setTimeout(() => {
+    try {
+      const quill = mainJournalRef.current?.getEditor?.();
+      const toolbar = (mainJournalRef.current as any)?.container?.querySelector?.('.ql-toolbar');
+      if (!quill || !toolbar) setUseFallbackEditor(true);
+    } catch {
+      setUseFallbackEditor(true);
+    }
+  }, 600);
+  return () => clearTimeout(t);
+}, [isOpen, selectedProfile, currentTrade?.id]);
 
   // Auto-save trade basic fields
   useEffect(() => {
@@ -615,16 +637,27 @@ export const TradeDetailsModal = ({
               ) : (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">Journal Entry</label>
-                  <div className="main-journal-editor relative z-10 pointer-events-auto h-[300px]">
-                    <ReactQuill
-                      ref={mainJournalRef}
-                      theme="snow"
-                      value={additionalComments}
-                      onChange={setAdditionalComments}
-                      modules={modules}
-                      readOnly={false}
-                      className="h-[260px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[220px]"
-                    />
+                  <div className="main-journal-editor relative z-[60] pointer-events-auto">
+                    {useFallbackEditor ? (
+                      <Textarea
+                        value={additionalComments}
+                        onChange={(e) => setAdditionalComments(e.target.value)}
+                        placeholder="Type your journal entry here..."
+                        className="min-h-[220px] bg-background"
+                      />
+                    ) : (
+                      <ReactQuill
+                        ref={mainJournalRef}
+                        theme="snow"
+                        value={additionalComments}
+                        onChange={setAdditionalComments}
+                        modules={modules}
+                        readOnly={false}
+                        placeholder="Type your journal entry here..."
+                        className="rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[220px] [&_.ql-toolbar]:z-[70] [&_.ql-toolbar]:pointer-events-auto [&_.ql-container]:pointer-events-auto"
+                        style={{ height: '320px' }}
+                      />
+                    )}
                   </div>
                 </div>
               )}
