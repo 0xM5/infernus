@@ -99,17 +99,57 @@ export const EdgeFinderSummary = ({ responses, onUpdate }: EdgeFinderSummaryProp
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/30">
+        <div>
+          <span className="text-muted-foreground">Ate Last Night:</span>
+          <span className="ml-2 text-foreground font-medium">{responses.ateLastNight || "N/A"}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Ate Morning:</span>
+          <span className="ml-2 text-foreground font-medium">{responses.ateMorning || "N/A"}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Caffeine:</span>
+          <span className="ml-2 text-foreground font-medium">{responses.caffeine || "N/A"}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Exercise:</span>
+          <span className="ml-2 text-foreground font-medium">{responses.exercise || "N/A"}</span>
+        </div>
+      </div>
+
+      <div className="pt-2 border-t border-border/30 space-y-2 text-xs">
+        <div>
+          <span className="text-muted-foreground">Market Condition:</span>
+          <span className="ml-2 text-foreground font-medium">{formatMarketConditions()}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">VWAP:</span>
+          <span className="ml-2 text-foreground font-medium">{formatVWAP()}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Volume:</span>
+          <span className="ml-2 text-foreground font-medium">{formatVolume()}</span>
+        </div>
+        {responses.keyLevels && (
+          <div>
+            <span className="text-muted-foreground">Key Levels:</span>
+            <p className="text-foreground mt-1">{responses.keyLevels}</p>
+          </div>
+        )}
+      </div>
+
       {responses.whyTrade && (
         <div className="pt-2 border-t border-border/30">
           <span className="text-muted-foreground text-xs">Why I took this trade:</span>
-          <p className="text-foreground text-xs mt-1 line-clamp-2">{responses.whyTrade}</p>
+          <p className="text-foreground text-xs mt-1">{responses.whyTrade}</p>
         </div>
       )}
 
       {responses.fixTomorrow && (
         <div className="pt-2 border-t border-border/30">
           <span className="text-muted-foreground text-xs">Fix for tomorrow:</span>
-          <p className="text-foreground text-xs mt-1 line-clamp-2">{responses.fixTomorrow}</p>
+          <p className="text-foreground text-xs mt-1">{responses.fixTomorrow}</p>
         </div>
       )}
 
@@ -171,6 +211,47 @@ export const EdgeFinderSummary = ({ responses, onUpdate }: EdgeFinderSummaryProp
                   onChange={(e) => updateResponse("sleepMinutes", e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Ate Last Night</label>
+              <Input
+                value={editedResponses.ateLastNight}
+                onChange={(e) => updateResponse("ateLastNight", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Ate This Morning</label>
+              <Input
+                value={editedResponses.ateMorning}
+                onChange={(e) => updateResponse("ateMorning", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Caffeine</label>
+              <Input
+                value={editedResponses.caffeine}
+                onChange={(e) => updateResponse("caffeine", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Exercise</label>
+              <Input
+                value={editedResponses.exercise}
+                onChange={(e) => updateResponse("exercise", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Key Levels</label>
+              <Textarea
+                value={editedResponses.keyLevels}
+                onChange={(e) => updateResponse("keyLevels", e.target.value)}
+                className="min-h-[80px]"
+              />
             </div>
 
             <div className="space-y-2">

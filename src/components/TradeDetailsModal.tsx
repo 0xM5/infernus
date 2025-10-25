@@ -622,6 +622,7 @@ export const TradeDetailsModal = ({
                       value={additionalComments}
                       onChange={setAdditionalComments}
                       modules={modules}
+                      readOnly={false}
                       className="rounded-xl [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground"
                       style={{ height: '400px' }}
                     />
