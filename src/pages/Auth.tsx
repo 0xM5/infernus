@@ -162,14 +162,14 @@ const Auth = () => {
 
   if (showResetPassword) {
     return (
-      <div className="min-h-screen w-full bg-background flex items-center justify-center p-8">
-        <div className="relative">
+      <div className="min-h-screen w-full bg-background flex items-center justify-center p-4 sm:p-8">
+        <div className="relative w-full max-w-md">
           <div className="absolute inset-0 bg-gradient-purple blur-3xl opacity-70 rounded-3xl" />
           
-          <Card className="relative w-[450px] border-border bg-card">
+          <Card className="relative w-full border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl sm:text-2xl font-bold">Reset Password</CardTitle>
+              <CardDescription className="text-sm">
                 Enter your email address and we'll send you a reset link
               </CardDescription>
             </CardHeader>
@@ -213,18 +213,18 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-background flex items-center justify-center p-8">
-      <div className="relative">
+    <div className="min-h-screen w-full bg-background flex items-center justify-center p-4 sm:p-8">
+      <div className="relative w-full max-w-md">
         <div className="absolute inset-0 bg-gradient-purple blur-3xl opacity-70 rounded-3xl" />
         
-        <Card className="relative w-[450px] border-border bg-card">
+        <Card className="relative w-full border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">
+            <CardTitle className="text-xl sm:text-2xl font-bold">
               Infernus
               <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">.</span>
               app
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Sign in to your trading journal
             </CardDescription>
           </CardHeader>
