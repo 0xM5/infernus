@@ -231,7 +231,7 @@ export const TradeDetailsModal = ({
 
   // Auto-save journal data
   useEffect(() => {
-    if (currentTrade?.id && selectedProfile && user?.id) {
+    if (currentTrade?.id && activeProfile?.id && user?.id) {
       if (currentTrade.symbol === 'SCRATCHPAD') {
         const scratchContent = { html: additionalComments };
         // Avoid saving empty notes
@@ -270,7 +270,7 @@ export const TradeDetailsModal = ({
       updateEntry(journalContent, selectedProfile === "default" ? "standard_questions" : "custom_questions");
     }
   }, [selectedEdges, customAnswers, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
-      bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments, currentTrade?.symbol]);
+      bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments, currentTrade?.symbol, activeProfile?.id]);
 
   // Get current profile's questions
   const [profileQuestions, setProfileQuestions] = useState<string[]>([]);
