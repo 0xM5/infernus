@@ -106,7 +106,8 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    /* Background gradient is set via JavaScript in Index.tsx */
   }
 
   /* Custom scrollbar styling */
