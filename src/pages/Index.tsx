@@ -353,7 +353,7 @@ const Index = () => {
         {/* Main container */}
         <div
           className={`relative bg-card border border-border rounded-3xl transition-all duration-500 ${
-            isExpanded ? `w-[90vw] ${edgeShowerEnabled ? 'h-auto' : 'h-[85vh]'} p-8` : "w-[600px] h-[400px] p-12"
+            isExpanded ? `w-[90vw] max-w-[1350px] ${edgeShowerEnabled ? 'h-auto max-h-[790px]' : 'h-[85vh] max-h-[790px]'} p-8` : "w-[600px] h-[400px] p-12"
           } flex ${isExpanded ? "flex-col" : "items-center justify-center"}`}
         >
           {!isExpanded ? (
