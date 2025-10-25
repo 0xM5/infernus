@@ -94,6 +94,7 @@ export const TradeDetailsModal = ({
   const [edgeFinderCompleted, setEdgeFinderCompleted] = useState(false);
   const [edgeEditOpen, setEdgeEditOpen] = useState(false);
   const [isScratchpadEditing, setIsScratchpadEditing] = useState(false);
+  const [showDeleteScratchpadDialog, setShowDeleteScratchpadDialog] = useState(false);
   
   // Ref for main journal quill editor
   const mainJournalRef = useRef<ReactQuill | null>(null);
@@ -460,6 +461,27 @@ export const TradeDetailsModal = ({
     }
   };
 
+  const handleDeleteScratchpad = async () => {
+    if (currentTrade?.id) {
+      try {
+        // Delete journal entries first
+        await supabase
+          .from('journal_entries')
+          .delete()
+          .eq('trade_id', currentTrade.id);
+        
+        // Delete the scratchpad trade
+        await deleteTrade(currentTrade.id);
+        setShowDeleteScratchpadDialog(false);
+        onClose();
+        toast.success('Scratchpad deleted');
+      } catch (error) {
+        console.error('Error deleting scratchpad:', error);
+        toast.error('Failed to delete scratchpad');
+      }
+    }
+  };
+
   const modules = {
     toolbar: {
       container: [
@@ -742,7 +764,7 @@ export const TradeDetailsModal = ({
                       </Button>
                     )}
                   </div>
-                  <div className={isScratchpadEditing ? "[&_.ql-editor]:text-white" : "[&_.ql-editor]:text-white [&_.ql-toolbar]:hidden"}>
+                   <div className={isScratchpadEditing ? "[&_.ql-editor]:text-white" : "[&_.ql-editor]:text-white [&_.ql-toolbar]:hidden"}>
                     <RichJournalEditor
                       value={additionalComments}
                       onChange={setAdditionalComments}
@@ -750,6 +772,17 @@ export const TradeDetailsModal = ({
                       height={600}
                       readOnly={!isScratchpadEditing}
                     />
+                  </div>
+                  <div className="flex justify-start mt-4">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowDeleteScratchpadDialog(true)}
+                      className="gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Scratchpad
+                    </Button>
                   </div>
                 </div>
               ) : selectedProfile === "default" && (
@@ -848,6 +881,23 @@ export const TradeDetailsModal = ({
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDeleteTrade} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Delete Forever
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showDeleteScratchpadDialog} onOpenChange={setShowDeleteScratchpadDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Scratchpad?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete your scratchpad notes for this day. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteScratchpad} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete Scratchpad
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
