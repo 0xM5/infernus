@@ -61,7 +61,7 @@ const Index = () => {
         <div className="flex-1 flex flex-col items-center justify-center max-w-3xl w-full">
           <div className="text-center space-y-4">
             <h1 className="text-6xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Infernus.app<span className="text-primary">.</span>
+              Infernus<span className="text-primary">.</span>app
             </h1>
             
             <p className="text-xl text-muted-foreground text-gray-400" style={{ fontFamily: 'Inter, sans-serif' }}>
