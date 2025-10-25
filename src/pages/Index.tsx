@@ -38,7 +38,7 @@ export interface Trade {
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const { profiles, activeProfile, setActiveProfile, createProfile, loading: profilesLoading } = useTradingProfiles(user?.id);
+  const { profiles, activeProfile, setActiveProfile, createProfile, updateProfile, deleteProfile, loading: profilesLoading } = useTradingProfiles(user?.id);
   const { trades: dbTrades, bulkImportTrades, loading: tradesLoading } = useTrades(activeProfile?.id, user?.id);
   
   const [isExpanded, setIsExpanded] = useState(false);
@@ -484,6 +484,19 @@ const Index = () => {
         onProfileChange={setSelectedProfile}
         edgeShowerEnabled={edgeShowerEnabled}
         onEdgeShowerChange={handleEdgeShowerChange}
+        activeProfile={activeProfile}
+        profiles={profiles}
+        onActiveProfileChange={setActiveProfile}
+        onCreateAccountProfile={async () => {
+          const newProfile = await createProfile(`Profile ${profiles.length + 1}`);
+          if (newProfile) {
+            setActiveProfile(newProfile);
+          }
+        }}
+        onDeleteAccountProfile={async (id) => {
+          await deleteProfile(id);
+        }}
+        onUpdateAccountProfile={updateProfile}
       />
 
       <StudyTradesModal

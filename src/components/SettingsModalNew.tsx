@@ -28,6 +28,12 @@ interface SettingsModalProps {
   onProfileChange: (profileId: string) => void;
   edgeShowerEnabled: boolean;
   onEdgeShowerChange: (enabled: boolean) => void;
+  activeProfile: TradingProfile | null;
+  profiles: TradingProfile[];
+  onActiveProfileChange: (profile: TradingProfile) => void;
+  onCreateAccountProfile: () => Promise<void>;
+  onDeleteAccountProfile: (id: string) => Promise<void>;
+  onUpdateAccountProfile: (id: string, updates: Partial<TradingProfile>) => Promise<void>;
 }
 
 export const SettingsModalNew = ({
@@ -38,11 +44,16 @@ export const SettingsModalNew = ({
   onProfileChange,
   edgeShowerEnabled,
   onEdgeShowerChange,
+  activeProfile,
+  profiles,
+  onActiveProfileChange,
+  onCreateAccountProfile,
+  onDeleteAccountProfile,
+  onUpdateAccountProfile,
 }: SettingsModalProps) => {
   const { toast: toastHook } = useToast();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { profiles, activeProfile, setActiveProfile, createProfile, updateProfile, deleteProfile } = useTradingProfiles(user?.id);
   
   const [questionProfiles, setQuestionProfiles] = useState<QuestionProfile[]>([
     { id: "default", name: "Default", questions: [] }
@@ -72,7 +83,7 @@ export const SettingsModalNew = ({
       toast.error("Maximum 3 profiles allowed");
       return;
     }
-    await createProfile(`Profile ${profiles.length + 1}`);
+    await onCreateAccountProfile();
   };
 
   const handleDeleteProfile = (profile: TradingProfile) => {
@@ -90,7 +101,7 @@ export const SettingsModalNew = ({
       return;
     }
     
-    await deleteProfile(profileToDelete.id);
+    await onDeleteAccountProfile(profileToDelete.id);
     setDeleteModalOpen(false);
     setProfileToDelete(null);
   };
@@ -98,7 +109,7 @@ export const SettingsModalNew = ({
   const handleCommissionChange = async (value: string) => {
     setCommission(value);
     if (activeProfile) {
-      await updateProfile(activeProfile.id, { commission: parseFloat(value) || 0 });
+      await onUpdateAccountProfile(activeProfile.id, { commission: parseFloat(value) || 0 });
     }
   };
 
@@ -116,7 +127,7 @@ export const SettingsModalNew = ({
       return;
     }
     
-    await updateProfile(editingProfileId, { name: trimmedName });
+    await onUpdateAccountProfile(editingProfileId, { name: trimmedName });
     setEditingProfileId(null);
     setEditingName("");
   };
@@ -145,7 +156,7 @@ export const SettingsModalNew = ({
             <label className="text-sm font-semibold text-foreground">Trade Account Profile</label>
             <RadioGroup value={activeProfile?.id} onValueChange={(id) => {
               const profile = profiles.find(p => p.id === id);
-              if (profile) setActiveProfile(profile);
+              if (profile) onActiveProfileChange(profile);
             }}>
               <div className="space-y-2">
                 {profiles.map((profile) => (
