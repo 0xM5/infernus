@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,6 +83,7 @@ export const SettingsModalNew = ({
   const [secondaryHue, setSecondaryHue] = useState(0);
   const [secondarySaturation, setSecondarySaturation] = useState(84);
   const [secondaryLightness, setSecondaryLightness] = useState(60);
+  const [gradientPopoverOpen, setGradientPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -195,7 +197,7 @@ export const SettingsModalNew = ({
     navigate("/auth");
   };
 
-  const handleGradientChange = () => {
+  const applyGradient = () => {
     const gradient = {
       bgHue,
       bgSaturation,
@@ -210,6 +212,9 @@ export const SettingsModalNew = ({
     const gradientStyle = `linear-gradient(135deg, hsl(${bgHue} ${bgSaturation}% ${bgLightness}%), hsl(${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%))`;
     document.body.style.backgroundImage = gradientStyle;
     document.body.style.backgroundAttachment = 'fixed';
+    
+    setGradientPopoverOpen(false);
+    toast.success("Background updated");
   };
 
   const resetToDefaultGradient = () => {
@@ -226,10 +231,6 @@ export const SettingsModalNew = ({
     document.body.style.backgroundAttachment = 'fixed';
     toast.success("Reset to default gradient");
   };
-
-  useEffect(() => {
-    handleGradientChange();
-  }, [bgHue, bgSaturation, bgLightness, secondaryHue, secondarySaturation, secondaryLightness]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -407,95 +408,109 @@ export const SettingsModalNew = ({
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-foreground">Background</label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetToDefaultGradient}
-                className="text-xs"
-              >
-                Default
-              </Button>
-            </div>
-            
-            <div className="space-y-4 bg-background border border-border rounded-lg p-4">
-              <div 
-                className="w-full h-16 rounded-lg"
-                style={{
-                  backgroundImage: `linear-gradient(135deg, hsl(${bgHue} ${bgSaturation}% ${bgLightness}%), hsl(${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%))`
-                }}
-              />
-              
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground">Primary Hue</Label>
-                  <Slider
-                    value={[bgHue]}
-                    onValueChange={([value]) => setBgHue(value)}
-                    max={360}
-                    step={1}
-                    className="mt-2"
+          <div className="space-y-2">
+            <Popover open={gradientPopoverOpen} onOpenChange={setGradientPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full border-border">
+                  Customize background color
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[420px] bg-popover border-border z-50" align="start">
+                <div className="space-y-4">
+                  <div 
+                    className="w-full h-16 rounded-lg"
+                    style={{
+                      backgroundImage: `linear-gradient(135deg, hsl(${bgHue} ${bgSaturation}% ${bgLightness}%), hsl(${secondaryHue} ${secondarySaturation}% ${secondaryLightness}%))`
+                    }}
                   />
-                </div>
-                
-                <div>
-                  <Label className="text-xs text-muted-foreground">Primary Saturation</Label>
-                  <Slider
-                    value={[bgSaturation]}
-                    onValueChange={([value]) => setBgSaturation(value)}
-                    max={100}
-                    step={1}
-                    className="mt-2"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-xs text-muted-foreground">Primary Lightness</Label>
-                  <Slider
-                    value={[bgLightness]}
-                    onValueChange={([value]) => setBgLightness(value)}
-                    max={100}
-                    step={1}
-                    className="mt-2"
-                  />
-                </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Primary Hue</Label>
+                      <Slider
+                        value={[bgHue]}
+                        onValueChange={([value]) => setBgHue(value)}
+                        max={360}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Primary Saturation</Label>
+                      <Slider
+                        value={[bgSaturation]}
+                        onValueChange={([value]) => setBgSaturation(value)}
+                        max={100}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Primary Lightness</Label>
+                      <Slider
+                        value={[bgLightness]}
+                        onValueChange={([value]) => setBgLightness(value)}
+                        max={100}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
 
-                <div className="pt-2 border-t border-border">
-                  <Label className="text-xs text-muted-foreground">Secondary Hue</Label>
-                  <Slider
-                    value={[secondaryHue]}
-                    onValueChange={([value]) => setSecondaryHue(value)}
-                    max={360}
-                    step={1}
-                    className="mt-2"
-                  />
+                    <div className="pt-2 border-t border-border">
+                      <Label className="text-xs text-muted-foreground">Secondary Hue</Label>
+                      <Slider
+                        value={[secondaryHue]}
+                        onValueChange={([value]) => setSecondaryHue(value)}
+                        max={360}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Secondary Saturation</Label>
+                      <Slider
+                        value={[secondarySaturation]}
+                        onValueChange={([value]) => setSecondarySaturation(value)}
+                        max={100}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Secondary Lightness</Label>
+                      <Slider
+                        value={[secondaryLightness]}
+                        onValueChange={([value]) => setSecondaryLightness(value)}
+                        max={100}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2 border-t border-border">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetToDefaultGradient}
+                      className="flex-1"
+                    >
+                      Reset to Default
+                    </Button>
+                    <Button
+                      onClick={applyGradient}
+                      className="flex-1"
+                    >
+                      Apply
+                    </Button>
+                  </div>
                 </div>
-                
-                <div>
-                  <Label className="text-xs text-muted-foreground">Secondary Saturation</Label>
-                  <Slider
-                    value={[secondarySaturation]}
-                    onValueChange={([value]) => setSecondarySaturation(value)}
-                    max={100}
-                    step={1}
-                    className="mt-2"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-xs text-muted-foreground">Secondary Lightness</Label>
-                  <Slider
-                    value={[secondaryLightness]}
-                    onValueChange={([value]) => setSecondaryLightness(value)}
-                    max={100}
-                    step={1}
-                    className="mt-2"
-                  />
-                </div>
-              </div>
-            </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="pt-4 border-t border-border">
