@@ -299,6 +299,35 @@ useEffect(() => {
     }
   }, [edges]);
 
+  // Handle clipboard image paste (image blobs)
+  useEffect(() => {
+    const quill = (mainJournalRef.current as any)?.getEditor?.();
+    const root = quill?.root as HTMLElement | undefined;
+    if (!quill || !root) return;
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (!blob) continue;
+          if (uploadImage) {
+            e.preventDefault();
+            const file = new File([blob], 'pasted-image.png', { type: blob.type });
+            const url = await uploadImage(file);
+            if (url) {
+              const range = quill.getSelection(true);
+              quill.insertEmbed(range?.index ?? 0, 'image', url);
+            }
+          }
+        }
+      }
+    };
+    root.addEventListener('paste', handlePaste as any);
+    return () => root.removeEventListener('paste', handlePaste as any);
+  }, [isOpen, uploadImage]);
+
   if (!selectedDate) return null;
 
   const dayTrades = trades.filter((trade) => {
@@ -417,35 +446,6 @@ useEffect(() => {
     "image",
     "clean",
   ];
-
-  // Handle clipboard image paste (image blobs)
-  useEffect(() => {
-    const quill = (mainJournalRef.current as any)?.getEditor?.();
-    const root = quill?.root as HTMLElement | undefined;
-    if (!quill || !root) return;
-    const handlePaste = async (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
-          const blob = item.getAsFile();
-          if (!blob) continue;
-          if (uploadImage) {
-            e.preventDefault();
-            const file = new File([blob], 'pasted-image.png', { type: blob.type });
-            const url = await uploadImage(file);
-            if (url) {
-              const range = quill.getSelection(true);
-              quill.insertEmbed(range?.index ?? 0, 'image', url);
-            }
-          }
-        }
-      }
-    };
-    root.addEventListener('paste', handlePaste as any);
-    return () => root.removeEventListener('paste', handlePaste as any);
-  }, [isOpen, uploadImage]);
 
   const getPnLColor = () => {
     if (totalPnL > 0) return "text-green-400";
