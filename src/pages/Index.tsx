@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTradingProfiles } from "@/hooks/useTradingProfiles";
+import { useTrades } from "@/hooks/useTrades";
 import { supabase } from "@/integrations/supabase/client";
 import { JournalButton } from "@/components/JournalButton";
 import { TradeCalendar } from "@/components/TradeCalendar";
 import { TradeProviderModal } from "@/components/TradeProviderModal";
-import { SettingsModal } from "@/components/SettingsModal";
+import { SettingsModalNew } from "@/components/SettingsModalNew";
 import { CreateProfileModal } from "@/components/CreateProfileModal";
 import { QuestionEditorModal } from "@/components/QuestionEditorModal";
 import { PnLChartModal } from "@/components/PnLChartModal";
@@ -35,12 +37,24 @@ export interface Trade {
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const { profiles, activeProfile, setActiveProfile, createProfile, loading: profilesLoading } = useTradingProfiles(user?.id);
+  const { trades: dbTrades, bulkImportTrades, loading: tradesLoading } = useTrades(activeProfile?.id, user?.id);
+  
   const [isExpanded, setIsExpanded] = useState(false);
-  const [trades, setTrades] = useState<Trade[]>([]);
+  
+  // Convert DB trades to display format
+  const trades: Trade[] = dbTrades.map(t => ({
+    date: new Date(t.date),
+    profit: t.profit,
+    symbol: t.symbol,
+    side: t.side as "LONG" | "SHORT" | undefined,
+    quantity: t.quantity || undefined,
+    entryPrice: t.entry_price || undefined,
+    exitPrice: t.exit_price || undefined,
+  }));
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [isYearlyView, setIsYearlyView] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
-  const [useEstimatedCommissions, setUseEstimatedCommissions] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreateProfile, setShowCreateProfile] = useState(false);
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
@@ -52,7 +66,6 @@ const Index = () => {
   const [showStudyTrades, setShowStudyTrades] = useState(false);
   const [studyEdge, setStudyEdge] = useState<{ edge: string; wins: number; losses: number } | null>(null);
   const [edgesVersion, setEdgesVersion] = useState(0);
-  const [selectedAccountProfile, setSelectedAccountProfile] = useState("");
   const [useCommission, setUseCommission] = useState(false);
   const [userProfile, setUserProfile] = useState<{ nickname: string | null; account_expires_at: string | null } | null>(null);
 
@@ -80,6 +93,13 @@ const Index = () => {
     fetchUserProfile();
   }, [user]);
 
+  // Create default profile if none exist
+  useEffect(() => {
+    if (!profilesLoading && profiles.length === 0 && user) {
+      createProfile("Profile 1");
+    }
+  }, [profilesLoading, profiles, user]);
+
   const formatExpirationDate = () => {
     if (!userProfile?.account_expires_at) {
       return <span className="text-yellow-400">Unlimited Access</span>;
@@ -98,14 +118,6 @@ const Index = () => {
     const saved = localStorage.getItem("edgeShowerEnabled");
     if (saved) {
       setEdgeShowerEnabled(JSON.parse(saved));
-    }
-
-    const savedAccounts = localStorage.getItem("tradeAccountProfiles");
-    if (savedAccounts) {
-      const accounts = JSON.parse(savedAccounts);
-      if (accounts.length > 0) {
-        setSelectedAccountProfile(accounts[0].id);
-      }
     }
   }, []);
 
@@ -149,10 +161,9 @@ const Index = () => {
     });
     
     // Apply commissions if enabled (divide by 2, then subtract per contract)
-    const tradesWithCommissions = useCommission
+    const tradesWithCommissions = useCommission && activeProfile?.commission
       ? monthlyTrades.map(trade => {
-          const commissionValue = parseFloat(localStorage.getItem("userCommission") || "0");
-          const commissionPerContract = commissionValue / 2;
+          const commissionPerContract = activeProfile.commission / 2;
           const totalCommission = commissionPerContract * (trade.quantity || 1);
           return {
             ...trade,
@@ -188,6 +199,11 @@ const Index = () => {
       return;
     }
 
+    if (!activeProfile || !user) {
+      toast.error("Please wait for profile to load...");
+      return;
+    }
+
     try {
       const text = await file.text();
       const parsedTrades = parseTradeFile(text);
@@ -197,27 +213,26 @@ const Index = () => {
         return;
       }
       
-      const formattedTrades: Trade[] = parsedTrades.map(trade => ({
-        date: trade.date,
+      const formattedTrades = parsedTrades.map(trade => ({
+        profile_id: activeProfile.id,
+        user_id: user.id,
+        date: format(trade.date, 'yyyy-MM-dd'),
         profit: trade.profit,
         symbol: trade.symbol,
         side: trade.side,
         quantity: trade.quantity,
-        entryPrice: trade.entryPrice,
-        exitPrice: trade.exitPrice,
-        entryTime: trade.date.toLocaleTimeString(),
-        exitTime: trade.date.toLocaleTimeString(),
+        entry_price: trade.entryPrice,
+        exit_price: trade.exitPrice,
       }));
 
-      setTrades(formattedTrades);
-      toast.success(`Successfully imported ${parsedTrades.length} trades`);
+      await bulkImportTrades(formattedTrades);
     } catch (error) {
       console.error("Error parsing file:", error);
       toast.error("Error parsing trade file");
     }
   };
 
-  if (loading) {
+  if (loading || profilesLoading) {
     return (
       <div className="min-h-screen w-full bg-background flex items-center justify-center">
         <div className="text-foreground">Loading...</div>
@@ -252,7 +267,7 @@ const Index = () => {
                       Welcome to Infernus Beta <span className="text-red-400">v0.01b</span>, <span className="font-bold">{userProfile?.nickname || 'User'}</span>
                     </h1>
                     <div className="text-sm text-muted-foreground mt-1">
-                      Expires On: {formatExpirationDate()}
+                      Expires On: {formatExpirationDate()} | Profile: {activeProfile?.name || 'Loading...'}
                     </div>
                   </div>
                   
@@ -459,7 +474,7 @@ const Index = () => {
         )}
       </div>
       
-      <SettingsModal
+      <SettingsModalNew
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onCreateProfile={() => setShowCreateProfile(true)}
@@ -467,8 +482,6 @@ const Index = () => {
         onProfileChange={setSelectedProfile}
         edgeShowerEnabled={edgeShowerEnabled}
         onEdgeShowerChange={handleEdgeShowerChange}
-        selectedAccountProfile={selectedAccountProfile}
-        onAccountProfileChange={setSelectedAccountProfile}
       />
 
       <StudyTradesModal
