@@ -12,9 +12,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTrades } from "@/hooks/useTrades";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useTradingProfiles } from "@/hooks/useTradingProfiles";
+import BlotFormatter from "quill-blot-formatter";
+
+// Register image resize/move module once
+try {
+  // @ts-ignore
+  Quill.register("modules/blotFormatter", BlotFormatter);
+} catch {}
 
 interface Trade {
   id?: string;
@@ -292,6 +299,7 @@ export const TradeDetailsModal = ({
       ["image"],
       ["clean"],
     ],
+    blotFormatter: {},
   };
 
   const getPnLColor = () => {
@@ -496,7 +504,7 @@ export const TradeDetailsModal = ({
                     onClick={() => setShowEdgeFinderWizard(true)}
                     className="border-border"
                   >
-                    Help me find my edge
+                    Discover My Edge
                   </Button>
                 </div>
               )}
@@ -518,7 +526,7 @@ export const TradeDetailsModal = ({
                     value={additionalComments}
                     onChange={setAdditionalComments}
                     modules={modules}
-                    className="bg-background rounded-lg"
+                    className="rounded-xl [&_.ql-container]:bg-muted [&_.ql-toolbar]:bg-muted/80 [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-editor]:text-foreground"
                     style={{ height: '400px' }}
                   />
                 </div>

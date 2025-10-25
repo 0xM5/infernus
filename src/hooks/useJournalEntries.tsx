@@ -92,6 +92,18 @@ export const useJournalEntries = (tradeId: string | undefined, profileId: string
     [userId, profileId, tradeId]
   );
 
+  // Ensure pending autosave runs on page unload/unmount
+  useEffect(() => {
+    const flush = () => {
+      try { (debouncedSave as any).flush?.(); } catch {}
+    };
+    window.addEventListener('beforeunload', flush);
+    return () => {
+      flush();
+      window.removeEventListener('beforeunload', flush);
+    };
+  }, [debouncedSave]);
+  
   const updateEntry = (content: any, entryType: JournalEntry['entry_type']) => {
     const updatedEntry = {
       ...entry,
