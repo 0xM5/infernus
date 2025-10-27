@@ -320,7 +320,7 @@ export const TradeDetailsModal = ({
         return;
       }
 
-      updateEntry(journalContent, (!activeProfile?.selected_question_profile || activeProfile.selected_question_profile === "default") ? "standard_questions" : "custom_questions");
+      updateEntry(journalContent, (selectedProfile === "default" || !selectedProfile) ? "standard_questions" : "custom_questions");
     }
   }, [selectedEdges, customAnswers, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
       bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments, currentTrade?.symbol, activeProfile?.id]);
@@ -330,7 +330,9 @@ export const TradeDetailsModal = ({
 
   useEffect(() => {
     const loadQuestions = async () => {
-      if (!activeProfile?.selected_question_profile || activeProfile.selected_question_profile === "default") {
+      if (!user?.id) return;
+
+      if (!selectedProfile || selectedProfile === "default") {
         setProfileQuestions([]);
         return;
       }
@@ -339,8 +341,8 @@ export const TradeDetailsModal = ({
         const { data, error } = await supabase
           .from('custom_questions')
           .select('questions')
-          .eq('user_id', user?.id)
-          .eq('profile_name', activeProfile.selected_question_profile)
+          .eq('user_id', user.id)
+          .eq('profile_name', selectedProfile)
           .maybeSingle();
 
         if (error) throw error;
@@ -357,7 +359,7 @@ export const TradeDetailsModal = ({
     };
 
     loadQuestions();
-  }, [activeProfile?.selected_question_profile, user?.id]);
+  }, [selectedProfile, user?.id]);
 
   // Load edges from localStorage on mount
   useEffect(() => {
@@ -792,7 +794,7 @@ export const TradeDetailsModal = ({
                     />
                   </div>
                 </div>
-              ) : (!activeProfile?.selected_question_profile || activeProfile.selected_question_profile === "default") && (
+              ) : (selectedProfile === "default" || !selectedProfile) && (
                 <div className="space-y-4 mb-4">
                   <Button
                     variant="outline"
@@ -840,7 +842,7 @@ export const TradeDetailsModal = ({
                 </div>
               )}
 
-              {dayTrades[0]?.symbol !== 'SCRATCHPAD' && activeProfile?.selected_question_profile && activeProfile.selected_question_profile !== "default" && profileQuestions.length > 0 ? (
+              {dayTrades[0]?.symbol !== 'SCRATCHPAD' && selectedProfile && selectedProfile !== "default" && profileQuestions.length > 0 ? (
                 <CustomQuestionJournal
                   questions={profileQuestions}
                   answers={customAnswers}
