@@ -162,7 +162,7 @@ export const TradeDetailsModal = ({
       setEdgeFinderResponses(null);
     }
 
-    // Then load from entry if it exists for this specific trade
+    // ONLY load from entry if it exists AND matches this specific trade
     if (entry?.content && entry.trade_id === currentTrade.id) {
       const content = entry.content as any;
 
@@ -194,7 +194,12 @@ export const TradeDetailsModal = ({
         setAdditionalComments(content.additionalComments || "");
       }
     }
-}, [selectedTrade?.date?.toISOString(), selectedTrade?.symbol, currentTrade?.id, entry?.trade_id, activeProfile?.id]);
+    // If entry exists but doesn't match current trade, explicitly ensure everything is cleared
+    else if (entry && entry.trade_id !== currentTrade.id) {
+      // Already reset above, but being explicit here for clarity
+      setCustomAnswers({});
+    }
+}, [currentTrade?.id, entry?.id, entry?.trade_id]);
 
   // Load latest scratchpad content directly by trade_id
   useEffect(() => {
