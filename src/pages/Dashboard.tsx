@@ -71,6 +71,13 @@ const Index = () => {
   const [useCommission, setUseCommission] = useState(false);
   const [userProfile, setUserProfile] = useState<{ nickname: string | null; account_expires_at: string | null } | null>(null);
 
+  // Sync selectedProfile with activeProfile's selected_question_profile
+  useEffect(() => {
+    if (activeProfile) {
+      setSelectedProfile(activeProfile.selected_question_profile || "default");
+    }
+  }, [activeProfile]);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate("/");
@@ -133,6 +140,13 @@ const Index = () => {
     
     const expiryDate = new Date(userProfile.account_expires_at);
     return format(expiryDate, "EEEE, MMMM d 'at' h:mmaaa 'EST'");
+  };
+
+  const handleQuestionProfileChange = async (profileId: string) => {
+    setSelectedProfile(profileId);
+    if (activeProfile) {
+      await updateProfile(activeProfile.id, { selected_question_profile: profileId });
+    }
   };
 
   const handleLogout = async () => {
@@ -630,7 +644,7 @@ const Index = () => {
         onClose={() => setShowSettings(false)}
         onCreateProfile={() => setShowCreateProfile(true)}
         selectedProfile={selectedProfile}
-        onProfileChange={setSelectedProfile}
+        onProfileChange={handleQuestionProfileChange}
         edgeShowerEnabled={edgeShowerEnabled}
         onEdgeShowerChange={handleEdgeShowerChange}
         activeProfile={activeProfile}

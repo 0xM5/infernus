@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTradingProfiles, TradingProfile } from "@/hooks/useTradingProfiles";
+import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -86,13 +87,32 @@ export const SettingsModalNew = ({
   const [gradientPopoverOpen, setGradientPopoverOpen] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !user?.id) return;
 
-    const savedProfiles = localStorage.getItem("questionProfiles");
-    if (savedProfiles) {
-      const parsed = JSON.parse(savedProfiles);
-      setQuestionProfiles([{ id: "default", name: "Default", questions: [] }, ...parsed]);
-    }
+    const loadQuestionProfiles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('custom_questions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        const dbProfiles: QuestionProfile[] = data?.map(item => ({
+          id: item.profile_name,
+          name: item.profile_name,
+          questions: item.questions
+        })) || [];
+
+        setQuestionProfiles([{ id: "default", name: "Default", questions: [] }, ...dbProfiles]);
+      } catch (error) {
+        console.error('Error loading question profiles:', error);
+        setQuestionProfiles([{ id: "default", name: "Default", questions: [] }]);
+      }
+    };
+
+    loadQuestionProfiles();
 
     if (activeProfile) {
       setCommission(activeProfile.commission?.toString() || "0");
@@ -109,7 +129,7 @@ export const SettingsModalNew = ({
       setSecondarySaturation(gradient.secondarySaturation);
       setSecondaryLightness(gradient.secondaryLightness);
     }
-  }, [isOpen, activeProfile]);
+  }, [isOpen, activeProfile, user?.id]);
 
   const handleCreateAccountProfile = async () => {
     if (profiles.length >= 3) {
@@ -174,20 +194,31 @@ export const SettingsModalNew = ({
     setDeleteQuestionProfileId(profileId);
   };
 
-  const confirmDeleteQuestionProfile = () => {
-    if (!deleteQuestionProfileId) return;
+  const confirmDeleteQuestionProfile = async () => {
+    if (!deleteQuestionProfileId || !user?.id) return;
     
-    const updatedProfiles = questionProfiles.filter(p => p.id !== deleteQuestionProfileId);
-    const customProfiles = updatedProfiles.filter(p => p.id !== "default");
-    localStorage.setItem("questionProfiles", JSON.stringify(customProfiles));
-    setQuestionProfiles(updatedProfiles);
-    
-    if (selectedProfile === deleteQuestionProfileId) {
-      onProfileChange("default");
+    try {
+      const { error } = await supabase
+        .from('custom_questions')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('profile_name', deleteQuestionProfileId);
+
+      if (error) throw error;
+
+      const updatedProfiles = questionProfiles.filter(p => p.id !== deleteQuestionProfileId);
+      setQuestionProfiles(updatedProfiles);
+      
+      if (selectedProfile === deleteQuestionProfileId) {
+        onProfileChange("default");
+      }
+      
+      setDeleteQuestionProfileId(null);
+      toast.success("Question profile deleted");
+    } catch (error) {
+      console.error('Error deleting question profile:', error);
+      toast.error("Failed to delete question profile");
     }
-    
-    setDeleteQuestionProfileId(null);
-    toast.success("Question profile deleted");
   };
 
   const handleLogout = async () => {

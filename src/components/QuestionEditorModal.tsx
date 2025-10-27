@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface QuestionEditorModalProps {
   isOpen: boolean;
@@ -22,6 +24,7 @@ export const QuestionEditorModal = ({
   onSave,
   onCancel,
 }: QuestionEditorModalProps) => {
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<string[]>([""]); // Start with one question
   const MAX_QUESTIONS = 25;
 
@@ -47,7 +50,7 @@ export const QuestionEditorModal = ({
     setQuestions(newQuestions);
   };
 
-  const handleDone = () => {
+  const handleDone = async () => {
     const validQuestions = questions.filter(q => q.trim() !== "");
     
     if (validQuestions.length === 0) {
@@ -55,22 +58,31 @@ export const QuestionEditorModal = ({
       return;
     }
 
-    // Save to localStorage
-    const savedProfiles = localStorage.getItem("questionProfiles");
-    const profiles = savedProfiles ? JSON.parse(savedProfiles) : [];
-    
-    profiles.push({
-      id: profileId,
-      name: profileName,
-      questions: validQuestions,
-    });
+    if (!user?.id) {
+      toast.error("You must be logged in to save question profiles");
+      return;
+    }
 
-    localStorage.setItem("questionProfiles", JSON.stringify(profiles));
-    
-    toast.success("Profile created successfully!");
-    setQuestions([""]);
-    onSave(profileId);
-    onClose();
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('custom_questions')
+        .insert({
+          user_id: user.id,
+          profile_name: profileName,
+          questions: validQuestions,
+        });
+
+      if (error) throw error;
+      
+      toast.success("Profile created successfully!");
+      setQuestions([""]);
+      onSave(profileId);
+      onClose();
+    } catch (error: any) {
+      console.error('Error saving question profile:', error);
+      toast.error(error.message || "Failed to save profile");
+    }
   };
 
   const handleCancel = () => {
