@@ -1,6 +1,5 @@
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import { useRef, useEffect } from "react";
+import { RichJournalEditor } from "./RichJournalEditor";
 
 interface CustomQuestionJournalProps {
   questions: string[];
@@ -15,125 +14,6 @@ export const CustomQuestionJournal = ({
   onAnswerChange,
   onImageUpload,
 }: CustomQuestionJournalProps) => {
-  const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
-
-  const imageHandler = (index: number) => {
-    return function(this: any) {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'file');
-      input.setAttribute('accept', 'image/*');
-      input.click();
-
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (file && onImageUpload) {
-          const url = await onImageUpload(file);
-          if (url) {
-            const quill = quillRefs.current[index]?.getEditor();
-            if (quill) {
-              const range = quill.getSelection(true);
-              quill.insertEmbed(range.index, 'image', url);
-            }
-          }
-        }
-      };
-    };
-  };
-
-  const getModules = (index: number) => ({
-    toolbar: {
-      container: [
-        [{ font: [] }, { size: ["small", false, "large", "huge"] }],
-        [{ header: [1, 2, 3, false] }],
-        ["bold", "italic", "underline"],
-        [{ color: [] }, { background: [] }],
-        ["image"],
-        ["clean"],
-      ],
-      handlers: {
-        image: imageHandler(index),
-      },
-    },
-    clipboard: {
-      matchVisual: false,
-      matchers: [
-        // Intercept pasted images and upload them instead of embedding base64
-        ['img', (node: any, delta: any) => {
-          const image = node;
-          const imageUrl = image.getAttribute('src');
-          
-          // If it's a data URL (pasted image), we need to upload it
-          if (imageUrl && imageUrl.startsWith('data:image')) {
-            // Convert data URL to blob and upload
-            fetch(imageUrl)
-              .then(res => res.blob())
-              .then(blob => {
-                const file = new File([blob], 'pasted-image.png', { type: blob.type });
-                if (onImageUpload) {
-                  onImageUpload(file).then(url => {
-                    if (url && quillRefs.current[index]) {
-                      const quill = quillRefs.current[index]!.getEditor();
-                      const range = quill.getSelection(true);
-                      // Remove the temporary base64 image
-                      quill.deleteText(range.index - 1, 1);
-                      // Insert the uploaded image URL
-                      quill.insertEmbed(range.index - 1, 'image', url);
-                    }
-                  });
-                }
-              });
-            // Return empty delta to prevent base64 insertion initially
-            return { ops: [] };
-          }
-          return delta;
-        }]
-      ]
-    }
-  });
-
-  // Attach clipboard image paste handler to all editors (handles raw image blobs)
-  useEffect(() => {
-    const disposers: Array<() => void> = [];
-    Object.values(quillRefs.current).forEach((ref) => {
-      const quill = (ref as any)?.getEditor?.();
-      const root = quill?.root as HTMLElement | undefined;
-      if (!quill || !root) return;
-      const handlePaste = async (e: ClipboardEvent) => {
-        const items = e.clipboardData?.items;
-        if (!items || !onImageUpload) return;
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          if (item.kind === 'file' && item.type.startsWith('image/')) {
-            const blob = item.getAsFile();
-            if (!blob) continue;
-            e.preventDefault();
-            const file = new File([blob], 'pasted-image.png', { type: blob.type });
-            const url = await onImageUpload(file);
-            if (url) {
-              const range = quill.getSelection(true);
-              quill.insertEmbed(range?.index ?? 0, 'image', url);
-            }
-          }
-        }
-      };
-      root.addEventListener('paste', handlePaste as any);
-      disposers.push(() => root.removeEventListener('paste', handlePaste as any));
-    });
-    return () => disposers.forEach((d) => d());
-  }, [questions, answers, onImageUpload]);
-
-  const formats = [
-    'header',
-    'font',
-    'size',
-    'bold',
-    'italic',
-    'underline',
-    'color',
-    'background',
-    'image',
-    'clean',
-  ];
 
   return (
     <div className="space-y-6">
@@ -142,17 +22,12 @@ export const CustomQuestionJournal = ({
           <h3 className="text-lg font-semibold text-white">
             {question}
           </h3>
-          <div className={`h-[200px] custom-question-editor-${index}`}>
-            <ReactQuill
-              ref={(el) => (quillRefs.current[index] = el)}
-              theme="snow"
-              value={answers[index] || ""}
-              onChange={(value) => onAnswerChange(index, value)}
-              modules={getModules(index)}
-              formats={formats}
-              className="h-[150px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[100px]"
-            />
-          </div>
+          <RichJournalEditor
+            value={answers[index] || ""}
+            onChange={(value) => onAnswerChange(index, value)}
+            onImageUpload={onImageUpload}
+            height={200}
+          />
         </div>
       ))}
       
@@ -161,17 +36,12 @@ export const CustomQuestionJournal = ({
         <h3 className="text-lg font-semibold text-white">
           Do you want to add anything else?
         </h3>
-        <div className="h-[250px] custom-question-editor--1">
-          <ReactQuill
-            ref={(el) => (quillRefs.current[-1] = el)}
-            theme="snow"
-            value={answers[-1] || ""}
-            onChange={(value) => onAnswerChange(-1, value)}
-            modules={getModules(-1)}
-            formats={formats}
-            className="h-[200px] rounded-xl [&_.ql-container]:rounded-b-xl [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-transparent [&_.ql-toolbar]:border-transparent [&_.ql-container]:bg-background [&_.ql-toolbar]:bg-muted/80 [&_.ql-editor]:text-foreground [&_.ql-editor]:min-h-[150px]"
-          />
-        </div>
+        <RichJournalEditor
+          value={answers[-1] || ""}
+          onChange={(value) => onAnswerChange(-1, value)}
+          onImageUpload={onImageUpload}
+          height={250}
+        />
       </div>
     </div>
   );
