@@ -120,6 +120,23 @@ export const useJournalEntries = (
 
           if (error) throw error;
         } else {
+          // Verify trade exists before inserting new entry
+          const { data: tradeExists, error: tradeError } = await supabase
+            .from('trades')
+            .select('id')
+            .eq('id', currentTradeId)
+            .maybeSingle();
+
+          if (tradeError) {
+            console.error('Error checking trade:', tradeError);
+            return;
+          }
+
+          if (!tradeExists) {
+            console.warn('Trade does not exist in database yet, skipping journal save');
+            return;
+          }
+
           // Insert new entry
           const { data, error } = await supabase
             .from('journal_entries')
@@ -139,11 +156,14 @@ export const useJournalEntries = (
         }
       } catch (error: any) {
         console.error('Error saving journal entry:', error);
-        toast({
-          title: 'Error saving',
-          description: 'Failed to auto-save journal entry.',
-          variant: 'destructive',
-        });
+        // Only show error toast if it's not a foreign key constraint error (which we now prevent above)
+        if (error.code !== '23503') {
+          toast({
+            title: 'Error saving',
+            description: 'Failed to auto-save journal entry.',
+            variant: 'destructive',
+          });
+        }
       } finally {
         setSaving(false);
       }
