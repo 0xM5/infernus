@@ -325,7 +325,10 @@ export const TradeDetailsModal = ({
         return;
       }
 
-      updateEntry(journalContent, (selectedProfile === "default" || !selectedProfile) ? "standard_questions" : "custom_questions");
+      const entryType = (!activeProfile?.selected_question_profile || activeProfile.selected_question_profile === "default") 
+        ? "standard_questions" 
+        : "custom_questions";
+      updateEntry(journalContent, entryType);
     }
   }, [selectedEdges, customAnswers, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
       bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments, currentTrade?.symbol, activeProfile?.id]);
