@@ -320,7 +320,7 @@ export const TradeDetailsModal = ({
         return;
       }
 
-      updateEntry(journalContent, selectedProfile === "default" ? "standard_questions" : "custom_questions");
+      updateEntry(journalContent, (!activeProfile?.selected_question_profile || activeProfile.selected_question_profile === "default") ? "standard_questions" : "custom_questions");
     }
   }, [selectedEdges, customAnswers, energy, energyWhy, stress, stressWhy, confidence, confidenceWhy, 
       bias, regime, vwap, keyLevels, volume, fixTomorrow, additionalComments, currentTrade?.symbol, activeProfile?.id]);
@@ -329,19 +329,35 @@ export const TradeDetailsModal = ({
   const [profileQuestions, setProfileQuestions] = useState<string[]>([]);
 
   useEffect(() => {
-    if (selectedProfile !== "default") {
-      const savedProfiles = localStorage.getItem("questionProfiles");
-      if (savedProfiles) {
-        const profiles = JSON.parse(savedProfiles);
-        const profile = profiles.find((p: any) => p.id === selectedProfile);
-        if (profile) {
-          setProfileQuestions(profile.questions);
-        }
+    const loadQuestions = async () => {
+      if (!activeProfile?.selected_question_profile || activeProfile.selected_question_profile === "default") {
+        setProfileQuestions([]);
+        return;
       }
-    } else {
-      setProfileQuestions([]);
-    }
-  }, [selectedProfile]);
+
+      try {
+        const { data, error } = await supabase
+          .from('custom_questions')
+          .select('questions')
+          .eq('user_id', user?.id)
+          .eq('profile_name', activeProfile.selected_question_profile)
+          .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data && Array.isArray(data.questions)) {
+          setProfileQuestions(data.questions);
+        } else {
+          setProfileQuestions([]);
+        }
+      } catch (error) {
+        console.error('Error loading custom questions:', error);
+        setProfileQuestions([]);
+      }
+    };
+
+    loadQuestions();
+  }, [activeProfile?.selected_question_profile, user?.id]);
 
   // Load edges from localStorage on mount
   useEffect(() => {
@@ -776,7 +792,7 @@ export const TradeDetailsModal = ({
                     />
                   </div>
                 </div>
-              ) : selectedProfile === "default" && (
+              ) : (!activeProfile?.selected_question_profile || activeProfile.selected_question_profile === "default") && (
                 <div className="space-y-4 mb-4">
                   <Button
                     variant="outline"
@@ -824,7 +840,7 @@ export const TradeDetailsModal = ({
                 </div>
               )}
 
-              {dayTrades[0]?.symbol !== 'SCRATCHPAD' && selectedProfile !== "default" ? (
+              {dayTrades[0]?.symbol !== 'SCRATCHPAD' && activeProfile?.selected_question_profile && activeProfile.selected_question_profile !== "default" && profileQuestions.length > 0 ? (
                 <CustomQuestionJournal
                   questions={profileQuestions}
                   answers={customAnswers}
