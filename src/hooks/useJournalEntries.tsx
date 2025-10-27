@@ -123,13 +123,13 @@ export const useJournalEntries = (
           // Insert new entry
           const { data, error } = await supabase
             .from('journal_entries')
-            .insert([{
+            .insert({
               trade_id: currentTradeId,
               profile_id: currentProfileId,
               user_id: currentUserId,
               entry_type: entryData.entry_type,
               content: entryData.content,
-            }])
+            })
             .select()
             .single();
 
