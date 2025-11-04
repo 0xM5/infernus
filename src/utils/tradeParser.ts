@@ -11,7 +11,7 @@ interface ParsedTrade {
   exitTime?: string;
 }
 
-type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "TradingView" | "Unknown";
+type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "TradingView" | "Thinkorswim" | "Unknown";
 
 // Point values for different futures contracts
 const POINT_VALUES: { [key: string]: number } = {
@@ -520,8 +520,180 @@ export const parseTradingViewCSV = (content: string): ParsedTrade[] => {
   return trades;
 };
 
+export const parseThinkorswimCSV = (content: string): ParsedTrade[] => {
+  const lines = content.split('\n');
+  const trades: ParsedTrade[] = [];
+  
+  // Find the Cash Balance section with TRD entries
+  let inCashBalanceSection = false;
+  const cashBalanceLines: string[] = [];
+  
+  for (const line of lines) {
+    if (line.includes('Cash Balance')) {
+      inCashBalanceSection = true;
+      continue;
+    }
+    if (inCashBalanceSection) {
+      if (line.trim() === '' || line.includes('Futures Statements')) {
+        break;
+      }
+      cashBalanceLines.push(line);
+    }
+  }
+  
+  if (cashBalanceLines.length < 2) return trades;
+  
+  // Parse the header
+  const headerLine = cashBalanceLines[0];
+  const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
+  
+  const dateIdx = headers.indexOf('DATE');
+  const timeIdx = headers.indexOf('TIME');
+  const typeIdx = headers.indexOf('TYPE');
+  const descIdx = headers.indexOf('DESCRIPTION');
+  const feesIdx = headers.indexOf('Commissions & Fees');
+  const amountIdx = headers.indexOf('AMOUNT');
+  
+  console.log('Thinkorswim headers:', headers);
+  console.log('Column indices:', { dateIdx, timeIdx, typeIdx, descIdx, feesIdx, amountIdx });
+  
+  // Store open positions by option key (symbol + strike + type)
+  const openPositions = new Map<string, any[]>();
+  
+  for (let i = 1; i < cashBalanceLines.length; i++) {
+    const line = cashBalanceLines[i].trim();
+    if (!line || line.startsWith('TOTAL')) continue;
+    
+    // Parse CSV with proper handling of quoted fields
+    const columns: string[] = [];
+    let currentField = '';
+    let inQuotes = false;
+    
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        columns.push(currentField.trim());
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
+    columns.push(currentField.trim());
+    
+    const type = columns[typeIdx];
+    if (type !== 'TRD') continue;
+    
+    const dateStr = columns[dateIdx];
+    const timeStr = columns[timeIdx];
+    const description = columns[descIdx];
+    const feesStr = columns[feesIdx] || '0';
+    const amountStr = columns[amountIdx] || '0';
+    
+    if (!dateStr || !description) continue;
+    
+    // Parse description: "BOT +1 SPX 100 (Weeklys) 4 NOV 25 6785 PUT @7.30 CBOE"
+    const descMatch = description.match(/(BOT|SOLD)\s+([\+\-]\d+)\s+(\w+)\s+(\d+)\s+\([^)]+\)\s+.*?(\d+)\s+(CALL|PUT)\s+@([\d.]+)/i);
+    
+    if (!descMatch) {
+      console.log('Failed to parse description:', description);
+      continue;
+    }
+    
+    const [, action, qtyStr, symbol, multiplierStr, strike, optionType, priceStr] = descMatch;
+    const quantity = Math.abs(parseInt(qtyStr));
+    const multiplier = parseInt(multiplierStr);
+    const price = parseFloat(priceStr);
+    const fees = Math.abs(parseFloat(feesStr.replace(/[$(),]/g, '')));
+    const amount = parseFloat(amountStr.replace(/[$(),]/g, '')) * (amountStr.includes('(') ? -1 : 1);
+    
+    // Create unique key for matching
+    const optionKey = `${symbol} ${strike} ${optionType}`;
+    
+    // Parse date
+    const date = new Date(dateStr + ' ' + timeStr);
+    if (isNaN(date.getTime())) continue;
+    
+    const time = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true 
+    });
+    
+    if (action === 'BOT') {
+      // Opening position
+      if (!openPositions.has(optionKey)) {
+        openPositions.set(optionKey, []);
+      }
+      openPositions.get(optionKey)!.push({
+        date,
+        symbol,
+        optionKey,
+        quantity,
+        entryPrice: price,
+        entryTime: time,
+        entryFees: fees,
+        entryAmount: Math.abs(amount),
+      });
+    } else if (action === 'SOLD') {
+      // Closing position
+      const opens = openPositions.get(optionKey);
+      if (opens && opens.length > 0) {
+        // Match quantity - may need to close multiple positions
+        let remainingQty = quantity;
+        const exitPrice = price;
+        const exitTime = time;
+        const exitFees = fees;
+        
+        while (remainingQty > 0 && opens.length > 0) {
+          const openTrade = opens[0];
+          const closeQty = Math.min(remainingQty, openTrade.quantity);
+          
+          // Calculate profit
+          const profit = ((exitPrice - openTrade.entryPrice) * closeQty * multiplier) - (openTrade.entryFees + exitFees);
+          
+          trades.push({
+            date: openTrade.date,
+            symbol,
+            quantity: closeQty,
+            entryPrice: openTrade.entryPrice,
+            exitPrice,
+            profit,
+            side: 'LONG',
+            commission: openTrade.entryFees + exitFees,
+            entryTime: openTrade.entryTime,
+            exitTime,
+          });
+          
+          if (closeQty >= openTrade.quantity) {
+            opens.shift();
+          } else {
+            openTrade.quantity -= closeQty;
+          }
+          
+          remainingQty -= closeQty;
+        }
+        
+        if (opens.length === 0) {
+          openPositions.delete(optionKey);
+        }
+      }
+    }
+  }
+  
+  console.log(`Parsed ${trades.length} completed trades from Thinkorswim CSV`);
+  return trades;
+};
+
 export const detectTradeProvider = (content: string): TradeProvider => {
-  const firstLines = content.split('\n').slice(0, 5).join('\n').toLowerCase();
+  const firstLines = content.split('\n').slice(0, 10).join('\n').toLowerCase();
+  
+  // Thinkorswim detection (check first as it has distinctive format)
+  if (firstLines.includes('account statement') && firstLines.includes('cash balance') && (firstLines.includes('bot') || firstLines.includes('sold'))) {
+    return "Thinkorswim";
+  }
   
   // SierraChart detection
   if (firstLines.includes('datetime') && firstLines.includes('fillprice') && firstLines.includes('openclose')) {
@@ -569,6 +741,8 @@ export const parseTradeFile = (content: string, provider?: TradeProvider): Parse
       return parseTradovateCSV(content);
     case "TradingView":
       return parseTradingViewCSV(content);
+    case "Thinkorswim":
+      return parseThinkorswimCSV(content);
     default:
       // Try all parsers and return the one with most results
       const results = [
@@ -577,6 +751,7 @@ export const parseTradeFile = (content: string, provider?: TradeProvider): Parse
         parseInteractiveBrokersCSV(content),
         parseTradovateCSV(content),
         parseTradingViewCSV(content),
+        parseThinkorswimCSV(content),
       ];
       return results.reduce((best, current) => current.length > best.length ? current : best, []);
   }
