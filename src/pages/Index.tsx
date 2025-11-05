@@ -61,7 +61,7 @@ const Index = () => {
               Infernus<span className="text-primary">.</span>app
             </h1>
             
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground text-gray-400 px-4" style={{
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground text-gray-400 px-4 mb-8 sm:mb-12 md:mb-16" style={{
             fontFamily: 'Inter, sans-serif'
           }}>
               Built for what traders{" "}
@@ -74,18 +74,20 @@ const Index = () => {
               need.
             </p>
             
-            <div className="max-w-2xl mx-4 sm:mx-auto mt-8 sm:mt-12 md:mt-16 space-y-6">
-              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
-              fontFamily: 'Inter, sans-serif'
+            <div className="max-w-2xl mx-4 sm:mx-auto space-y-6">
+              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed animate-fade-in" style={{
+              fontFamily: 'Inter, sans-serif',
+              animationDuration: '2s',
+              animationDelay: '0.5s',
+              animationFillMode: 'backwards'
             }}>
-                <span className="font-bold">Infernus</span> /ɪnˈfɜːrnəs/ — noun.{" "}
-                <span className="inline-block animate-fade-in" style={{ animationDelay: '1s', animationFillMode: 'backwards' }}>
+                <span className="font-bold">Infernus</span> /ɪnˈfɜːrnəs/ — noun. <span className="inline opacity-0 animate-fade-in" style={{ animationDelay: '2.5s', animationDuration: '2s', animationFillMode: 'forwards' }}>
                   Latin for "hell" or "the lower regions." Commonly used to denote the underworld, a place of torment, or intense fire and heat.
                 </span>
               </p>
               
-              <div className="flex flex-col items-start animate-fade-in" style={{ animationDelay: '3s', animationFillMode: 'backwards' }}>
-                <div className="text-primary mb-2">↓</div>
+              <div className="flex flex-col items-start opacity-0 animate-fade-in" style={{ animationDelay: '4.5s', animationDuration: '2s', animationFillMode: 'forwards' }}>
+                <div className="text-primary mb-2 animate-bounce" style={{ animationDuration: '3s' }}>↓</div>
                 <p className="text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
                 fontFamily: 'Inter, sans-serif'
               }}>
