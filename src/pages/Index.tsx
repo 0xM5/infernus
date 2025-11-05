@@ -74,14 +74,24 @@ const Index = () => {
               need.
             </p>
             
-            <div className="border border-border rounded-lg p-4 sm:p-6 max-w-md mx-4 sm:mx-auto mt-8 sm:mt-12 md:mt-16" style={{
-            backgroundColor: 'hsl(0 0% 7%)'
-          }}>
-              <p className="text-xs sm:text-sm text-muted-foreground text-gray-300 leading-relaxed" style={{
+            <div className="max-w-2xl mx-4 sm:mx-auto mt-8 sm:mt-12 md:mt-16 space-y-6">
+              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
               fontFamily: 'Inter, sans-serif'
             }}>
-                Infernus.app is in private beta. It's being built for traders who want to improve and not break the bank doing so.
+                <span className="font-bold">Infernus</span> /ɪnˈfɜːrnəs/ — noun.{" "}
+                <span className="inline-block animate-fade-in" style={{ animationDelay: '1s', animationFillMode: 'backwards' }}>
+                  Latin for "hell" or "the lower regions." Commonly used to denote the underworld, a place of torment, or intense fire and heat.
+                </span>
               </p>
+              
+              <div className="flex flex-col items-start animate-fade-in" style={{ animationDelay: '3s', animationFillMode: 'backwards' }}>
+                <div className="text-primary mb-2">↓</div>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                  <span className="font-bold">Translation —</span> This journal is for the traders who have been broken by the market. The ones who sit in silence after another loss, wondering if it is worth it. It is for the nights filled with doubt and the mornings you still choose to show up.
+                </p>
+              </div>
             </div>
             
             <Button onClick={() => navigate("/auth")} size="lg" className="rounded-full px-6 sm:px-8 text-sm sm:text-base">
