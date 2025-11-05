@@ -74,7 +74,7 @@ const Index = () => {
               need.
             </p>
             
-            <div className="max-w-2xl mx-4 sm:mx-auto space-y-6">
+            <div className="max-w-2xl mx-4 sm:mx-auto space-y-8">
               <div className="typewriter-container text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
               fontFamily: 'Inter, sans-serif'
             }}>
@@ -86,11 +86,17 @@ const Index = () => {
                 </div>
               </div>
               
-              <div className="flex flex-col items-start opacity-0" style={{ 
-                animation: 'fade-in 1.5s ease-out 4.5s forwards',
-                animationFillMode: 'forwards'
+              <div className="flex flex-col items-center" style={{ 
+                opacity: 0,
+                animation: 'fade-in 2s ease-in-out 4.5s forwards'
               }}>
-                <div className="text-primary mb-2" style={{ animation: 'bounce 3s ease-in-out infinite' }}>↓</div>
+                <div className="text-primary mb-4" style={{ animation: 'bounce 3s ease-in-out infinite' }}>↓</div>
+              </div>
+              
+              <div className="flex flex-col items-start" style={{ 
+                opacity: 0,
+                animation: 'fade-in 2s ease-in-out 5s forwards'
+              }}>
                 <p className="text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
                 fontFamily: 'Inter, sans-serif'
               }}>
