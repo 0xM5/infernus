@@ -142,11 +142,9 @@ All colors MUST be HSL.
 
   @keyframes typewriter {
     from { 
-      width: 0;
       opacity: 0;
     }
     to { 
-      width: 100%;
       opacity: 1;
     }
   }
@@ -154,26 +152,34 @@ All colors MUST be HSL.
   @keyframes push-left {
     from { 
       justify-content: center;
+      text-align: center;
     }
     to { 
       justify-content: flex-start;
+      text-align: left;
     }
   }
 
   .typewriter-container {
-    animation: push-left 0.5s ease-out 1s forwards;
+    animation: push-left 0.8s ease-out 1s forwards;
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .typewriter-container.pushed {
+    align-items: flex-start;
+    text-align: left;
   }
 
   .typewriter-text {
-    overflow: hidden;
-    white-space: nowrap;
-    width: 0;
     opacity: 0;
-    animation: typewriter 3s steps(150) 1.5s forwards;
+    animation: typewriter 3s ease-out 1.5s forwards;
   }
 }
+
 
 /* Quill dark theme adjustments using design tokens */
 .ql-toolbar.ql-snow {

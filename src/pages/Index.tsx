@@ -78,16 +78,19 @@ const Index = () => {
               <div className="typewriter-container text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
               fontFamily: 'Inter, sans-serif'
             }}>
-                <p className="flex-shrink-0">
+                <div>
                   <span className="font-bold">Infernus</span> /ɪnˈfɜːrnəs/ — noun.{" "}
-                </p>
-                <p className="typewriter-text ml-1">
-                  Latin for "hell" or "the lower regions." Commonly used to denote the underworld, a place of torment, or intense fire and heat.
-                </p>
+                  <span className="typewriter-text">
+                    Latin for "hell" or "the lower regions." Commonly used to denote the underworld, a place of torment, or intense fire and heat.
+                  </span>
+                </div>
               </div>
               
-              <div className="flex flex-col items-start opacity-0 animate-fade-in" style={{ animationDelay: '4.5s', animationDuration: '1.5s', animationFillMode: 'forwards' }}>
-                <div className="text-primary mb-2 animate-bounce" style={{ animationDuration: '3s' }}>↓</div>
+              <div className="flex flex-col items-start opacity-0" style={{ 
+                animation: 'fade-in 1.5s ease-out 4.5s forwards',
+                animationFillMode: 'forwards'
+              }}>
+                <div className="text-primary mb-2" style={{ animation: 'bounce 3s ease-in-out infinite' }}>↓</div>
                 <p className="text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
                 fontFamily: 'Inter, sans-serif'
               }}>
