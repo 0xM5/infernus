@@ -75,18 +75,18 @@ const Index = () => {
             </p>
             
             <div className="max-w-2xl mx-4 sm:mx-auto space-y-6">
-              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed animate-fade-in" style={{
-              fontFamily: 'Inter, sans-serif',
-              animationDuration: '2s',
-              animationDelay: '0.5s',
-              animationFillMode: 'backwards'
+              <div className="typewriter-container text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
+              fontFamily: 'Inter, sans-serif'
             }}>
-                <span className="font-bold">Infernus</span> /ɪnˈfɜːrnəs/ — noun. <span className="inline opacity-0 animate-fade-in" style={{ animationDelay: '2.5s', animationDuration: '2s', animationFillMode: 'forwards' }}>
+                <p className="flex-shrink-0">
+                  <span className="font-bold">Infernus</span> /ɪnˈfɜːrnəs/ — noun.{" "}
+                </p>
+                <p className="typewriter-text ml-1">
                   Latin for "hell" or "the lower regions." Commonly used to denote the underworld, a place of torment, or intense fire and heat.
-                </span>
-              </p>
+                </p>
+              </div>
               
-              <div className="flex flex-col items-start opacity-0 animate-fade-in" style={{ animationDelay: '4.5s', animationDuration: '2s', animationFillMode: 'forwards' }}>
+              <div className="flex flex-col items-start opacity-0 animate-fade-in" style={{ animationDelay: '4.5s', animationDuration: '1.5s', animationFillMode: 'forwards' }}>
                 <div className="text-primary mb-2 animate-bounce" style={{ animationDuration: '3s' }}>↓</div>
                 <p className="text-xs sm:text-sm text-gray-400 leading-relaxed" style={{
                 fontFamily: 'Inter, sans-serif'
