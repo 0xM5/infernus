@@ -11,7 +11,7 @@ interface ParsedTrade {
   exitTime?: string;
 }
 
-type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "TradingView" | "Thinkorswim" | "Unknown";
+type TradeProvider = "SierraChart" | "Robinhood" | "InteractiveBrokers" | "Tradovate" | "TradingView" | "Thinkorswim" | "TopOne" | "Unknown";
 
 // Point values for different futures contracts
 const POINT_VALUES: { [key: string]: number } = {
@@ -687,8 +687,89 @@ export const parseThinkorswimCSV = (content: string): ParsedTrade[] => {
   return trades;
 };
 
+export const parseTopOneCSV = (content: string): ParsedTrade[] => {
+  const lines = content.split('\n');
+  const trades: ParsedTrade[] = [];
+  
+  if (lines.length < 2) return trades;
+  
+  // Parse header - handle BOM and quotes
+  const headerLine = lines[0].replace(/^\uFEFF/, '');
+  const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
+  console.log('TopOne headers:', headers);
+  
+  const ticketIdx = headers.findIndex(h => h.toLowerCase().includes('ticket'));
+  const symbolIdx = headers.findIndex(h => h.toLowerCase() === 'symbol');
+  const sideIdx = headers.findIndex(h => h.toLowerCase() === 'side');
+  const openTimeIdx = headers.findIndex(h => h.toLowerCase().includes('open time'));
+  const openPriceIdx = headers.findIndex(h => h.toLowerCase().includes('open price'));
+  const closePriceIdx = headers.findIndex(h => h.toLowerCase().includes('close price'));
+  const pnlIdx = headers.findIndex(h => h.toLowerCase() === 'pnl');
+  const lotsIdx = headers.findIndex(h => h.toLowerCase() === 'lots');
+  const commissionsIdx = headers.findIndex(h => h.toLowerCase() === 'commissions');
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+    
+    const symbol = columns[symbolIdx];
+    const side = columns[sideIdx]?.toUpperCase();
+    const openTimeStr = columns[openTimeIdx];
+    const openPrice = parseFloat(columns[openPriceIdx] || '0');
+    const closePrice = parseFloat(columns[closePriceIdx] || '0');
+    const pnlStr = columns[pnlIdx] || '';
+    const lots = parseFloat(columns[lotsIdx] || '1');
+    const commission = parseFloat(columns[commissionsIdx] || '0');
+    
+    if (!symbol || !openTimeStr || !openPrice) continue;
+    
+    // Parse date from "DD/MM/YYYY HH:MM:SS" format
+    const dateParts = openTimeStr.split(' ');
+    const dateStr = dateParts[0];
+    const timeStr = dateParts[1] || '';
+    const [day, month, year] = dateStr.split('/').map(Number);
+    
+    if (!day || !month || !year) continue;
+    
+    const date = new Date(year, month - 1, day);
+    if (isNaN(date.getTime())) continue;
+    
+    // Parse PnL - handle formats like "$200", "-$200", "-$187.5"
+    let pnl = 0;
+    if (pnlStr) {
+      const cleanPnl = pnlStr.replace(/[$,]/g, '');
+      pnl = parseFloat(cleanPnl) || 0;
+    }
+    
+    // Subtract commission from profit
+    const profitAfterCommission = pnl - commission;
+    
+    trades.push({
+      date,
+      symbol,
+      quantity: lots,
+      entryPrice: openPrice,
+      exitPrice: closePrice,
+      profit: profitAfterCommission,
+      side: side === 'BUY' ? 'LONG' : 'SHORT',
+      commission,
+      entryTime: timeStr,
+    });
+  }
+  
+  console.log(`Parsed ${trades.length} trades from TopOne CSV`);
+  return trades;
+};
+
 export const detectTradeProvider = (content: string): TradeProvider => {
   const firstLines = content.split('\n').slice(0, 10).join('\n').toLowerCase();
+  
+  // TopOne detection (check for distinctive header format)
+  if (firstLines.includes('ticket') && firstLines.includes('open time') && firstLines.includes('close time') && firstLines.includes('pnl') && firstLines.includes('lots')) {
+    return "TopOne";
+  }
   
   // Thinkorswim detection (check first as it has distinctive format)
   if (firstLines.includes('account statement') && firstLines.includes('cash balance') && (firstLines.includes('bot') || firstLines.includes('sold'))) {
@@ -743,6 +824,8 @@ export const parseTradeFile = (content: string, provider?: TradeProvider): Parse
       return parseTradingViewCSV(content);
     case "Thinkorswim":
       return parseThinkorswimCSV(content);
+    case "TopOne":
+      return parseTopOneCSV(content);
     default:
       // Try all parsers and return the one with most results
       const results = [
@@ -752,6 +835,7 @@ export const parseTradeFile = (content: string, provider?: TradeProvider): Parse
         parseTradovateCSV(content),
         parseTradingViewCSV(content),
         parseThinkorswimCSV(content),
+        parseTopOneCSV(content),
       ];
       return results.reduce((best, current) => current.length > best.length ? current : best, []);
   }
