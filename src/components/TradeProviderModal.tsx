@@ -11,6 +11,7 @@ const providers = [
   "InteractiveBrokers",
   "Robinhood",
   "SierraChart",
+  "TopOne",
   "Tradovate",
   "TradingView",
 ];
