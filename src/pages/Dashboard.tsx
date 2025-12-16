@@ -281,7 +281,21 @@ const Index = () => {
         })
       : monthlyTrades;
     
-    const totalPnL = tradesWithCommissions.reduce((sum, trade) => sum + trade.profit, 0);
+    // DEBUG: Log each trade's profit to find the issue
+    console.log('=== Monthly Stats Debug ===');
+    console.log('Total trades for month:', tradesWithCommissions.length);
+    tradesWithCommissions.forEach(t => {
+      console.log(`Trade: ${t.symbol} on ${t.date.toISOString().split('T')[0]}, profit: ${t.profit}, type: ${typeof t.profit}`);
+    });
+    
+    const totalPnL = tradesWithCommissions.reduce((sum, trade) => {
+      const result = sum + trade.profit;
+      console.log(`Running total: ${sum} + ${trade.profit} = ${result}`);
+      return result;
+    }, 0);
+    
+    console.log('Final totalPnL:', totalPnL);
+    
     const winningTrades = tradesWithCommissions.filter(trade => trade.profit > 0);
     const losingTrades = tradesWithCommissions.filter(trade => trade.profit < 0);
     const winners = winningTrades.length;
