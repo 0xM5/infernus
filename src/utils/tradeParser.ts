@@ -706,7 +706,7 @@ export const parseTopOneCSV = (content: string): ParsedTrade[] => {
   const closePriceIdx = headers.findIndex(h => h.toLowerCase().includes('close price'));
   const pnlIdx = headers.findIndex(h => h.toLowerCase() === 'pnl');
   const lotsIdx = headers.findIndex(h => h.toLowerCase() === 'lots');
-  
+  const commissionsIdx = headers.findIndex(h => h.toLowerCase() === 'commissions');
   
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -721,6 +721,7 @@ export const parseTopOneCSV = (content: string): ParsedTrade[] => {
     const closePrice = parseFloat(columns[closePriceIdx] || '0');
     const pnlStr = columns[pnlIdx] || '';
     const lots = parseFloat(columns[lotsIdx] || '1');
+    const commission = parseFloat(columns[commissionsIdx] || '0');
     
     if (!symbol || !openTimeStr || !openPrice) continue;
     
@@ -736,12 +737,14 @@ export const parseTopOneCSV = (content: string): ParsedTrade[] => {
     if (isNaN(date.getTime())) continue;
     
     // Parse PnL - handle formats like "$200", "-$200", "-$187.5"
-    // TopOne PnL is already net of commissions, so we use it directly
     let pnl = 0;
     if (pnlStr) {
       const cleanPnl = pnlStr.replace(/[$,]/g, '');
       pnl = parseFloat(cleanPnl) || 0;
     }
+    
+    // Subtract commission from profit
+    const profitAfterCommission = pnl - commission;
     
     trades.push({
       date,
@@ -749,8 +752,9 @@ export const parseTopOneCSV = (content: string): ParsedTrade[] => {
       quantity: lots,
       entryPrice: openPrice,
       exitPrice: closePrice,
-      profit: pnl,
+      profit: profitAfterCommission,
       side: side === 'BUY' ? 'LONG' : 'SHORT',
+      commission,
       entryTime: timeStr,
     });
   }
