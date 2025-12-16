@@ -43,16 +43,16 @@ const Index = () => {
   
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Convert DB trades to display format
+  // Convert DB trades to display format - ensure profit is always a number
   const trades: Trade[] = dbTrades.map(t => ({
     id: t.id,
     date: new Date(t.date),
-    profit: t.profit,
+    profit: Number(t.profit) || 0,
     symbol: t.symbol,
     side: t.side as "LONG" | "SHORT" | undefined,
-    quantity: t.quantity || undefined,
-    entryPrice: t.entry_price || undefined,
-    exitPrice: t.exit_price || undefined,
+    quantity: t.quantity ? Number(t.quantity) : undefined,
+    entryPrice: t.entry_price ? Number(t.entry_price) : undefined,
+    exitPrice: t.exit_price ? Number(t.exit_price) : undefined,
   }));
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [isYearlyView, setIsYearlyView] = useState(false);
