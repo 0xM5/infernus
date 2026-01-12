@@ -60,13 +60,27 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
   const symbolIdx = headers.indexOf('Symbol');
   const quantityIdx = headers.indexOf('Quantity');
   const fillPriceIdx = headers.indexOf('FillPrice');
+  const filledQuantityIdx = headers.indexOf('FilledQuantity');
   const buySellIdx = headers.indexOf('BuySell');
   const openCloseIdx = headers.indexOf('OpenClose');
+  const internalOrderIdIdx = headers.indexOf('InternalOrderID');
+  const parentInternalOrderIdIdx = headers.indexOf('ParentInternalOrderID');
 
-  console.log('Column indices:', { dateTimeIdx, symbolIdx, quantityIdx, fillPriceIdx, buySellIdx, openCloseIdx });
+  console.log('Column indices:', { dateTimeIdx, symbolIdx, quantityIdx, fillPriceIdx, buySellIdx, openCloseIdx, internalOrderIdIdx, parentInternalOrderIdIdx });
 
-  // Group trades by pairs (Open + Close)
-  const openTrades = new Map<string, any>();
+  // Parse all fills first
+  interface Fill {
+    date: Date;
+    symbol: string;
+    quantity: number;
+    fillPrice: number;
+    buySell: string;
+    openClose: string;
+    internalOrderId: string;
+    parentInternalOrderId: string;
+  }
+  
+  const allFills: Fill[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -81,66 +95,120 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
       const fillPrice = parseFloat(columns[fillPriceIdx]?.trim() || '0');
       const buySell = columns[buySellIdx]?.trim();
       const openClose = columns[openCloseIdx]?.trim();
+      const internalOrderId = columns[internalOrderIdIdx]?.trim() || '';
+      const parentInternalOrderId = columns[parentInternalOrderIdIdx]?.trim() || '';
 
       if (!dateStr || !symbol || !quantity || !fillPrice) continue;
 
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) continue;
 
-      console.log('Parsed trade:', { dateStr, symbol, quantity, fillPrice, buySell, openClose });
-
-      if (openClose === 'Open') {
-        // Store the opening trade
-        openTrades.set(symbol, {
-          date,
-          symbol,
-          quantity,
-          entryPrice: fillPrice,
-          buySell,
-        });
-      } else if (openClose === 'Close') {
-        // Find the matching open trade
-        const openTrade = openTrades.get(symbol);
-        if (openTrade) {
-          const pointValue = getPointValue(symbol);
-          
-          // Calculate profit based on whether we bought or sold first
-          let priceDiff: number;
-          if (openTrade.buySell === 'Buy') {
-            // Bought low, sold high
-            priceDiff = fillPrice - openTrade.entryPrice;
-          } else {
-            // Sold high, bought low (short)
-            priceDiff = openTrade.entryPrice - fillPrice;
-          }
-          
-          const profit = priceDiff * quantity * pointValue;
-
-          console.log('Completed trade:', {
-            symbol,
-            entryPrice: openTrade.entryPrice,
-            exitPrice: fillPrice,
-            profit,
-            pointValue,
-            priceDiff
-          });
-
-          trades.push({
-            date: openTrade.date,
-            symbol,
-            quantity,
-            entryPrice: openTrade.entryPrice,
-            exitPrice: fillPrice,
-            profit,
-            side: openTrade.buySell === 'Buy' ? 'LONG' : 'SHORT',
-          });
-
-          openTrades.delete(symbol);
-        }
-      }
+      allFills.push({
+        date,
+        symbol,
+        quantity,
+        fillPrice,
+        buySell,
+        openClose,
+        internalOrderId,
+        parentInternalOrderId,
+      });
     } catch (error) {
       console.error('Error parsing line:', line, error);
       continue;
+    }
+  }
+
+  console.log('Total fills parsed:', allFills.length);
+
+  // Group opening fills by InternalOrderID
+  const openTrades = new Map<string, {
+    date: Date;
+    symbol: string;
+    quantity: number;
+    entryPrice: number;
+    buySell: string;
+    internalOrderId: string;
+  }>();
+
+  // Group closing fills by ParentInternalOrderID
+  const closingFillsByParent = new Map<string, Fill[]>();
+
+  for (const fill of allFills) {
+    if (fill.openClose === 'Open') {
+      // For opening trades, store by InternalOrderID
+      openTrades.set(fill.internalOrderId, {
+        date: fill.date,
+        symbol: fill.symbol,
+        quantity: fill.quantity,
+        entryPrice: fill.fillPrice,
+        buySell: fill.buySell,
+        internalOrderId: fill.internalOrderId,
+      });
+    } else if (fill.openClose === 'Close' || fill.openClose === 'Filled') {
+      // For closing fills, group by ParentInternalOrderID
+      const parentId = fill.parentInternalOrderId;
+      if (parentId) {
+        if (!closingFillsByParent.has(parentId)) {
+          closingFillsByParent.set(parentId, []);
+        }
+        closingFillsByParent.get(parentId)!.push(fill);
+      }
+    }
+  }
+
+  console.log('Open trades:', openTrades.size);
+  console.log('Closing fill groups:', closingFillsByParent.size);
+
+  // Match opening trades with their closing fills
+  for (const [internalOrderId, openTrade] of openTrades) {
+    const closingFills = closingFillsByParent.get(internalOrderId);
+    
+    if (closingFills && closingFills.length > 0) {
+      // Combine all partial fills into one trade
+      let totalQuantity = 0;
+      let weightedPriceSum = 0;
+      
+      for (const fill of closingFills) {
+        totalQuantity += fill.quantity;
+        weightedPriceSum += fill.fillPrice * fill.quantity;
+      }
+      
+      const avgExitPrice = weightedPriceSum / totalQuantity;
+      const pointValue = getPointValue(openTrade.symbol);
+      
+      // Calculate profit based on whether we bought or sold first
+      let priceDiff: number;
+      if (openTrade.buySell === 'Buy') {
+        // Long: Bought low, sold high
+        priceDiff = avgExitPrice - openTrade.entryPrice;
+      } else {
+        // Short: Sold high, bought low
+        priceDiff = openTrade.entryPrice - avgExitPrice;
+      }
+      
+      const profit = priceDiff * openTrade.quantity * pointValue;
+
+      console.log('Completed trade:', {
+        symbol: openTrade.symbol,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: avgExitPrice,
+        quantity: openTrade.quantity,
+        profit,
+        pointValue,
+        priceDiff,
+        partialFills: closingFills.length,
+      });
+
+      trades.push({
+        date: openTrade.date,
+        symbol: openTrade.symbol,
+        quantity: openTrade.quantity,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: avgExitPrice,
+        profit,
+        side: openTrade.buySell === 'Buy' ? 'LONG' : 'SHORT',
+      });
     }
   }
 
