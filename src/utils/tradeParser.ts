@@ -78,6 +78,7 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
     openClose: string;
     internalOrderId: string;
     parentInternalOrderId: string;
+    lineNumber: number;
   }
   
   const allFills: Fill[] = [];
@@ -112,6 +113,7 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
         openClose,
         internalOrderId,
         parentInternalOrderId,
+        lineNumber: i,
       });
     } catch (error) {
       console.error('Error parsing line:', line, error);
@@ -121,7 +123,7 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
 
   console.log('Total fills parsed:', allFills.length);
 
-  // Group opening fills by InternalOrderID
+  // Store opening fills by InternalOrderID
   const openTrades = new Map<string, {
     date: Date;
     symbol: string;
@@ -129,10 +131,14 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
     entryPrice: number;
     buySell: string;
     internalOrderId: string;
+    lineNumber: number;
   }>();
 
   // Group closing fills by ParentInternalOrderID
   const closingFillsByParent = new Map<string, Fill[]>();
+  
+  // Track closing fills without parent (will match by position/time)
+  const closingFillsWithoutParent: Fill[] = [];
 
   for (const fill of allFills) {
     if (fill.openClose === 'Open') {
@@ -144,27 +150,37 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
         entryPrice: fill.fillPrice,
         buySell: fill.buySell,
         internalOrderId: fill.internalOrderId,
+        lineNumber: fill.lineNumber,
       });
     } else if (fill.openClose === 'Close' || fill.openClose === 'Filled') {
-      // For closing fills, group by ParentInternalOrderID
+      // For closing fills, group by ParentInternalOrderID if it exists
       const parentId = fill.parentInternalOrderId;
       if (parentId) {
         if (!closingFillsByParent.has(parentId)) {
           closingFillsByParent.set(parentId, []);
         }
         closingFillsByParent.get(parentId)!.push(fill);
+      } else {
+        // No parent ID - track separately for position-based matching
+        closingFillsWithoutParent.push(fill);
       }
     }
   }
 
   console.log('Open trades:', openTrades.size);
-  console.log('Closing fill groups:', closingFillsByParent.size);
+  console.log('Closing fill groups with parent:', closingFillsByParent.size);
+  console.log('Closing fills without parent:', closingFillsWithoutParent.length);
 
-  // Match opening trades with their closing fills
+  // Track which open trades have been matched
+  const matchedOpenTrades = new Set<string>();
+
+  // First, match opening trades with their closing fills by ParentInternalOrderID
   for (const [internalOrderId, openTrade] of openTrades) {
     const closingFills = closingFillsByParent.get(internalOrderId);
     
     if (closingFills && closingFills.length > 0) {
+      matchedOpenTrades.add(internalOrderId);
+      
       // Combine all partial fills into one trade
       let totalQuantity = 0;
       let weightedPriceSum = 0;
@@ -189,7 +205,7 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
       
       const profit = priceDiff * openTrade.quantity * pointValue;
 
-      console.log('Completed trade:', {
+      console.log('Completed trade (matched by parent):', {
         symbol: openTrade.symbol,
         entryPrice: openTrade.entryPrice,
         exitPrice: avgExitPrice,
@@ -206,6 +222,65 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
         quantity: openTrade.quantity,
         entryPrice: openTrade.entryPrice,
         exitPrice: avgExitPrice,
+        profit,
+        side: openTrade.buySell === 'Buy' ? 'LONG' : 'SHORT',
+      });
+    }
+  }
+
+  // Now match closing fills without parent to remaining open trades by symbol and timing
+  // Sort unmatched open trades by line number (chronological order)
+  const unmatchedOpenTrades = Array.from(openTrades.entries())
+    .filter(([id]) => !matchedOpenTrades.has(id))
+    .sort((a, b) => a[1].lineNumber - b[1].lineNumber);
+
+  // Sort closing fills without parent by line number
+  closingFillsWithoutParent.sort((a, b) => a.lineNumber - b.lineNumber);
+
+  for (const closeFill of closingFillsWithoutParent) {
+    // Find the earliest unmatched open trade with matching symbol and opposite direction
+    const matchIdx = unmatchedOpenTrades.findIndex(([id, open]) => 
+      open.symbol === closeFill.symbol && 
+      open.lineNumber < closeFill.lineNumber &&
+      ((open.buySell === 'Buy' && closeFill.buySell === 'Sell') ||
+       (open.buySell === 'Sell' && closeFill.buySell === 'Buy'))
+    );
+
+    if (matchIdx !== -1) {
+      const [matchedId, openTrade] = unmatchedOpenTrades[matchIdx];
+      unmatchedOpenTrades.splice(matchIdx, 1); // Remove from unmatched list
+      matchedOpenTrades.add(matchedId);
+
+      const pointValue = getPointValue(openTrade.symbol);
+      
+      // Calculate profit based on whether we bought or sold first
+      let priceDiff: number;
+      if (openTrade.buySell === 'Buy') {
+        // Long: Bought low, sold high
+        priceDiff = closeFill.fillPrice - openTrade.entryPrice;
+      } else {
+        // Short: Sold high, bought low
+        priceDiff = openTrade.entryPrice - closeFill.fillPrice;
+      }
+      
+      const profit = priceDiff * openTrade.quantity * pointValue;
+
+      console.log('Completed trade (matched by position):', {
+        symbol: openTrade.symbol,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: closeFill.fillPrice,
+        quantity: openTrade.quantity,
+        profit,
+        pointValue,
+        priceDiff,
+      });
+
+      trades.push({
+        date: openTrade.date,
+        symbol: openTrade.symbol,
+        quantity: openTrade.quantity,
+        entryPrice: openTrade.entryPrice,
+        exitPrice: closeFill.fillPrice,
         profit,
         side: openTrade.buySell === 'Buy' ? 'LONG' : 'SHORT',
       });
