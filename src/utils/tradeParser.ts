@@ -32,14 +32,66 @@ const POINT_VALUES: { [key: string]: number } = {
 };
 
 const getPointValue = (symbol: string): number => {
+  let baseSymbol = '';
+  
+  // Handle CME format like "MESH26_FUT_CME" or "ESH26_FUT_CME"
+  // Format: {PRODUCT}{MONTH}{YEAR}_FUT_CME
+  if (symbol.includes('_FUT_CME')) {
+    const productPart = symbol.split('_')[0]; // Get "MESH26" or "ESH26"
+    // Extract product code by removing month letter and year digits
+    // Month letters: F,G,H,J,K,M,N,Q,U,V,X,Z (Jan-Dec)
+    const monthLetters = 'FGHJKMNQUVXZ';
+    
+    // Find where the product code ends and month+year begins
+    for (let i = productPart.length - 1; i >= 0; i--) {
+      const char = productPart[i];
+      if (!/[0-9FGHJKMNQUVXZ]/.test(char)) {
+        // Found the end of the product code
+        baseSymbol = productPart.substring(0, i + 1);
+        break;
+      }
+    }
+    
+    // If still empty, try another approach - look for known prefixes
+    if (!baseSymbol) {
+      const knownProducts = ['MES', 'MNQ', 'MYM', 'M2K', 'ES', 'NQ', 'YM', 'RTY', 'GC', 'SI', 'CL', 'NG', 'ZB', 'ZN'];
+      for (const product of knownProducts) {
+        if (productPart.startsWith(product)) {
+          baseSymbol = product;
+          break;
+        }
+      }
+    }
+  } 
   // Handle SierraChart format like "F.US.MESZ25"
-  // Extract the base symbol (MES in this case)
-  const parts = symbol.split('.');
-  const symbolPart = parts[parts.length - 1]; // Get last part (MESZ25)
-  const baseSymbol = symbolPart.replace(/[0-9]/g, '').replace(/[A-Z]$/, ''); // Remove numbers and last letter (MES)
+  else if (symbol.includes('.')) {
+    const parts = symbol.split('.');
+    const symbolPart = parts[parts.length - 1]; // Get last part (MESZ25)
+    baseSymbol = symbolPart.replace(/[0-9]/g, '').replace(/[A-Z]$/, ''); // Remove numbers and last letter (MES)
+  }
+  // Fallback: try to match known products
+  else {
+    const knownProducts = ['MES', 'MNQ', 'MYM', 'M2K', 'ES', 'NQ', 'YM', 'RTY', 'GC', 'SI', 'CL', 'NG', 'ZB', 'ZN'];
+    for (const product of knownProducts) {
+      if (symbol.toUpperCase().includes(product)) {
+        baseSymbol = product;
+        break;
+      }
+    }
+  }
   
   console.log('Symbol:', symbol, 'Base symbol:', baseSymbol, 'Point value:', POINT_VALUES[baseSymbol] || 1);
   return POINT_VALUES[baseSymbol] || 1;
+};
+
+// Sierra Chart CME prices are in hundredths (693800 = 6938.00)
+// We need to convert to actual points for profit calculation
+const normalizeSierraChartPrice = (price: number): number => {
+  // If price is > 10000, it's likely in hundredths format
+  if (price > 10000) {
+    return price / 100;
+  }
+  return price;
 };
 
 export const parseSierraChartLog = (content: string): ParsedTrade[] => {
@@ -220,14 +272,18 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
       const avgExitPrice = weightedPriceSum / totalQuantity;
       const pointValue = getPointValue(openTrade.symbol);
       
+      // Normalize prices (Sierra Chart CME prices are in hundredths)
+      const normalizedEntry = normalizeSierraChartPrice(openTrade.entryPrice);
+      const normalizedExit = normalizeSierraChartPrice(avgExitPrice);
+      
       // Calculate profit based on whether we bought or sold first
       let priceDiff: number;
       if (openTrade.buySell === 'Buy') {
         // Long: Bought low, sold high
-        priceDiff = avgExitPrice - openTrade.entryPrice;
+        priceDiff = normalizedExit - normalizedEntry;
       } else {
         // Short: Sold high, bought low
-        priceDiff = openTrade.entryPrice - avgExitPrice;
+        priceDiff = normalizedEntry - normalizedExit;
       }
       
       // Use the opening quantity for profit calculation (should match closing total)
@@ -281,14 +337,18 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
 
       const pointValue = getPointValue(openTrade.symbol);
       
+      // Normalize prices (Sierra Chart CME prices are in hundredths)
+      const normalizedEntry = normalizeSierraChartPrice(openTrade.entryPrice);
+      const normalizedExit = normalizeSierraChartPrice(closeFill.fillPrice);
+      
       // Calculate profit based on whether we bought or sold first
       let priceDiff: number;
       if (openTrade.buySell === 'Buy') {
         // Long: Bought low, sold high
-        priceDiff = closeFill.fillPrice - openTrade.entryPrice;
+        priceDiff = normalizedExit - normalizedEntry;
       } else {
         // Short: Sold high, bought low
-        priceDiff = openTrade.entryPrice - closeFill.fillPrice;
+        priceDiff = normalizedEntry - normalizedExit;
       }
       
       const profit = priceDiff * openTrade.quantity * pointValue;
