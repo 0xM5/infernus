@@ -65,8 +65,10 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
   const openCloseIdx = headers.indexOf('OpenClose');
   const internalOrderIdIdx = headers.indexOf('InternalOrderID');
   const parentInternalOrderIdIdx = headers.indexOf('ParentInternalOrderID');
+  const orderActionSourceIdx = headers.indexOf('OrderActionSource');
+  const fillExecutionServiceIDIdx = headers.indexOf('FillExecutionServiceID');
 
-  console.log('Column indices:', { dateTimeIdx, symbolIdx, quantityIdx, fillPriceIdx, buySellIdx, openCloseIdx, internalOrderIdIdx, parentInternalOrderIdIdx });
+  console.log('Column indices:', { dateTimeIdx, symbolIdx, quantityIdx, fillPriceIdx, filledQuantityIdx, buySellIdx, openCloseIdx, internalOrderIdIdx, parentInternalOrderIdIdx });
 
   // Parse all fills first
   interface Fill {
@@ -79,9 +81,12 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
     internalOrderId: string;
     parentInternalOrderId: string;
     lineNumber: number;
+    fillExecutionId: string;
   }
   
   const allFills: Fill[] = [];
+  // Track unique fill execution IDs to avoid duplicates (Teton and CME both report same fills)
+  const seenFillExecutionIds = new Set<string>();
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -92,14 +97,32 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
     try {
       const dateStr = columns[dateTimeIdx]?.trim();
       const symbol = columns[symbolIdx]?.trim();
+      // Use FilledQuantity if available, fall back to Quantity
+      const filledQuantity = parseFloat(columns[filledQuantityIdx]?.trim() || '0');
       const quantity = parseFloat(columns[quantityIdx]?.trim() || '0');
+      const actualQuantity = filledQuantity || quantity;
       const fillPrice = parseFloat(columns[fillPriceIdx]?.trim() || '0');
       const buySell = columns[buySellIdx]?.trim();
       const openClose = columns[openCloseIdx]?.trim();
       const internalOrderId = columns[internalOrderIdIdx]?.trim() || '';
       const parentInternalOrderId = columns[parentInternalOrderIdIdx]?.trim() || '';
+      const orderActionSource = columns[orderActionSourceIdx]?.trim() || '';
+      const fillExecutionId = columns[fillExecutionServiceIDIdx]?.trim() || '';
 
-      if (!dateStr || !symbol || !quantity || !fillPrice) continue;
+      // Skip if no fill price (not a filled order)
+      if (!dateStr || !symbol || !fillPrice) continue;
+      
+      // Skip if quantity is 0
+      if (!actualQuantity) continue;
+
+      // Skip duplicate fills - only process each unique fill execution once
+      // Prefer Teton fills (they come first and have parent ID info)
+      if (fillExecutionId) {
+        if (seenFillExecutionIds.has(fillExecutionId)) {
+          continue;
+        }
+        seenFillExecutionIds.add(fillExecutionId);
+      }
 
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) continue;
@@ -107,13 +130,14 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
       allFills.push({
         date,
         symbol,
-        quantity,
+        quantity: actualQuantity,
         fillPrice,
         buySell,
         openClose,
         internalOrderId,
         parentInternalOrderId,
         lineNumber: i,
+        fillExecutionId,
       });
     } catch (error) {
       console.error('Error parsing line:', line, error);
@@ -143,16 +167,19 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
   for (const fill of allFills) {
     if (fill.openClose === 'Open') {
       // For opening trades, store by InternalOrderID
-      openTrades.set(fill.internalOrderId, {
-        date: fill.date,
-        symbol: fill.symbol,
-        quantity: fill.quantity,
-        entryPrice: fill.fillPrice,
-        buySell: fill.buySell,
-        internalOrderId: fill.internalOrderId,
-        lineNumber: fill.lineNumber,
-      });
-    } else if (fill.openClose === 'Close' || fill.openClose === 'Filled') {
+      // Only store if we don't already have this order (avoid duplicates)
+      if (!openTrades.has(fill.internalOrderId)) {
+        openTrades.set(fill.internalOrderId, {
+          date: fill.date,
+          symbol: fill.symbol,
+          quantity: fill.quantity,
+          entryPrice: fill.fillPrice,
+          buySell: fill.buySell,
+          internalOrderId: fill.internalOrderId,
+          lineNumber: fill.lineNumber,
+        });
+      }
+    } else if (fill.openClose === 'Close') {
       // For closing fills, group by ParentInternalOrderID if it exists
       const parentId = fill.parentInternalOrderId;
       if (parentId) {
@@ -203,6 +230,7 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
         priceDiff = openTrade.entryPrice - avgExitPrice;
       }
       
+      // Use the opening quantity for profit calculation (should match closing total)
       const profit = priceDiff * openTrade.quantity * pointValue;
 
       console.log('Completed trade (matched by parent):', {
