@@ -63,11 +63,23 @@ const getPointValue = (symbol: string): number => {
       }
     }
   } 
-  // Handle SierraChart format like "F.US.MESZ25"
+  // Handle SierraChart format like "F.US.MESH26" or "F.US.MESZ25"
   else if (symbol.includes('.')) {
     const parts = symbol.split('.');
-    const symbolPart = parts[parts.length - 1]; // Get last part (MESZ25)
-    baseSymbol = symbolPart.replace(/[0-9]/g, '').replace(/[A-Z]$/, ''); // Remove numbers and last letter (MES)
+    const symbolPart = parts[parts.length - 1]; // Get last part (MESH26 or MESZ25)
+    // Remove month letter and year digits to get base symbol
+    // Month letters in order: F,G,H,J,K,M,N,Q,U,V,X,Z (Jan-Dec)
+    const knownProducts = ['MES', 'MNQ', 'MYM', 'M2K', 'ES', 'NQ', 'YM', 'RTY', 'GC', 'SI', 'CL', 'NG', 'ZB', 'ZN'];
+    for (const product of knownProducts) {
+      if (symbolPart.startsWith(product)) {
+        baseSymbol = product;
+        break;
+      }
+    }
+    // Fallback if no known product found
+    if (!baseSymbol) {
+      baseSymbol = symbolPart.replace(/[0-9]/g, '').replace(/[FGHJKMNQUVXZ]$/, '');
+    }
   }
   // Fallback: try to match known products
   else {
@@ -84,11 +96,17 @@ const getPointValue = (symbol: string): number => {
   return POINT_VALUES[baseSymbol] || 1;
 };
 
-// Sierra Chart CME prices are in hundredths (693800 = 6938.00)
-// We need to convert to actual points for profit calculation
-const normalizeSierraChartPrice = (price: number): number => {
-  // If price is > 10000, it's likely in hundredths format
-  if (price > 10000) {
+// Sierra Chart prices can be in two formats:
+// - "F.US." format: Already in actual points (6941.50)
+// - "_FUT_CME" format: In hundredths (693800 = 6938.00)
+// This function normalizes based on the detected format
+const normalizeSierraChartPrice = (price: number, symbol: string): number => {
+  // F.US. format prices are already normal (e.g., 6941.50)
+  if (symbol.includes('F.US.') || symbol.startsWith('F.')) {
+    return price;
+  }
+  // _FUT_CME format prices are in hundredths
+  if (symbol.includes('_FUT_CME') && price > 10000) {
     return price / 100;
   }
   return price;
@@ -272,9 +290,9 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
       const avgExitPrice = weightedPriceSum / totalQuantity;
       const pointValue = getPointValue(openTrade.symbol);
       
-      // Normalize prices (Sierra Chart CME prices are in hundredths)
-      const normalizedEntry = normalizeSierraChartPrice(openTrade.entryPrice);
-      const normalizedExit = normalizeSierraChartPrice(avgExitPrice);
+      // Normalize prices based on symbol format
+      const normalizedEntry = normalizeSierraChartPrice(openTrade.entryPrice, openTrade.symbol);
+      const normalizedExit = normalizeSierraChartPrice(avgExitPrice, openTrade.symbol);
       
       // Calculate profit based on whether we bought or sold first
       let priceDiff: number;
@@ -337,9 +355,9 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
 
       const pointValue = getPointValue(openTrade.symbol);
       
-      // Normalize prices (Sierra Chart CME prices are in hundredths)
-      const normalizedEntry = normalizeSierraChartPrice(openTrade.entryPrice);
-      const normalizedExit = normalizeSierraChartPrice(closeFill.fillPrice);
+      // Normalize prices based on symbol format
+      const normalizedEntry = normalizeSierraChartPrice(openTrade.entryPrice, openTrade.symbol);
+      const normalizedExit = normalizeSierraChartPrice(closeFill.fillPrice, openTrade.symbol);
       
       // Calculate profit based on whether we bought or sold first
       let priceDiff: number;
