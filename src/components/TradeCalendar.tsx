@@ -90,15 +90,12 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
     };
   };
 
-  const getWeeklyPnL = (weekStartDay: number) => {
+  const getWeeklyPnL = (weekStartDay: number, weekEndDay: number) => {
     let total = 0;
-    for (let i = 0; i < 7; i++) {
-      const day = weekStartDay + i;
-      if (day <= daysInMonth) {
-        const dayStats = getDayStats(day);
-        if (dayStats) {
-          total += dayStats.profit;
-        }
+    for (let day = weekStartDay; day <= weekEndDay && day <= daysInMonth; day++) {
+      const dayStats = getDayStats(day);
+      if (dayStats) {
+        total += dayStats.profit;
       }
     }
     return total;
@@ -197,8 +194,9 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
             currentDay++;
           }
           
-          const weekStartDay = 1;
-          const weekPnL = getWeeklyPnL(weekStartDay);
+          // First week ends at currentDay - 1
+          const firstWeekEndDay = currentDay - 1;
+          const weekPnL = getWeeklyPnL(1, firstWeekEndDay);
           firstWeekCells.push(
             <div
               key={`week-${weekIndex}`}
@@ -267,7 +265,9 @@ export const TradeCalendar = ({ trades, currentDate, setCurrentDate, selectedPro
               weeks.push(<div key={`empty-end-${weekIndex}-${i}`} className="p-2" />);
             }
             
-            const weekPnL = getWeeklyPnL(weekStartDay);
+            // Week ends at currentDay - 1
+            const weekEndDay = currentDay - 1;
+            const weekPnL = getWeeklyPnL(weekStartDay, weekEndDay);
             weeks.push(
               <div
                 key={`week-${weekIndex}`}
