@@ -63,6 +63,22 @@ const getPointValue = (symbol: string): number => {
       }
     }
   } 
+  // Handle Rithmic format like "NQH6.CME" or "MESH6.CME"
+  // Format: {PRODUCT}{MONTH}{YEAR}.{EXCHANGE}
+  else if (symbol.match(/^[A-Z0-9]+\.(CME|CBOT|NYMEX|COMEX)$/)) {
+    const productPart = symbol.split('.')[0]; // Get "NQH6" or "MESH6"
+    const knownProducts = ['MES', 'MNQ', 'MYM', 'M2K', 'ES', 'NQ', 'YM', 'RTY', 'GC', 'SI', 'CL', 'NG', 'ZB', 'ZN'];
+    for (const product of knownProducts) {
+      if (productPart.startsWith(product)) {
+        baseSymbol = product;
+        break;
+      }
+    }
+    // Fallback: extract by removing month letter and year digits
+    if (!baseSymbol) {
+      baseSymbol = productPart.replace(/[FGHJKMNQUVXZ]\d+$/, '');
+    }
+  }
   // Handle SierraChart format like "F.US.MESH26" or "F.US.MESZ25"
   else if (symbol.includes('.')) {
     const parts = symbol.split('.');
@@ -96,9 +112,10 @@ const getPointValue = (symbol: string): number => {
   return POINT_VALUES[baseSymbol] || 1;
 };
 
-// Sierra Chart prices can be in two formats:
+// Sierra Chart / Rithmic prices can be in different formats:
 // - "F.US." format: Already in actual points (6941.50)
 // - "_FUT_CME" format: In hundredths (693800 = 6938.00)
+// - "NQH6.CME" Rithmic format: In hundredths (2582275 = 25822.75)
 // This function normalizes based on the detected format
 const normalizeSierraChartPrice = (price: number, symbol: string): number => {
   // F.US. format prices are already normal (e.g., 6941.50)
@@ -107,6 +124,10 @@ const normalizeSierraChartPrice = (price: number, symbol: string): number => {
   }
   // _FUT_CME format prices are in hundredths
   if (symbol.includes('_FUT_CME') && price > 10000) {
+    return price / 100;
+  }
+  // Rithmic format like "NQH6.CME" - prices are in hundredths
+  if (symbol.match(/^[A-Z0-9]+\.(CME|CBOT|NYMEX|COMEX)$/) && price > 10000) {
     return price / 100;
   }
   return price;
