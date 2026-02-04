@@ -237,6 +237,8 @@ export const parseSierraChartLog = (content: string): ParsedTrade[] => {
   }
 
   console.log('Total fills parsed:', allFills.length);
+  console.log('Open fills:', allFills.filter(f => f.openClose === 'Open').length);
+  console.log('Close fills:', allFills.filter(f => f.openClose === 'Close').length);
 
   // Store opening fills by InternalOrderID
   const openTrades = new Map<string, {
